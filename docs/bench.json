@@ -9,5 +9,7 @@
   "maxMs": 13.5,
   "serverMeanMs": 10.8,
   "target": "p95 < 2000ms",
-  "pass": true
+  "pass": true,
+  "piiScan": "PASS (blocks=10, txs=9, logs=6, findings=0)",
+  "chain": "hardhat localhost 31337"
 }

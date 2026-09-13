@@ -35,20 +35,22 @@ def pytest_summary() -> dict:
     return {"ok": code == 0, "tests": tests, "failures": fails, "errors": errors}
 
 
-def vitest_summary(pkg: str) -> dict:
-    code, out = run(["pnpm", "--filter", pkg, "exec", "vitest", "run", "--reporter=json"])
+def vitest_summary(pkg: str, path: str) -> dict:
+    outfile = ROOT / path / ".vitest/json/output.json"
+    code, out = run(["pnpm", "--filter", pkg, "exec", "vitest", "run", "--reporter=json", f"--outputFile={outfile}"])
     try:
-        js = json.loads(out[out.index("{"):out.rindex("}") + 1])
-        return {"ok": js.get("success", code == 0), "tests": js.get("numTotalTests"), "failures": js.get("numFailedTests")}
+        js = json.loads(outfile.read_text(encoding="utf-8"))
+        return {"ok": bool(js.get("success", code == 0)), "tests": js.get("numTotalTests"), "failures": js.get("numFailedTests")}
     except Exception:
         return {"ok": code == 0, "raw": out[-800:]}
 
 
 def hardhat_summary() -> dict:
     code, out = run(["pnpm", "--filter", "@dbp/chain", "test"])
-    passing = sum(int(x.split()[0]) for x in [l.strip() for l in out.splitlines() if l.strip().endswith("passing")] if x.split()[0].isdigit())
-    failing = sum(int(x.split()[0]) for x in [l.strip() for l in out.splitlines() if l.strip().endswith("failing")] if x.split()[0].isdigit())
-    return {"ok": code == 0, "passing": passing, "failing": failing}
+    import re
+    m_pass = re.search(r"(\d+) passing", out)
+    m_fail = re.search(r"(\d+) failing", out)
+    return {"ok": code == 0, "passing": int(m_pass[1]) if m_pass else 0, "failing": int(m_fail[1]) if m_fail else 0}
 
 
 def main() -> int:
@@ -56,8 +58,8 @@ def main() -> int:
     code, pii_out = run(["uv", "run", "python", "scripts/pii_items.py"])
     pii = json.loads(pii_out) if code in (0, 1) and pii_out.strip().startswith("{") else {"error": pii_out[-500:]}
     py = pytest_summary()
-    ts_rules = vitest_summary("@dbp/rules")
-    ts_vc = vitest_summary("@dbp/vc")
+    ts_rules = vitest_summary("@dbp/rules", "packages/rules/ts")
+    ts_vc = vitest_summary("@dbp/vc", "packages/vc/ts")
     hh = hardhat_summary()
     bench = json.loads((ROOT / "docs/bench.json").read_text()) if (ROOT / "docs/bench.json").exists() else None
     commit = run(["git", "rev-parse", "--short", "HEAD"])[1].strip()

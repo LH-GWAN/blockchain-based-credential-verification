@@ -22,3 +22,8 @@ chain/besu/data/
 apps/e2e/test-results/
 apps/e2e/playwright-report/
 .DS_Store
+.vitest/
+.report/
+.smoke/
+.demo/
+.besu-test/

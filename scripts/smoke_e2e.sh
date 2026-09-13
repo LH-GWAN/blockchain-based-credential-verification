@@ -63,5 +63,12 @@ for kind in ["replay","expired","forged","wrong-holder"]:
     assert a["verdict"] == "FAIL"
 PY
 
-echo "[smoke] PII 스캔"; (cd chain && pnpm scan-pii --names 김복례,이순자,박영희 2>&1 | tail -3)
+echo "[smoke] PII 스캔"; SCAN=$(cd chain && pnpm scan-pii --names 김복례,이순자,박영희 2>&1 | grep -E "scanned|PASS|FAIL" | tr '\n' ' '); echo "$SCAN"
+uv run python - "$SCAN" <<'PY'
+import json, sys, re, pathlib
+p = pathlib.Path("docs/bench.json"); d = json.loads(p.read_text()) if p.exists() else {}
+m = re.search(r"blocks=(\d+) txs=(\d+) logs=(\d+) findings=(\d+)", sys.argv[1])
+d["piiScan"] = (("PASS" if "PASS" in sys.argv[1] else "FAIL") + (f" (blocks={m[1]}, txs={m[2]}, logs={m[3]}, findings={m[4]})" if m else ""))
+p.write_text(json.dumps(d, ensure_ascii=False, indent=2))
+PY
 echo "[smoke] 완료"
