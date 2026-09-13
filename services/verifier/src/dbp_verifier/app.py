@@ -106,7 +106,8 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
             results[request_id]["receipt"]["txHash"] = None
             results[request_id]["receipt"]["error"] = str(e)
 
-    def run_present(request_id: str, vp_jwt: str, background: BackgroundTasks | None) -> dict:
+    def run_present(request_id: str, vp_jwt: str, background: BackgroundTasks | None, store_as: str | None = None) -> dict:
+        """store_as 가 주어지면 결과를 그 키로 저장한다 (공격 시연이 원래 요청의 결과를 덮어쓰지 않도록)."""
         req = requests.get(request_id)
         if not req:
             raise HTTPException(404, "REQUEST_UNKNOWN")
@@ -132,14 +133,16 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
             full = {k: False for k in bundle["claims"]["rules"]}
             full.update(out.claims)
             result["policyCheck"] = {"policyId": req["policyId"], "eligible": evaluate_policies(bundle, full).get(req["policyId"])}
-        results[request_id] = result
-        if out.verdict == "PASS":
+        key = store_as or request_id
+        result["resultId"] = key
+        results[key] = result
+        if out.verdict == "PASS" and store_as is None:
             last["vp"] = vp_jwt
             last["requestId"] = request_id
         if background is not None:
-            background.add_task(anchor_receipt, request_id, h)
+            background.add_task(anchor_receipt, key, h)
         else:
-            anchor_receipt(request_id, h)
+            anchor_receipt(key, h)
         return result
 
     def new_request(body: RequestIn) -> dict:
@@ -201,7 +204,9 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
                 rid = None
         if not rid:
             raise HTTPException(404, "REQUEST_UNKNOWN")
-        return run_present(rid, body.vpJwt, background)
+        # 같은 요청에 대한 두 번째 제출(재사용 시도)은 원래 결과를 덮어쓰지 않고 별도 키로 기록한다
+        store_as = f"{rid}#replay-{uuid.uuid4().hex[:6]}" if rid in results else None
+        return run_present(rid, body.vpJwt, background, store_as=store_as)
 
     @app.get("/results/{request_id}")
     def get_result(request_id: str):
@@ -222,13 +227,13 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
         vcs = payload["vp"]["verifiableCredential"]
         if body.kind == "replay":
             rid = last["requestId"]
-            return run_present(rid, vp, None)
+            return run_present(rid, vp, None, store_as=f"{rid}#attack-replay-{uuid.uuid4().hex[:6]}")
         if body.kind == "expired":
             rid = last["requestId"]
             with lock:
                 requests[rid]["used"] = False
                 requests[rid]["exp"] = int(time.time()) - 1
-            return run_present(rid, vp, None)
+            return run_present(rid, vp, None, store_as=f"{rid}#attack-expired-{uuid.uuid4().hex[:6]}")
         rec = new_request(RequestIn(verifierId=None, purpose="공격 시연"))
         if body.kind == "forged":
             h, p, s = vcs[0].split(".")

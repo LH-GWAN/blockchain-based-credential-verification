@@ -33,8 +33,8 @@ echo "[demo] 발급기관(대구시 8001, iM뱅크 8003) · 검증기관(8002) �
 wait_http http://localhost:8001/health; wait_http http://localhost:8003/health; wait_http http://localhost:8002/health; wait_http http://localhost:8004/health
 
 echo "[demo] 지갑 앱(3000) · 검증기관 앱(3001) 기동"
-(pnpm --filter @dbp/wallet dev -- -p 3000 > .demo/wallet.log 2>&1) & PIDS+=($!)
-(pnpm --filter @dbp/verifier-app dev -- -p 3001 > .demo/verifier-app.log 2>&1) & PIDS+=($!)
+(pnpm --filter @dbp/wallet dev -p 3000 > .demo/wallet.log 2>&1) & PIDS+=($!)
+(pnpm --filter @dbp/verifier-app dev -p 3001 > .demo/verifier-app.log 2>&1) & PIDS+=($!)
 wait_http http://localhost:3000; wait_http http://localhost:3001
 
 cat <<MSG

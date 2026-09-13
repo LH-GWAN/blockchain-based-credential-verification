@@ -94,6 +94,9 @@ def test_replay_blocked(env):
     assert again["verdict"] == "FAIL" and "NONCE_REUSED" in again["reasonCodes"]
     atk = client.post("/demo/attack", json={"kind": "replay"}).json()
     assert "NONCE_REUSED" in atk["reasonCodes"]
+    # 공격 시연은 원래 요청의 PASS 결과를 덮어쓰지 않는다
+    orig = client.get(f"/results/{req['requestId']}").json()
+    assert orig["verdict"] == "PASS"
 
 
 def test_revoked_blocked(env):
