@@ -1,0 +1,137 @@
+# 대구 혜택패스 전체 스택. 신뢰 도메인별 네트워크 격리:
+#   net-citizen : wallet ↔ issuer / ai / verifier   (시민 단말이 닿는 곳)
+#   net-issuer  : issuer ↔ chain
+#   net-verifier: verifier ↔ chain
+# verifier 는 issuer 와 같은 네트워크에 속하지 않는다 → 발급기관에 직접 조회 불가 (프롬프트 §2-5).
+# 기본 체인은 Hardhat 노드. Besu QBFT 는 `docker compose --profile besu` (chain/besu 참고).
+name: daegu-benefit-pass
+
+x-python-base: &python-base
+  build:
+    context: .
+    dockerfile: docker/python.Dockerfile
+  environment: &python-env
+    RPC_URL: http://chain:8545
+    DEPLOYMENT_FILE: /app/chain/deployments/latest.json
+    RULE_EVAL_DATE: "2026-09-14"
+  volumes:
+    - ./chain/deployments:/app/chain/deployments:ro
+
+services:
+  chain:
+    build:
+      context: .
+      dockerfile: docker/chain.Dockerfile
+    command: ["pnpm", "--filter", "@dbp/chain", "node", "--", "--hostname", "0.0.0.0"]
+    ports: ["8545:8545"]
+    networks: [net-issuer, net-verifier, net-ops]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -X POST -H 'content-type: application/json' --data '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_chainId\",\"params\":[]}' http://localhost:8545 >/dev/null"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  deployer:
+    build:
+      context: .
+      dockerfile: docker/chain.Dockerfile
+    command: ["sh", "-c", "pnpm --filter @dbp/chain deploy:localhost && uv run python scripts/seed_ledger.py"]
+    environment:
+      RPC_URL: http://chain:8545
+    volumes:
+      - ./chain/deployments:/app/chain/deployments
+    depends_on:
+      chain: { condition: service_healthy }
+    networks: [net-ops]
+
+  issuer-daegu:
+    <<: *python-base
+    command: ["uv", "run", "python", "-m", "dbp_issuer"]
+    environment:
+      <<: *python-env
+      ISSUER_ID: daegu
+      ISSUER_PORT: "8001"
+      ISSUER_DB_PATH: /data/issuer-daegu.db
+    volumes:
+      - ./chain/deployments:/app/chain/deployments:ro
+      - issuer-daegu-data:/data
+    ports: ["8001:8001"]
+    depends_on:
+      deployer: { condition: service_completed_successfully }
+    networks: [net-citizen, net-issuer]
+
+  issuer-imbank:
+    <<: *python-base
+    command: ["uv", "run", "python", "-m", "dbp_issuer"]
+    environment:
+      <<: *python-env
+      ISSUER_ID: imbank
+      ISSUER_PORT: "8003"
+      ISSUER_DB_PATH: /data/issuer-imbank.db
+    volumes:
+      - ./chain/deployments:/app/chain/deployments:ro
+      - issuer-imbank-data:/data
+    ports: ["8003:8003"]
+    depends_on:
+      deployer: { condition: service_completed_successfully }
+    networks: [net-citizen, net-issuer]
+
+  verifier:
+    <<: *python-base
+    command: ["uv", "run", "python", "-m", "dbp_verifier"]
+    environment:
+      <<: *python-env
+      VERIFIER_PORT: "8002"
+      VERIFIER_PUBLIC_URL: http://localhost:8002
+    ports: ["8002:8002"]
+    depends_on:
+      deployer: { condition: service_completed_successfully }
+    networks: [net-citizen, net-verifier]   # ← net-issuer 없음: 발급기관에 닿을 수 없다
+
+  ai:
+    <<: *python-base
+    command: ["uv", "run", "python", "-m", "dbp_ai"]
+    environment:
+      AI_PORT: "8004"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-claude-opus-5}
+      LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
+    volumes: []
+    ports: ["8004:8004"]
+    networks: [net-citizen, net-egress]     # LLM API 만 외부로
+
+  wallet:
+    build:
+      context: .
+      dockerfile: docker/next.Dockerfile
+      args: { APP: wallet }
+    environment:
+      NEXT_PUBLIC_ISSUER_DAEGU_URL: http://localhost:8001
+      NEXT_PUBLIC_ISSUER_IMBANK_URL: http://localhost:8003
+      NEXT_PUBLIC_VERIFIER_URL: http://localhost:8002
+      NEXT_PUBLIC_AI_URL: http://localhost:8004
+      NEXT_PUBLIC_RPC_URL: http://localhost:8545
+    ports: ["3000:3000"]
+    networks: [net-citizen]
+
+  verifier-app:
+    build:
+      context: .
+      dockerfile: docker/next.Dockerfile
+      args: { APP: verifier }
+    environment:
+      NEXT_PUBLIC_VERIFIER_URL: http://localhost:8002
+      NEXT_PUBLIC_RPC_URL: http://localhost:8545
+    ports: ["3001:3000"]
+    networks: [net-citizen]
+
+networks:
+  net-citizen: {}
+  net-issuer: { internal: true }
+  net-verifier: { internal: true }
+  net-ops: { internal: true }
+  net-egress: {}
+
+volumes:
+  issuer-daegu-data: {}
+  issuer-imbank-data: {}

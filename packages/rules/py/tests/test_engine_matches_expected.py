@@ -51,3 +51,13 @@ def test_policies_evaluate_from_claims_only():
     claims.update({"daeguResident": True, "incomeBelow50Median": True})
     pol = evaluate_policies(BUNDLE, claims)
     assert pol["telecom-discount"] is True and pol["near-poor"] is True and pol["nbl-housing"] is False
+
+
+def test_partial_profile_only_evaluates_requested_claims():
+    """은행(iM뱅크)은 신용·연소득만 안다. 자기 소관 claim 만 평가하면 다른 입력이 없어도 동작해야 한다."""
+    import pytest
+    bank_record = {"creditScoreTier": "bottom20", "annualIncomeKRW": 12_000_000}
+    out = evaluate_claims(BUNDLE, bank_record, date(2026, 9, 14), only=["creditBottom20", "annualIncomeUnder35M"])
+    assert out == {"creditBottom20": True, "annualIncomeUnder35M": True}
+    with pytest.raises(TypeError):
+        evaluate_claims(BUNDLE, bank_record, date(2026, 9, 14), only=["incomeBelow50Median"])

@@ -34,24 +34,23 @@ def preprocess(bundle: dict, profile: dict, as_of: date | None = None) -> dict:
     """원본 프로필에 파생값을 합쳐 규칙 입력 데이터를 만든다. 원본은 변경하지 않는다."""
     as_of = as_of or eval_date_from_env(bundle)
     data: dict = dict(profile)
+    # 입력이 없으면 파생값도 None. (발급기관마다 아는 필드가 다르므로 — 은행은 가구원수를 모른다 —
+    # 자기 소관 claim 만 평가하면 된다. None 이 섞인 claim 을 평가하면 jsonlogic 이 TypeError 를 낸다.)
     for d in bundle["preprocess"]["derived"]:
         op = d["op"]
+        src = data.get(d["from"]) if "from" in d else None
         if op == "ageOn":
-            data[d["name"]] = _age_on(data[d["from"]], as_of)
+            data[d["name"]] = _age_on(src, as_of) if isinstance(src, str) else None
         elif op == "birthYear":
-            data[d["name"]] = int(str(data[d["from"]])[:4])
+            data[d["name"]] = int(str(src)[:4]) if isinstance(src, str) else None
         elif op == "get":
             data[d["name"]] = _get(data, d["path"])
         elif op == "clampInt":
-            v = int(data[d["from"]])
-            data[d["name"]] = max(int(d["min"]), min(int(d["max"]), v))
+            data[d["name"]] = max(int(d["min"]), min(int(d["max"]), int(src))) if isinstance(src, int) and not isinstance(src, bool) else None
         elif op == "lookup":
             key = evaluate(d["keyExpr"], data)
             table = bundle["tables"][d["table"]]
-            skey = str(key)
-            if skey not in table:
-                raise KeyError(f"lookup {d['table']}[{skey}] missing")
-            data[d["name"]] = table[skey]
+            data[d["name"]] = table.get(str(key)) if key is not None else None
         elif op == "expr":
             data[d["name"]] = evaluate(d["expr"], data)
         else:

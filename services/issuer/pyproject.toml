@@ -1,0 +1,25 @@
+[project]
+name = "dbp-issuer"
+version = "0.1.0"
+description = "대구 혜택패스 발급기관 서버 (대구광역시 / iM뱅크 모사)"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "pydantic>=2.8",
+  "dbp-rules",
+  "dbp-vc",
+  "dbp-ledger",
+]
+
+[tool.uv.sources]
+dbp-rules = { workspace = true }
+dbp-vc = { workspace = true }
+dbp-ledger = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dbp_issuer"]
