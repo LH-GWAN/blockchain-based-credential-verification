@@ -54,4 +54,10 @@ demo-isolation: ## 검증기관 컨테이너에서 발급기관 접속이 차단
 bench: ## 검증 성능 벤치 (make demo 기동 상태에서) → docs/bench.json
 	uv run python scripts/bench_verify.py 50
 
-.PHONY: help setup build test chain deploy seed expected report demo compose-up compose-down demo-isolation bench
+e2e: ## Playwright 로 시연 ①~⑤ 자동 재현 + docs/screenshots 갱신 (make demo 기동 상태에서; WALLET_URL/VERIFIER_APP_URL 로 포트 지정)
+	pnpm --filter @dbp/e2e test
+
+smoke: ## 체인 기동부터 발급·검증·폐기·공격·벤치·PII 스캔까지 헤드리스 통합 확인
+	./scripts/smoke_e2e.sh 50
+
+.PHONY: help setup build test chain deploy seed expected report demo compose-up compose-down demo-isolation bench e2e smoke

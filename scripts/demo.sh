@@ -32,16 +32,19 @@ echo "[demo] 발급기관(대구시 8001, iM뱅크 8003) · 검증기관(8002) �
 (AI_PORT=8004 uv run python -m dbp_ai > .demo/ai.log 2>&1) & PIDS+=($!)
 wait_http http://localhost:8001/health; wait_http http://localhost:8003/health; wait_http http://localhost:8002/health; wait_http http://localhost:8004/health
 
-echo "[demo] 지갑 앱(3000) · 검증기관 앱(3001) 기동"
-(pnpm --filter @dbp/wallet dev -p 3000 > .demo/wallet.log 2>&1) & PIDS+=($!)
-(pnpm --filter @dbp/verifier-app dev -p 3001 > .demo/verifier-app.log 2>&1) & PIDS+=($!)
-wait_http http://localhost:3000; wait_http http://localhost:3001
+port_free() { ! lsof -nP -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1; }
+WALLET_PORT="${WALLET_PORT:-3000}"; port_free "$WALLET_PORT" || { echo "[demo] $WALLET_PORT 포트 사용 중 → 지갑을 3010 으로 기동"; WALLET_PORT=3010; }
+VERIFIER_APP_PORT="${VERIFIER_APP_PORT:-3001}"; port_free "$VERIFIER_APP_PORT" || { echo "[demo] $VERIFIER_APP_PORT 포트 사용 중 → 검증기관 화면을 3011 로 기동"; VERIFIER_APP_PORT=3011; }
+echo "[demo] 지갑 앱($WALLET_PORT) · 검증기관 앱($VERIFIER_APP_PORT) 기동"
+(pnpm --filter @dbp/wallet dev -p "$WALLET_PORT" > .demo/wallet.log 2>&1) & PIDS+=($!)
+(pnpm --filter @dbp/verifier-app dev -p "$VERIFIER_APP_PORT" > .demo/verifier-app.log 2>&1) & PIDS+=($!)
+wait_http "http://localhost:$WALLET_PORT"; wait_http "http://localhost:$VERIFIER_APP_PORT"
 
 cat <<MSG
 
   ✅ 시연 준비 완료
-     시민 지갑       http://localhost:3000
-     검증기관 화면   http://localhost:3001
+     시민 지갑       http://localhost:$WALLET_PORT   (모바일 폭으로 보세요)
+     검증기관 화면   http://localhost:$VERIFIER_APP_PORT
      발급기관 관리   http://localhost:8001/docs  (대구시)  ·  http://localhost:8003/docs (iM뱅크)
      로그            .demo/*.log
   docs/DEMO.md 의 ①~⑤ 순서대로 진행하세요. 종료: Ctrl+C
