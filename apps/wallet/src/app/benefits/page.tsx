@@ -3,8 +3,8 @@
 import { policyIndex } from '@dbp/rules';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChatBox } from '@/components/ChatBox';
-import { RecommendationCard } from '@/components/RecommendationCard';
-import { BottomSheet, Button, Card, JsonView, LinkButton, Notice, SectionTitle, Spinner } from '@/components/ui';
+import { LegalBasisList, RecommendationCard, SourceBadge } from '@/components/RecommendationCard';
+import { BottomSheet, Button, Card, Collapsible, JsonView, LinkButton, Notice, SectionTitle, Spinner } from '@/components/ui';
 import { useWallet } from '@/hooks/useWallet';
 import { aiApi, issuerApi } from '@/lib/api';
 import { COPY } from '@/lib/copy';
@@ -13,8 +13,12 @@ import {
   computeClaims,
   credentialHoldings,
   failingClaimLabels,
-  fillWithTemplates,
   filterRecommendations,
+  groupEligibleByChannel,
+  pickRecommendation,
+  resolveCitations,
+  submitDocuments,
+  templateRecommendation,
 } from '@/lib/eligibility';
 import { ENV } from '@/lib/env';
 import { toKoreanError } from '@/lib/errors';
@@ -28,10 +32,44 @@ interface Loaded {
 }
 
 interface AiState {
+  /** /recommend 응답 중 불변 조건 7 (규칙 엔진 적격 + 실재 조항 인용) 을 통과한 항목만. */
   recommendations: Recommendation[];
   provider: AiProvider | null;
   disclaimer: string | null;
   error: string | null;
+}
+
+/**
+ * B. 공공 복지·교통 — 복지멤버십이 이미 안내하는 대상이므로 "추천" 하지 않고 판정 결과만 간결하게 보여준다.
+ * 설명은 정책 문서를 그대로 문장화한 템플릿이며 근거 조항을 함께 편다.
+ */
+function WelfareRow({ policy }: { policy: PolicyMeta }) {
+  const rec = templateRecommendation(policy);
+  const bases = resolveCitations(policy, rec.citations);
+  return (
+    <Card>
+      <div className="flex items-start justify-between gap-2">
+        <h3 className="font-bold leading-snug">{policy.name}</h3>
+        <span className="shrink-0 rounded-full border border-line bg-canvas px-2 py-0.5 text-[0.75rem] font-semibold text-muted">{COPY.benefits.welfareBadge}</span>
+      </div>
+      <p className="mt-1 line-clamp-2 text-[0.9rem] text-muted">{policy.summary}</p>
+      <Collapsible summary={COPY.benefits.explanation}>
+        <div className="space-y-2 pb-2 text-[0.9rem]">
+          <SourceBadge isAi={false} />
+          <p>{rec.explanation}</p>
+          {!policy.basisVerified && <p className="text-[0.8rem] text-warn">{COPY.common.exampleBasis}</p>}
+          <p className="font-semibold">
+            {COPY.benefits.legalBasis} ({bases.length})
+          </p>
+          <LegalBasisList bases={bases} />
+          <p className="text-muted">
+            <span className="font-semibold">{COPY.benefits.howToApply}: </span>
+            {policy.howToApply}
+          </p>
+        </div>
+      </Collapsible>
+    </Card>
+  );
 }
 
 export default function BenefitsPage() {
@@ -70,15 +108,15 @@ export default function BenefitsPage() {
     }
     setData({ bundle, policies, payload });
 
+    // /recommend 본문은 그대로 (범주값 + 모든 정책의 ruleResults). AI 는 설명만 하고 판정하지 않는다.
     const index = policyIndex(policies);
     const eligible = new Set(payload.ruleResults.filter((r) => r.eligible).map((r) => r.policyId));
     try {
       const res = await aiApi.recommend(payload);
-      // 불변 조건 7: 규칙 엔진 적격 + 실재 조항 인용만 노출. 부족하면 템플릿으로 채운다.
-      const kept = filterRecommendations(res.recommendations, index, eligible);
-      setAi({ recommendations: fillWithTemplates(kept, index, eligible), provider: res.provider, disclaimer: res.disclaimer, error: null });
+      // 불변 조건 7: 규칙 엔진 적격 + 실재 조항 인용만 노출. 없는 정책은 카드가 템플릿으로 채워진다.
+      setAi({ recommendations: filterRecommendations(res.recommendations, index, eligible), provider: res.provider, disclaimer: res.disclaimer, error: null });
     } catch (e) {
-      setAi({ recommendations: fillWithTemplates([], index, eligible), provider: null, disclaimer: null, error: toKoreanError(e) });
+      setAi({ recommendations: [], provider: null, disclaimer: null, error: toKoreanError(e) });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.citizenId]);
@@ -91,10 +129,12 @@ export default function BenefitsPage() {
     if (!data || !profile) return null;
     const claims = computeClaims(data.bundle, profile);
     const index = policyIndex(data.policies);
+    const eligible = new Set(data.payload.ruleResults.filter((r) => r.eligible).map((r) => r.policyId));
+    const groups = groupEligibleByChannel(index, eligible);
     const ineligible = data.payload.ruleResults
       .filter((r) => !r.eligible)
       .map((r) => ({ policyId: r.policyId, name: index[r.policyId]?.name ?? r.policyId, failing: failingClaimLabels(data.bundle, index[r.policyId], r.policyId, claims) }));
-    return { claims, index, ineligible };
+    return { claims, index, groups, ineligible };
   }, [data, profile]);
 
   async function openSheet() {
@@ -132,10 +172,12 @@ export default function BenefitsPage() {
   if (!data || !derived) return <Spinner label={COPY.common.loading} />;
 
   const isAiProvider = ai?.provider === 'anthropic';
+  const aiRecs = ai?.recommendations ?? [];
+  const { counter, welfare } = derived.groups;
 
   return (
-    <div className="space-y-4">
-      <SectionTitle sub={`${COPY.benefits.eligibleNow} ${ai ? ai.recommendations.length : '…'}개`}>{COPY.benefits.title}</SectionTitle>
+    <div className="space-y-5">
+      <SectionTitle sub={COPY.benefits.subtitle}>{COPY.benefits.title}</SectionTitle>
       {credentials.length === 0 && (
         <Notice kind="warn">
           {COPY.benefits.needCredentials} <LinkButton href="/credentials" variant="ghost">증명서 받기</LinkButton>
@@ -143,30 +185,52 @@ export default function BenefitsPage() {
       )}
       {ai?.error && <Notice kind="warn">{COPY.benefits.aiUnavailable}</Notice>}
 
-      {!ai ? (
-        <Spinner label="AI 설명을 준비하는 중…" />
-      ) : ai.recommendations.length === 0 ? (
-        <Notice kind="info">{COPY.benefits.noEligible}</Notice>
-      ) : (
-        ai.recommendations.map((rec) => {
-          const policy = derived.index[rec.policyId];
-          return (
-            <RecommendationCard
-              key={rec.policyId}
-              rec={rec}
-              policy={policy}
-              holdings={policy ? credentialHoldings(policy, credentials, derived.claims, data.bundle) : []}
-              isAi={rec.source ? rec.source === 'llm' : isAiProvider}
-            />
-          );
-        })
-      )}
-      {ai?.disclaimer && <p className="text-[0.8rem] text-muted">{ai.disclaimer}</p>}
+      {/* A. 은행·민간 창구 혜택 — 혜택패스가 증명서 제출로 돕는 대상 (복지멤버십에 없음) */}
+      <section aria-labelledby="counter-heading" className="space-y-3">
+        <div>
+          <h2 id="counter-heading" className="text-[1.1rem] font-bold leading-snug">
+            {COPY.benefits.counterSection} <span className="font-normal text-muted">· {counter.length}개</span>
+          </h2>
+          <p className="mt-1 text-[0.85rem] text-muted">{COPY.benefits.counterNote}</p>
+        </div>
+        {!ai && <Spinner label={COPY.benefits.aiPreparing} />}
+        {counter.length === 0 ? (
+          <Notice kind="info">{COPY.benefits.noCounter}</Notice>
+        ) : (
+          counter.map((policy) => {
+            const rec = pickRecommendation(policy, aiRecs);
+            return (
+              <RecommendationCard
+                key={policy.policyId}
+                rec={rec}
+                policy={policy}
+                holdings={credentialHoldings(policy, credentials, derived.claims, data.bundle)}
+                isAi={rec.source ? rec.source === 'llm' : isAiProvider}
+                submitDocs={submitDocuments(data.bundle, policy)}
+                presentHref="/present"
+              />
+            );
+          })
+        )}
+        {ai?.disclaimer && <p className="text-[0.8rem] text-muted">{ai.disclaimer}</p>}
+      </section>
 
       <Button variant="secondary" full onClick={openSheet}>
         {COPY.benefits.aiPayloadButton}
       </Button>
 
+      {/* B. 공공 복지·교통 — 복지멤버십 안내 대상. 추천하지 않고 판정 결과만 보여준다. */}
+      <section aria-labelledby="welfare-heading" className="space-y-3">
+        <div>
+          <h2 id="welfare-heading" className="text-[1.1rem] font-bold leading-snug">
+            {COPY.benefits.welfareSection} <span className="font-normal text-muted">· {welfare.length}개</span>
+          </h2>
+          <p className="mt-1 text-[0.85rem] text-muted">{COPY.benefits.welfareNote}</p>
+        </div>
+        {welfare.length === 0 ? <p className="text-[0.9rem] text-muted">{COPY.benefits.noWelfare}</p> : welfare.map((policy) => <WelfareRow key={policy.policyId} policy={policy} />)}
+      </section>
+
+      {/* C. 지금은 해당되지 않는 혜택 */}
       <Card muted>
         <h2 className="font-bold text-ink">{COPY.benefits.notEligible}</h2>
         {derived.ineligible.length === 0 ? (

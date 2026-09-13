@@ -1,4 +1,4 @@
-import { CHECK_LABELS, claimLabel, CRED_CHECK_LABELS, reasonText, RESULT, TIMING_LABELS } from "@/lib/copy";
+import { CHECK_LABELS, claimLabel, CRED_CHECK_LABELS, policyLabel, reasonText, RESULT, TIMING_LABELS } from "@/lib/copy";
 import { formatDateTime, formatMs, formatSeconds, issuerNames, receivedFactCount, statusLabel } from "@/lib/format";
 import { CHECK_KEYS, TIMING_PARTS, type VerificationResult } from "@/lib/types";
 import { Checkmark } from "./Checkmark";
@@ -283,5 +283,30 @@ export function DataNote({ result }: { result: VerificationResult }) {
     <p className="rounded-2xl border border-accent/30 bg-accent-soft px-5 py-4 text-lg font-medium text-accent">
       {RESULT.dataNote(receivedFactCount(result))}
     </p>
+  );
+}
+
+/** policyId 를 보낸 요청에만 나오는 작은 카드: 제출된 참/거짓 항목만으로 정책 규칙을 다시 돌린 결과. */
+export function PolicyCheckCard({ result }: { result: VerificationResult }) {
+  const pc = result.policyCheck;
+  if (!pc) return null;
+  const verdict = pc.eligible === null ? RESULT.undetermined : pc.eligible ? RESULT.eligible : RESULT.ineligible;
+  const tone =
+    pc.eligible === null
+      ? "border-warn/40 bg-warn-soft/50 text-warn"
+      : pc.eligible
+        ? "border-pass/40 bg-pass-soft text-pass"
+        : "border-fail/40 bg-fail-soft text-fail";
+  return (
+    <section className={`rounded-2xl border px-5 py-4 ${tone}`} aria-label={RESULT.policyCheck}>
+      <p className="text-lg">
+        <span className="font-semibold">{RESULT.policyCheck}: </span>
+        <span className="font-bold">{policyLabel(pc.policyId)}</span>
+        <span> — </span>
+        <span className="font-extrabold">{verdict}</span>
+        <span className="text-sm"> ({RESULT.policyRuleNote})</span>
+      </p>
+      <p className="mono mt-1 text-xs opacity-80">{pc.policyId}</p>
+    </section>
   );
 }

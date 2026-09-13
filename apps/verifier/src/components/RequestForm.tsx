@@ -1,23 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import { api, isApiError, isUnreachable } from "@/lib/api";
-import { ERRORS, REQUEST } from "@/lib/copy";
-import type { ClaimDef, PresentationRequest, VerifierProfile } from "@/lib/types";
+import { ERRORS, policyLabel, PRESETS_FALLBACK, REQUEST, RULES_VERSION, verifierKindLabel } from "@/lib/copy";
+import { initialRequestState, isClaimSelected, requestFormReducer } from "@/lib/request-state";
+import type { ClaimDef, PresentationRequest, Preset, VerifierProfile } from "@/lib/types";
 import { RequestQr } from "./RequestQr";
 import { ServiceUnavailable } from "./ServiceUnavailable";
 
 const DEFAULT_VERIFIER = "imbank-branch-01";
-const DEFAULT_CLAIMS = ["daeguResident", "incomeBelow50Median"];
 
-type Meta = { kind: "loading" } | { kind: "down" } | { kind: "ready"; verifiers: VerifierProfile[]; claims: ClaimDef[] };
+type Meta =
+  | { kind: "loading" }
+  | { kind: "down" }
+  | { kind: "ready"; verifiers: VerifierProfile[]; claims: ClaimDef[]; presets: Preset[] };
 
 /** 화면 1: 검증 요청 만들기 → QR/코드/남은 시간 → 결과 화면으로 자동 이동 */
 export function RequestForm() {
   const [meta, setMeta] = useState<Meta>({ kind: "loading" });
   const [verifierId, setVerifierId] = useState(DEFAULT_VERIFIER);
-  const [purpose, setPurpose] = useState<string>(REQUEST.purposeDefault);
-  const [selected, setSelected] = useState<Set<string>>(() => new Set(DEFAULT_CLAIMS));
+  // 프리셋 목록이 도착하기 전에는 내장 사본으로 초기화한다 (기본: consult).
+  const [form, dispatch] = useReducer(requestFormReducer, PRESETS_FALLBACK, initialRequestState);
   const [request, setRequest] = useState<PresentationRequest | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,9 +28,18 @@ export function RequestForm() {
   const loadMeta = useCallback(async () => {
     setMeta({ kind: "loading" });
     try {
-      const [verifiers, claims] = await Promise.all([api.verifiers(), api.claims()]);
-      setMeta({ kind: "ready", verifiers, claims });
+      const [verifiers, claims, presets] = await Promise.all([
+        api.verifiers(),
+        api.claims(),
+        // 프리셋은 부가 정보 — 서비스가 아직 /presets 를 모르거나 빈 목록이면 내장 사본을 쓴다.
+        api
+          .presets()
+          .then((list) => (list.length > 0 ? list : [...PRESETS_FALLBACK]))
+          .catch(() => [...PRESETS_FALLBACK]),
+      ]);
+      setMeta({ kind: "ready", verifiers, claims, presets });
       setVerifierId((cur) => (verifiers.some((v) => v.id === cur) ? cur : (verifiers[0]?.id ?? cur)));
+      dispatch({ type: "presetsLoaded", presets });
     } catch {
       setMeta({ kind: "down" });
     }
@@ -39,7 +51,8 @@ export function RequestForm() {
 
   const create = useCallback(async () => {
     if (meta.kind !== "ready") return;
-    const requested = meta.claims.filter((c) => selected.has(c.claim)).map((c) => ({ claim: c.claim, expected: true }));
+    const known = new Set(meta.claims.map((c) => c.claim));
+    const requested = form.requested.filter((r) => known.has(r.claim));
     if (requested.length === 0) {
       setError(REQUEST.needOne);
       return;
@@ -47,7 +60,12 @@ export function RequestForm() {
     setSubmitting(true);
     setError(null);
     try {
-      const req = await api.createRequest({ verifierId, purpose: purpose.trim() || REQUEST.purposeDefault, requested });
+      const req = await api.createRequest({
+        verifierId,
+        purpose: form.purpose.trim() || REQUEST.purposeDefault,
+        requested,
+        ...(form.policyId ? { policyId: form.policyId } : {}),
+      });
       setRequest(req);
     } catch (e) {
       if (isUnreachable(e)) setMeta({ kind: "down" });
@@ -55,7 +73,7 @@ export function RequestForm() {
     } finally {
       setSubmitting(false);
     }
-  }, [meta, selected, verifierId, purpose]);
+  }, [meta, form, verifierId]);
 
   if (meta.kind === "loading") {
     return (
@@ -71,13 +89,8 @@ export function RequestForm() {
     return <RequestQr request={request} onRenew={create} onReset={() => setRequest(null)} renewing={submitting} />;
   }
 
-  const toggle = (claim: string) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(claim)) next.delete(claim);
-      else next.add(claim);
-      return next;
-    });
+  const activePreset = meta.presets.find((p) => p.id === form.presetId);
+  const selectedClaims = meta.claims.filter((c) => isClaimSelected(form, c.claim));
 
   return (
     <form
@@ -116,12 +129,43 @@ export function RequestForm() {
                   />
                   <span className="flex flex-col">
                     <span className="text-lg font-semibold">{v.name}</span>
-                    <span className="text-sm text-muted">{v.kind === "bank" ? "금융기관" : "행정기관"}</span>
+                    <span className="text-sm text-muted">{verifierKindLabel(v.kind)}</span>
                   </span>
                 </label>
               );
             })}
           </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className="mb-1 text-lg font-semibold">{REQUEST.presets}</legend>
+          <p className="mb-3 text-sm text-muted">{REQUEST.presetsLead}</p>
+          <div className="flex flex-wrap gap-2">
+            {meta.presets.map((p) => {
+              const active = p.id === form.presetId;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => dispatch({ type: "applyPreset", preset: p })}
+                  className={`min-h-11 rounded-full border-2 px-4 text-base font-semibold transition focus-visible:ring-4 focus-visible:ring-accent-ring/40 focus-visible:outline-none ${
+                    active ? "border-accent bg-accent text-white" : "border-line bg-surface text-ink hover:border-accent/50"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted" aria-live="polite">
+            <span>{activePreset ? activePreset.hint : REQUEST.presetCustom}</span>
+            {activePreset?.policyId && (
+              <span className="badge border-accent/30 bg-accent-soft text-accent">
+                {REQUEST.presetPolicy}: {policyLabel(activePreset.policyId)}
+              </span>
+            )}
+          </p>
         </fieldset>
 
         <div>
@@ -131,8 +175,8 @@ export function RequestForm() {
           <input
             id="purpose"
             className="field"
-            value={purpose}
-            onChange={(e) => setPurpose(e.target.value)}
+            value={form.purpose}
+            onChange={(e) => dispatch({ type: "setPurpose", purpose: e.target.value })}
             maxLength={80}
             autoComplete="off"
           />
@@ -143,7 +187,7 @@ export function RequestForm() {
           <p className="mb-3 text-sm text-muted">{REQUEST.claimsHint}</p>
           <ul className="grid gap-2 sm:grid-cols-2">
             {meta.claims.map((c) => {
-              const on = selected.has(c.claim);
+              const on = isClaimSelected(form, c.claim);
               return (
                 <li key={c.claim}>
                   <label
@@ -151,7 +195,12 @@ export function RequestForm() {
                       on ? "border-accent bg-accent-soft/60" : "border-line bg-surface hover:border-accent/50"
                     }`}
                   >
-                    <input type="checkbox" checked={on} onChange={() => toggle(c.claim)} className="h-5 w-5 accent-accent" />
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      onChange={() => dispatch({ type: "toggleClaim", claim: c.claim })}
+                      className="h-5 w-5 accent-accent"
+                    />
                     <span className="flex min-w-0 flex-col">
                       <span className="font-medium">{c.label}</span>
                       <span className="mono text-xs text-muted">{c.claim} · 기대값: 참</span>
@@ -175,23 +224,28 @@ export function RequestForm() {
       </div>
 
       <aside className="card flex flex-col gap-4 self-start bg-surface-2">
-        <h2 className="text-xl font-bold">이 요청으로 기관이 받는 것</h2>
+        <h2 className="text-xl font-bold">이 요청으로 창구가 받는 것</h2>
         <ul className="grid gap-2">
-          {meta.claims
-            .filter((c) => selected.has(c.claim))
-            .map((c) => (
-              <li key={c.claim} className="flex items-center gap-2 text-lg">
-                <span className="font-bold text-pass" aria-hidden>
-                  ✔
-                </span>
-                {c.label}
-              </li>
-            ))}
-          {selected.size === 0 && <li className="text-muted">{REQUEST.needOne}</li>}
+          {selectedClaims.map((c) => (
+            <li key={c.claim} className="flex items-center gap-2 text-lg">
+              <span className="font-bold text-pass" aria-hidden>
+                ✔
+              </span>
+              {c.label}
+            </li>
+          ))}
+          {selectedClaims.length === 0 && <li className="text-muted">{REQUEST.needOne}</li>}
         </ul>
+        {form.policyId && (
+          <p className="text-base">
+            <span className="text-muted">{REQUEST.presetPolicy}: </span>
+            <span className="font-semibold">{policyLabel(form.policyId)}</span>
+            <span className="text-sm text-muted"> · 규칙 {RULES_VERSION} · 제출된 항목만으로 계산</span>
+          </p>
+        )}
         <p className="rounded-xl border border-line bg-surface px-4 py-3 text-muted">{REQUEST.notRequested}</p>
         <p className="text-sm text-muted">
-          각 항목은 발급기관이 서명한 참/거짓 하나뿐입니다. 검증기관은 발급기관 서버에 묻지 않고 공동원장에서 공개키·폐기
+          각 항목은 발급기관이 서명한 참/거짓 하나뿐입니다. 창구는 발급기관 서버에 묻지 않고 공동원장에서 공개키·폐기
           상태·규칙 버전만 확인합니다.
         </p>
       </aside>

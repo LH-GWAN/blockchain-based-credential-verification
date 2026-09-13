@@ -6,7 +6,17 @@ import { api, isApiError, isUnreachable } from "@/lib/api";
 import { ERRORS, RESULT } from "@/lib/copy";
 import { formatCountdown, remainingSeconds } from "@/lib/format";
 import type { VerificationResult } from "@/lib/types";
-import { ChecksList, ClaimsTable, CredentialDetails, DataNote, ReasonsPanel, ReceiptPanel, TimingPanel, VerdictBanner } from "./ResultParts";
+import {
+  ChecksList,
+  ClaimsTable,
+  CredentialDetails,
+  DataNote,
+  PolicyCheckCard,
+  ReasonsPanel,
+  ReceiptPanel,
+  TimingPanel,
+  VerdictBanner,
+} from "./ResultParts";
 import { ServiceUnavailable } from "./ServiceUnavailable";
 
 const POLL_MS = 1000;
@@ -116,15 +126,7 @@ export function ResultView({ requestId }: { requestId: string }) {
       <p className="kicker">2/3 · 결과</p>
       <VerdictBanner result={result} />
       <DataNote result={result} />
-      {result.policyCheck && (
-        <p className="text-lg">
-          <span className="text-muted">{RESULT.policyCheck}: </span>
-          <code className="mono">{result.policyCheck.policyId}</code> →{" "}
-          <span className={`font-semibold ${result.policyCheck.eligible ? "text-pass" : "text-fail"}`}>
-            {result.policyCheck.eligible ? RESULT.eligible : RESULT.ineligible}
-          </span>
-        </p>
-      )}
+      <PolicyCheckCard result={result} />
       <div className="grid gap-6 lg:grid-cols-2">
         <ClaimsTable result={result} />
         <TimingPanel result={result} />

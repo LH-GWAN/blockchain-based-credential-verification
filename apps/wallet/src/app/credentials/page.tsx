@@ -7,7 +7,7 @@ import { Button, Card, LinkButton, Notice, SectionTitle, Spinner } from '@/compo
 import { useWallet } from '@/hooks/useWallet';
 import { issuerApi } from '@/lib/api';
 import { COPY } from '@/lib/copy';
-import { checkBundleHash, computeClaims, planByIssuer, type HashCheck, type IssuerPlan } from '@/lib/eligibility';
+import { checkBundleHash, computeClaims, planByIssuer, selfCheckedClaims, type ClaimDecision, type HashCheck, type IssuerPlan } from '@/lib/eligibility';
 import { ENV, ISSUERS } from '@/lib/env';
 import { toKoreanError } from '@/lib/errors';
 import { hexToBytes } from '@/lib/hex';
@@ -23,7 +23,10 @@ interface Loaded {
   wellKnownErrors: Record<string, string>;
   hash: HashCheck;
   claims: ClaimMap;
+  /** 발급기관별 계획 (issuerOf 순서: 대구광역시 → 사회보장정보원). 'self' 항목은 어디에도 없다. */
   plans: IssuerPlan[];
+  /** 창구가 직접 확인하는 항목 (증명서 불필요) — 사전 판정 화면에만 표시. */
+  selfChecked: ClaimDecision[];
 }
 
 export default function CredentialsPage() {
@@ -68,13 +71,14 @@ export default function CredentialsPage() {
       if (r && r.status === 'fulfilled') wellKnown[iss.did] = r.value;
       else if (r) wellKnownErrors[iss.did] = toKoreanError(r.reason);
     });
-    // 발급기관이 알린 해시 (대구시 우선, 없으면 iM뱅크) 와 로컬 계산 해시 대조
-    const declared = wellKnown['did:dbp:daegu']?.bundle.bundleHash ?? wellKnown['did:dbp:imbank']?.bundle.bundleHash ?? null;
+    // 발급기관이 알린 해시 (대구광역시 우선, 없으면 사회보장정보원) 와 로컬 계산 해시 대조
+    const declared = ISSUERS.map((i) => wellKnown[i.did]?.bundle.bundleHash).find((h): h is string => typeof h === 'string') ?? null;
     const hash = checkBundleHash(bundle, declared);
     try {
       const claims = computeClaims(bundle, profile);
       const plans = planByIssuer(bundle, claims);
-      setData({ bundle, fromCache, wellKnown, wellKnownErrors, hash, claims, plans });
+      const selfChecked = selfCheckedClaims(bundle, claims);
+      setData({ bundle, fromCache, wellKnown, wellKnownErrors, hash, claims, plans, selfChecked });
       setPhase(credentials.length > 0 ? 'cards' : 'precheck');
     } catch (e) {
       setLoadError(`규칙 판정 중 오류: ${toKoreanError(e)}`);
@@ -235,6 +239,20 @@ export default function CredentialsPage() {
             )}
           </Card>
         ))}
+        {data.selfChecked.length > 0 && (
+          <Card muted>
+            <h2 className="text-[1rem] font-bold text-ink">{COPY.credentials.selfChecked}</h2>
+            <ul className="mt-1 space-y-0.5 text-[0.95rem]">
+              {data.selfChecked.map((d) => (
+                <li key={d.claim}>
+                  · {d.label}
+                  <span className="ml-1 text-[0.85rem]">({COPY.credentials.localValue(d.value)})</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-[0.85rem]">{COPY.credentials.selfCheckedNote}</p>
+          </Card>
+        )}
         <Notice kind="info">{COPY.credentials.localOnly}</Notice>
         <Button full onClick={startIssue} disabled={!data.hash.ok || !anyIssuable}>
           {COPY.credentials.startIssue}

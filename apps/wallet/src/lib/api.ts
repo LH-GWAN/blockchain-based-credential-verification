@@ -71,7 +71,7 @@ function postJson<T>(url: string, body: unknown): Promise<T> {
   });
 }
 
-// ---------- 발급기관 (대구광역시 :8001 / iM뱅크 :8003) ----------
+// ---------- 발급기관 (대구광역시 :8001 / 사회보장정보원(복지기관) :8003) — 공공기관만 발급, 은행은 검증기관 ----------
 
 export const issuerApi = {
   wellKnown: (base: string) => getJson<IssuerWellKnown>(`${base}/.well-known/issuer`),

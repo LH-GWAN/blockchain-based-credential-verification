@@ -6,6 +6,16 @@ export type ClaimDef = { claim: string; label: string };
 
 export type RequestedClaim = { claim: string; expected: boolean; label?: string };
 
+/** GET /presets 항목. 창구 용도별로 목적·요청 항목·(선택) 정책 판정을 한 번에 채운다. */
+export type Preset = {
+  id: string;
+  label: string;
+  purpose: string;
+  requested: { claim: string; expected: boolean }[];
+  policyId?: string;
+  hint: string;
+};
+
 export type PresentationRequest = {
   type: "dbp-presentation-request";
   requestId: string;
@@ -59,6 +69,9 @@ export type Receipt = {
   error?: string;
 };
 
+/** policyId 를 보낸 요청에만 포함. eligible=null 은 규칙 묶음에 없는 정책. */
+export type PolicyCheck = { policyId: string; eligible: boolean | null };
+
 export type VerificationResult = {
   requestId: string;
   verdict: Verdict;
@@ -75,7 +88,7 @@ export type VerificationResult = {
   holderDidShort: string;
   receipt: Receipt;
   verifiedAt: number;
-  policyCheck?: { policyId: string; eligible: boolean | null };
+  policyCheck?: PolicyCheck;
 };
 
 export type PendingResult = { status: "pending"; requestId: string; exp: number };

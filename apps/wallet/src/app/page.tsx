@@ -13,6 +13,16 @@ import { shortDid } from '@/lib/format';
 import { bytesToHex } from '@/lib/hex';
 import { resetWallet, saveWallet } from '@/lib/store';
 
+/** 한 줄 표어 + 역할 구분 (복지 안내 = 복지멤버십, 창구 증명 = 혜택패스). */
+function Tagline() {
+  return (
+    <>
+      {COPY.tagline}
+      <span className="mt-0.5 block text-[0.85rem] font-semibold text-primary-dark">{COPY.subTagline}</span>
+    </>
+  );
+}
+
 export default function HomePage() {
   const router = useRouter();
   const { loading, wallet, profile, credentials, reload } = useWallet();
@@ -56,7 +66,7 @@ export default function HomePage() {
     const s = profile ? citizenSummary(profile) : null;
     return (
       <div className="space-y-4">
-        <SectionTitle sub={COPY.tagline}>{COPY.home.walletExists}</SectionTitle>
+        <SectionTitle sub={<Tagline />}>{COPY.home.walletExists}</SectionTitle>
         <Card>
           {s ? (
             <p className="text-lg font-bold">
@@ -86,7 +96,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-4">
-      <SectionTitle sub={COPY.tagline}>{COPY.home.title}</SectionTitle>
+      <SectionTitle sub={<Tagline />}>{COPY.home.title}</SectionTitle>
       <Card>
         <label htmlFor="citizen" className="mb-1 block font-semibold">
           {COPY.home.selectLabel}

@@ -1,26 +1,23 @@
-# 시연 실행 기록 (2026-09-14)
+# 시연 실행 기록 (2026-09-14, 아이디어 개정 반영)
 
-`make demo` 상태에서 `make e2e` 로 ①~⑤ 를 자동 재현한 결과와, `make smoke` 헤드리스 통합 결과.
+`make demo` 상태에서 `make e2e` 로 ①~⑤ 를 자동 재현한 결과와 라이브 스택 벤치·PII 스캔 결과.
 
 ## E2E (Playwright, 헤드리스 Chromium, 지갑 390×844 / 검증기관 1280×860)
-- 결과: **통과, 8.5초** (지갑 생성 → 대구광역시·iM뱅크 발급 9장 → AI 추천 3건 → 코드 입력 제출 → 검증 PASS → 폐기 → 재제출 REVOKED → 공격 4종 차단 → 이력 원장 대조 ✓)
-- 스크린샷: `docs/screenshots/01…14`
+- 결과: **통과, 10.6초** — 지갑 생성 → 대구광역시·사회보장정보원(복지기관) 발급(신용평점은 "창구 자체 조회" 항목으로 분리) → 창구 혜택 안내(은행·민간 6건 카드 + 공공 복지 4건 짧게) → 서민금융 상담 프리셋 제출 PASS → **햇살론뱅크 프리셋: 연소득 3,500만 원 이하 1개 항목만 제출 → PASS + 정책 판정 재현 '적격'** → 복지기관에서 소득구간 증명서 폐기 → 재제출 REVOKED → 공격 4종 차단 → 이력 원장 대조 ✓
+- 스크린샷: `docs/screenshots/01…14` (+ `03b` 복지기관 동의, `10b` 햇살론뱅크 결과)
 
-## 헤드리스 통합 (`scripts/smoke_e2e.sh 50`, Hardhat localhost 31337)
+## 라이브 스택 벤치·스캔 (Hardhat localhost 31337)
 | 항목 | 결과 |
 |---|---|
-| 발급 (대구광역시) | daeguResident, incomeBelow50Median 발급 / incomeBelow32Median 거부 (규칙 기준 미충족) |
-| 발급 (iM뱅크) | creditBottom20, annualIncomeUnder35M |
-| 혼합 발급기관 제출 | PASS, 8.8ms |
-| 폐기 후 재제출 | FAIL [REVOKED], 상태목록 v2 |
-| 공격 | replay → NONCE_REUSED · expired → NONCE_EXPIRED · forged → VC_SIG_INVALID+HOLDER_MISMATCH · wrong-holder → HOLDER_MISMATCH |
-| 검증 벤치 50회 | 평균 12.2ms · p50 12.1ms · **p95 13.2ms** · 최대 13.5ms (목표 p95 < 2,000ms) |
-| PII 스캔 | PASS (blocks=10, txs=9, logs=6, findings=0) |
+| 검증 벤치 50회 (대구광역시 + 복지기관 혼합 VC) | 평균 12.4ms · p50 12.4ms · **p95 13.2ms** · 최대 13.9ms (목표 p95 < 2,000ms) |
+| PII 스캔 | PASS (blocks=80, txs=79, logs=76, findings=0) |
+| 개인정보 항목 | 서민금융 상담: 10개 → 2개(80%) · 햇살론뱅크: 10개 → 1개(90%) |
 
-## Besu QBFT 4-validator (chainId 1337, 2초 블록)
-- 배포·시드 성공, 발급 0.7초(블록 대기 포함), 검증 PASS 27.98ms, 제출 영수증 앵커 확인, 폐기 후 REVOKED 15ms, PII 스캔 44블록 findings=0
+## Besu QBFT 4-validator (개정 전 검증, chainId 1337, 2초 블록)
+- 배포·시드 성공, 발급 0.7초(블록 대기 포함), 검증 PASS 27.98ms, 제출 영수증 앵커 확인, 폐기 후 REVOKED 15ms, PII 스캔 44블록 findings=0. 컨트랙트·클라이언트는 개정으로 바뀌지 않았다.
 
 ## 미완료·주의
-- `ANTHROPIC_API_KEY` 미설정 상태로 실행해 AI 설명은 템플릿 제공자(`provider: template`)였다. 키를 넣으면 `claude-opus-5` 구조화 출력 경로가 동작하며 인용 검증기가 동일하게 적용된다.
+- `ANTHROPIC_API_KEY` 미설정 상태라 AI 설명은 템플릿 제공자였다. 키를 넣으면 `claude-opus-5` 경로가 동작하며 "창구 혜택 우선·창구 제출 안내" 규칙과 인용 검증기가 동일하게 적용된다.
 - 고령자 사용성 평가(5명 중 4명 3분 내 완료)는 실시하지 않았다.
-- 카메라 QR 스캔은 구현했으나 카메라 없는 환경이라 검증하지 못했다(6자리 코드 입력으로 대체).
+- 카메라 QR 스캔은 구현했으나 미검증(6자리 코드 입력으로 대체).
+- `next build` 를 개발 서버가 떠 있는 상태에서 실행하면 `.next` 가 덮어써져 개발 서버가 깨진다 → `make demo` 재기동 또는 해당 앱 dev 서버만 재시작.

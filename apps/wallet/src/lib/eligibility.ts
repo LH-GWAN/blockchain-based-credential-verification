@@ -5,7 +5,7 @@
 import { bundleHash, categoricalProfile, evaluateClaims, evaluatePolicies } from '@dbp/rules';
 import type { Json, JsonObject } from '@dbp/rules';
 import citizensJson from '@/generated/citizens.json';
-import { EVAL_DATE, ISSUERS } from './env';
+import { EVAL_DATE, SELF_ISSUER, issuerByDid, issuerName } from './env';
 import type {
   Bundle,
   CategoricalProfile,
@@ -82,27 +82,59 @@ export interface IssuerPlan {
   denied: ClaimDecision[];
 }
 
-/** 발급기관별(대구광역시 → iM뱅크) 발급 가능/불가 목록. issuerOf 에 없는 claim 은 제외. */
+/** 번들 issuerOf 에 등장하는 발급기관 DID (출현 순, 중복 제거). 'self' 는 발급기관이 아니므로 제외. */
+export function issuerDidsInOrder(bundle: Bundle): string[] {
+  const out: string[] = [];
+  for (const did of Object.values(bundle.claims.issuerOf)) {
+    if (did === SELF_ISSUER || out.includes(did)) continue;
+    out.push(did);
+  }
+  return out;
+}
+
+/** 이 claim 은 증명서로 발급되지 않고 창구가 직접 확인한다 (issuerOf === 'self'). */
+export function isSelfChecked(bundle: Bundle, claim: string): boolean {
+  return bundle.claims.issuerOf[claim] === SELF_ISSUER;
+}
+
+/**
+ * 발급기관별(대구광역시 → 사회보장정보원, issuerOf 출현 순) 발급 가능/불가 목록.
+ * issuerOf 에 없는 claim, issuerOf 가 'self' 인 claim, 지갑이 주소를 모르는 발급기관은 제외한다.
+ */
 export function planByIssuer(bundle: Bundle, claims: ClaimMap): IssuerPlan[] {
-  return ISSUERS.map((iss) => {
+  const plans: IssuerPlan[] = [];
+  for (const did of issuerDidsInOrder(bundle)) {
+    const iss = issuerByDid(did);
+    if (!iss) continue;
     const mine = Object.entries(bundle.claims.issuerOf)
-      .filter(([, did]) => did === iss.did)
+      .filter(([, d]) => d === did)
       .map(([claim]) => claim)
       .filter((claim) => claim in claims);
     const decisions = mine.map<ClaimDecision>((claim) => ({
       claim,
       label: claimLabel(bundle, claim),
       value: claims[claim] === true,
-      issuerDid: iss.did,
+      issuerDid: did,
     }));
-    return {
-      did: iss.did,
+    plans.push({
+      did,
       name: iss.name,
       url: iss.url,
       issuable: decisions.filter((d) => d.value),
       denied: decisions.filter((d) => !d.value),
-    };
-  });
+    });
+  }
+  return plans;
+}
+
+/**
+ * 창구가 직접 확인하는 항목 (issuerOf === 'self'). 어떤 발급 요청·동의 화면·증명서 카드에도 들어가지 않으며,
+ * 지갑은 시민 본인의 값으로 사전 판정에만 쓴다 (예: 신용평점 하위 20% — 은행이 자체 조회).
+ */
+export function selfCheckedClaims(bundle: Bundle, claims: ClaimMap): ClaimDecision[] {
+  return Object.entries(bundle.claims.issuerOf)
+    .filter(([claim, did]) => did === SELF_ISSUER && claim in claims)
+    .map(([claim]) => ({ claim, label: claimLabel(bundle, claim), value: claims[claim] === true, issuerDid: SELF_ISSUER }));
 }
 
 export interface HashCheck {
@@ -212,6 +244,7 @@ export interface Holding {
 /**
  * 정책 requiredClaims 대비 보유 증명서. expected=false 항목은 증명서가 존재할 수 없으므로
  * (발급기관은 참인 사실만 발급) 로컬 판정이 거짓이고 참 증명서가 없으면 "해당 없음 확인" 으로 표시한다.
+ * issuerOf 가 'self' 인 항목은 증명서가 아니므로 목록에서 뺀다 (창구가 직접 확인).
  */
 export function credentialHoldings(
   policy: PolicyMeta,
@@ -219,7 +252,7 @@ export function credentialHoldings(
   claims: ClaimMap,
   bundle: Bundle,
 ): Holding[] {
-  return policy.requiredClaims.map((rc) => {
+  return policy.requiredClaims.filter((rc) => !isSelfChecked(bundle, rc.claim)).map((rc) => {
     const label = claimLabel(bundle, rc.claim);
     if (rc.expected) {
       return { claim: rc.claim, expected: true, label, held: credentials.some((c) => c.claim === rc.claim && c.value) };
@@ -276,7 +309,7 @@ export function filterRecommendations(
   recs: readonly Recommendation[],
   index: Record<string, PolicyMeta>,
   eligibleIds: ReadonlySet<string>,
-  limit = 3,
+  limit = Number.POSITIVE_INFINITY,
 ): Recommendation[] {
   const seen = new Set<string>();
   const out: Recommendation[] = [];
@@ -292,26 +325,75 @@ export function filterRecommendations(
   return out;
 }
 
-const CATEGORY_RANK: Record<string, number> = { 복지: 0, 금융: 1, 교통: 2 };
+/** AI 항목이 있으면 그것을, 없으면 템플릿 카드를 쓴다 (정책 하나 = 카드 하나). */
+export function pickRecommendation(policy: PolicyMeta, recs: readonly Recommendation[]): Recommendation {
+  return recs.find((r) => r.policyId === policy.policyId) ?? templateRecommendation(policy);
+}
 
-/** 적격 정책을 템플릿 카드로 채운다 (AI 응답이 비거나 서비스가 없을 때). */
-export function fillWithTemplates(
-  current: readonly Recommendation[],
-  index: Record<string, PolicyMeta>,
-  eligibleIds: ReadonlySet<string>,
-  limit = 3,
-): Recommendation[] {
-  const out = [...current];
-  const have = new Set(out.map((r) => r.policyId));
-  const rest = [...eligibleIds]
-    .filter((id) => !have.has(id) && index[id])
-    .map((id) => index[id] as PolicyMeta)
-    .sort((a, b) => (CATEGORY_RANK[a.category] ?? 3) - (CATEGORY_RANK[b.category] ?? 3) || a.policyId.localeCompare(b.policyId));
-  for (const p of rest) {
-    if (out.length >= limit) break;
-    out.push(templateRecommendation(p));
-  }
-  return out;
+// ---------- 창구 종류별 분류 ----------
+
+export type PolicyChannel = 'welfare' | 'finance' | 'discount' | 'transport';
+
+const CHANNELS: readonly PolicyChannel[] = ['welfare', 'finance', 'discount', 'transport'];
+
+/** 예전 캐시(channel 없는 정책 문서)를 위한 예비: category 로 추정한다. */
+const CHANNEL_BY_CATEGORY: Record<string, PolicyChannel> = { 금융: 'finance', 생활: 'discount', 교통: 'transport' };
+
+export function policyChannel(policy: PolicyMeta): PolicyChannel {
+  const c = policy.channel as PolicyChannel | undefined;
+  if (c && CHANNELS.includes(c)) return c;
+  return CHANNEL_BY_CATEGORY[policy.category] ?? 'welfare';
+}
+
+/** 은행·민간 창구(복지멤버십이 다루지 않는 서민금융·민간 감면) 인지. */
+export function isCounterChannel(policy: PolicyMeta): boolean {
+  const c = policyChannel(policy);
+  return c === 'finance' || c === 'discount';
+}
+
+const COUNTER_RANK: Record<PolicyChannel, number> = { finance: 0, discount: 1, welfare: 2, transport: 3 };
+
+function byChannelThenName(a: PolicyMeta, b: PolicyMeta): number {
+  return COUNTER_RANK[policyChannel(a)] - COUNTER_RANK[policyChannel(b)] || a.name.localeCompare(b.name, 'ko');
+}
+
+export interface EligibleGroups {
+  /** A. 은행·민간 창구 혜택 (finance → discount → 이름순). 혜택패스가 증명서 제출로 돕는 대상. */
+  counter: PolicyMeta[];
+  /** B. 공공 복지·교통 (복지멤버십 안내 대상). 추천이 아니라 판정 결과만 보여준다. */
+  welfare: PolicyMeta[];
+}
+
+/** 규칙 엔진이 적격으로 판정한 정책을 창구 종류별로 나눈다. 판정은 eligibleIds(규칙 엔진) 가 전부 정한다. */
+export function groupEligibleByChannel(index: Record<string, PolicyMeta>, eligibleIds: ReadonlySet<string>): EligibleGroups {
+  const eligible = [...eligibleIds]
+    .map((id) => index[id])
+    .filter((p): p is PolicyMeta => p !== undefined)
+    .sort(byChannelThenName);
+  return {
+    counter: eligible.filter(isCounterChannel),
+    welfare: eligible.filter((p) => !isCounterChannel(p)),
+  };
+}
+
+export interface SubmitDocument {
+  claim: string;
+  label: string;
+  issuerDid: string;
+  issuerName: string;
+}
+
+/**
+ * 창구에 제출할 증명서 = 정책 requiredClaims 중 expected=true 이고 발급기관이 있는 것.
+ * 'self' 항목(창구 자체 조회)과 expected=false 항목(증명서 불필요)은 제외한다.
+ */
+export function submitDocuments(bundle: Bundle, policy: PolicyMeta): SubmitDocument[] {
+  return policy.requiredClaims
+    .filter((rc) => rc.expected && !isSelfChecked(bundle, rc.claim))
+    .map((rc) => {
+      const issuerDid = bundle.claims.issuerOf[rc.claim] ?? '';
+      return { claim: rc.claim, label: claimLabel(bundle, rc.claim), issuerDid, issuerName: issuerName(issuerDid) };
+    });
 }
 
 // ---------- 한국어 조사 ----------

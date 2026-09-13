@@ -1,11 +1,15 @@
 /** 화면에 노출되는 한국어 문구. 전문용어 금지(§12.1): VC→자격 증명서, VP→제출, nonce→1회용 확인번호. */
-import type { AttackKind, CheckKey, TimingPart } from "./types";
+import type { AttackKind, CheckKey, Preset, TimingPart } from "./types";
+
+/** 원장에 등록된 판정 규칙 버전. 헤더 배지·정책 판정 카드에 표시한다. */
+export const RULES_VERSION = "v2026.1";
 
 export const HEADER = {
   title: "검증기관 화면",
   subtitle: "발급기관에 직접 조회하지 않습니다 · 공동원장만 확인",
+  tagline: "소득금액증명 원본 대신 참/거짓 항목만 받습니다",
   badgeLedger: "검증: 공동원장",
-  badgeRules: "판정 규칙: v2026.1",
+  badgeRules: `판정 규칙: ${RULES_VERSION}`,
   product: "대구 혜택패스",
 } as const;
 
@@ -34,12 +38,16 @@ export const ERRORS = {
 
 export const REQUEST = {
   title: "검증 요청 만들기",
-  lead: "기관·목적·요청 항목을 정하면 1회용 확인번호가 담긴 QR 이 만들어집니다. 시민 지갑은 참/거짓 항목만 서명해 제출합니다.",
-  verifier: "기관명",
-  purpose: "목적",
+  lead: "창구(기관)·용도·요청 항목을 정하면 1회용 확인번호가 담긴 QR 이 만들어집니다. 시민 지갑은 소득 금액 대신 참/거짓 항목만 서명해 제출합니다.",
+  verifier: "창구(기관)",
+  presets: "용도 프리셋",
+  presetsLead: "프리셋을 누르면 용도·요청 항목·정책 판정이 한 번에 채워집니다. 이후 직접 바꿔도 됩니다.",
+  presetCustom: "직접 설정 중 — 정책 판정 없이 요청 항목의 참/거짓만 확인합니다.",
+  presetPolicy: "정책 판정",
+  purpose: "용도",
   purposeDefault: "서민금융 상담 대상 확인",
   claims: "요청 항목",
-  claimsHint: "체크한 항목의 '충족 여부(참)'만 요청합니다.",
+  claimsHint: "체크한 항목의 '충족 여부(참)'만 요청합니다. 항목을 바꾸면 프리셋 선택이 해제됩니다.",
   submit: "요청 QR 만들기",
   creating: "요청 생성 중…",
   needOne: "요청 항목을 하나 이상 선택하세요",
@@ -54,9 +62,80 @@ export const REQUEST = {
   requestedItems: "요청 항목",
   notRequested: "요청하지 않는 정보: 이름 · 주민등록번호 · 주소 · 소득 금액 · 계좌 정보",
   requestId: "요청 ID",
-  verifierLabel: "기관",
-  purposeLabel: "목적",
+  verifierLabel: "창구(기관)",
+  purposeLabel: "용도",
 } as const;
+
+/**
+ * GET /presets 가 실패했을 때 쓰는 내장 사본. services/verifier 의 프리셋과 동일하게 유지한다.
+ * 은행·저축은행 창구에서 실제로 쓰이는 네 가지 용도만 둔다.
+ */
+export const PRESETS_FALLBACK: readonly Preset[] = [
+  {
+    id: "consult",
+    label: "서민금융 상담 대상 확인",
+    purpose: "서민금융 상담 대상 확인",
+    requested: [
+      { claim: "daeguResident", expected: true },
+      { claim: "incomeBelow50Median", expected: true },
+    ],
+    hint: "상담 접수 단계에서는 거주·소득구간 참/거짓 2개 항목만 받습니다 — 소득 금액은 보지 않습니다.",
+  },
+  {
+    id: "sunshine-bank",
+    label: "햇살론뱅크 대상 확인",
+    purpose: "햇살론뱅크 대상 확인",
+    requested: [{ claim: "annualIncomeUnder35M", expected: true }],
+    policyId: "sunshine-loan-bank",
+    hint: "신용평점은 은행이 자체 조회합니다 — 소득금액증명 원본 대신 참/거짓 1개 항목만 받습니다.",
+  },
+  {
+    id: "new-hope",
+    label: "새희망홀씨 대상 확인",
+    purpose: "새희망홀씨 대상 확인",
+    requested: [{ claim: "annualIncomeUnder35M", expected: true }],
+    policyId: "new-hope-loan",
+    hint: "재직·연체 이력은 은행 심사 항목입니다 — 소득금액증명 원본 대신 참/거짓 1개 항목만 받습니다.",
+  },
+  {
+    id: "discount",
+    label: "수급자·차상위 감면 대상 확인",
+    purpose: "수급자·차상위 감면 대상 확인",
+    requested: [{ claim: "incomeBelow50Median", expected: true }],
+    hint: "수급자 증명서 원본 대신 소득구간 참/거짓 1개 항목만 받습니다 — 급여 종류·금액은 받지 않습니다.",
+  },
+];
+
+/** 창구 종류(kind) → 문구. 검증기관은 금융 창구뿐이다. 모르는 종류는 '금융기관'. */
+export const VERIFIER_KIND_LABELS: Record<string, string> = {
+  bank: "은행",
+  savings: "저축은행",
+};
+
+export function verifierKindLabel(kind: string | null | undefined): string {
+  return (kind && VERIFIER_KIND_LABELS[kind]) || "금융기관";
+}
+
+/** 정책 ID → 이름. data/policies/*.json 의 name 과 동일. */
+export const POLICY_LABELS: Record<string, string> = {
+  "sunshine-loan-bank": "햇살론뱅크",
+  "new-hope-loan": "새희망홀씨",
+  "micro-livelihood-loan": "소액생계비대출",
+  "nbl-livelihood": "생계급여",
+  "nbl-housing": "주거급여",
+  "nbl-education": "교육급여",
+  "near-poor": "차상위계층 확인",
+  "basic-pension": "기초연금",
+  "energy-voucher": "에너지바우처",
+  "telecom-discount": "통신요금 감면",
+  "daegu-metro-free": "대구 어르신 통합무임 교통카드",
+  "electricity-welfare-discount": "전기요금 복지할인",
+  "city-gas-discount": "도시가스 요금 경감",
+};
+
+export function policyLabel(policyId: string): string {
+  return POLICY_LABELS[policyId] ?? policyId;
+}
 
 export const RESULT = {
   pass: "자격 충족",
@@ -65,7 +144,7 @@ export const RESULT = {
   pendingHint: "시민 지갑이 제출하면 이 화면이 자동으로 갱신됩니다.",
   pendingExpired: "제출 없이 요청이 만료되었습니다",
   verifier: "검증기관",
-  purpose: "목적",
+  purpose: "용도",
   issuer: "발급기관",
   status: "상태",
   holder: "제출자",
@@ -98,9 +177,11 @@ export const RESULT = {
   credId: "증명서 ID",
   credChecks: "확인",
   dataNote: (n: number) => `기관이 받은 것: 참/거짓 항목 ${n}개 + 발급기관 + 유효상태. 이름·소득 금액·주민번호는 받지 않았습니다.`,
-  policyCheck: "정책 판정",
+  policyCheck: "정책 판정 재현",
+  policyRuleNote: `규칙 ${RULES_VERSION}, 제출된 항목만으로 계산`,
   eligible: "적격",
   ineligible: "부적격",
+  undetermined: "판정 불가",
   newRequest: "새 요청",
   toAttack: "공격 시연으로",
   copy: "복사",

@@ -4,7 +4,8 @@
  */
 export const COPY = {
   appName: '대구 혜택패스',
-  tagline: 'AI가 받을 혜택을 찾고, 블록체인이 자격만 증명합니다',
+  tagline: '공공이 판정한 자격을 은행 창구에서 소득 노출 없이 증명합니다',
+  subTagline: '복지 안내는 복지멤버십이, 창구 증명은 혜택패스가',
   syntheticNotice: '이 앱의 시민 정보는 모두 가명·합성 데이터입니다.',
 
   steps: ['1/3 증명서 받기', '2/3 혜택 찾기', '3/3 제출하기'] as const,
@@ -33,6 +34,9 @@ export const COPY = {
     hashBadDetail: '발급기관이 알린 규칙 해시와 내 휴대폰에서 계산한 해시가 다릅니다. 발급을 진행할 수 없습니다.',
     issuable: '발급 가능',
     denied: '발급 불가',
+    selfChecked: '창구가 직접 확인하는 항목 (증명서 불필요)',
+    selfCheckedNote: '이 항목은 증명서로 발급되지 않습니다. 지갑은 내 휴대폰 안의 값으로 사전 판정에만 쓰고, 창구가 직접 조회합니다.',
+    localValue: (yes: boolean) => `내 휴대폰 사전 판정: ${yes ? '예' : '아니오'}`,
     deniedReason: (label: string) => `규칙 기준 미충족 — ${label}`,
     startIssue: '증명서 받기',
     consentTitle: (issuerName: string) => `${issuerName}에 다음 증명서 발급을 요청합니다`,
@@ -52,9 +56,21 @@ export const COPY = {
   },
 
   benefits: {
-    title: 'AI 혜택 추천',
-    eligibleNow: '지금 신청 가능한 혜택',
+    title: '창구 혜택 안내',
+    subtitle: 'AI 설명 · 판정은 규칙 엔진',
+    counterSection: '은행·민간 창구 혜택 (복지멤버십에 없음)',
+    counterNote: '복지멤버십이 안내하지 않는 서민금융·민간 감면입니다. 창구에는 아래 증명서만 제출하고 소득 금액은 보여주지 않습니다.',
+    welfareSection: '공공 복지 (복지멤버십 안내 대상)',
+    welfareBadge: '복지멤버십에서 안내',
+    welfareNote: '공공 복지 신청·안내는 복지멤버십(복지로)이 맡습니다. 여기서는 규칙 엔진 판정 결과만 보여드립니다.',
     notEligible: '지금은 해당되지 않는 혜택',
+    submitDocs: '창구에 제출할 증명서: ',
+    verifierHint: '창구 안내: ',
+    goPresent: '제출하러 가기',
+    explanation: '설명 · 근거 조항',
+    noCounter: '지금 제출할 수 있는 창구 혜택이 없습니다.',
+    noWelfare: '해당되는 공공 복지가 없습니다.',
+    aiPreparing: 'AI 설명을 준비하는 중…',
     legalBasis: '근거 조항',
     howToApply: '신청 방법',
     nextSteps: '다음 단계',
@@ -72,7 +88,6 @@ export const COPY = {
     chatSend: '보내기',
     chatNote: '상담 내용은 이 화면을 닫으면 사라집니다.',
     failingPrefix: '미충족: ',
-    noEligible: '지금 신청 가능한 혜택이 없습니다.',
     needCredentials: '증명서를 먼저 받아야 합니다.',
   },
 

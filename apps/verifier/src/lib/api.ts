@@ -8,6 +8,7 @@ import type {
   ClaimDef,
   Health,
   PresentationRequest,
+  Preset,
   ResultResponse,
   VerificationResult,
   VerifierProfile,
@@ -72,19 +73,29 @@ async function call<T>(path: string, init: { method?: "GET" | "POST"; body?: Jso
   return (await res.json()) as T;
 }
 
+/** POST /requests 본문. policyId 는 정책 판정이 있는 프리셋이 활성일 때만 보낸다. */
+export type CreateRequestBody = {
+  verifierId: string;
+  purpose: string;
+  requested: { claim: string; expected: boolean }[];
+  policyId?: string;
+};
+
 export const api = {
   /** GET /health → { ok, ledgerConnected } */
   health: () => call<Health>("/health", { timeoutMs: 3000 }),
 
-  /** GET /verifiers → 기관 프로필 목록 */
+  /** GET /verifiers → 창구(기관) 프로필 목록 */
   verifiers: () => call<VerifierProfile[]>("/verifiers"),
 
   /** GET /claims → 요청 가능한 항목(claim, label) */
   claims: () => call<ClaimDef[]>("/claims"),
 
+  /** GET /presets → 용도 프리셋 목록. 실패하면 화면은 copy.ts 의 내장 사본을 쓴다. */
+  presets: () => call<Preset[]>("/presets"),
+
   /** POST /requests → QR 페이로드(+ qrText) */
-  createRequest: (body: { verifierId: string; purpose: string; requested: { claim: string; expected: boolean }[] }) =>
-    call<PresentationRequest>("/requests", { method: "POST", body }),
+  createRequest: (body: CreateRequestBody) => call<PresentationRequest>("/requests", { method: "POST", body }),
 
   /** GET /requests/{id|shortCode} */
   getRequest: (idOrCode: string) => call<Omit<PresentationRequest, "qrText">>(`/requests/${encodeURIComponent(idOrCode)}`),

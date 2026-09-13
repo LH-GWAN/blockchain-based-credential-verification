@@ -22,6 +22,7 @@ export function Header() {
                 {HEADER.title}
                 <span className="font-medium text-muted"> — {HEADER.subtitle}</span>
               </span>
+              <span className="text-sm font-medium text-muted">{HEADER.tagline}</span>
             </span>
           </Link>
         </div>
