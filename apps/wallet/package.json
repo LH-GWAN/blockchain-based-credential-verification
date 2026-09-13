@@ -1,0 +1,47 @@
+{
+  "name": "@dbp/wallet",
+  "version": "0.1.0",
+  "private": true,
+  "description": "대구 혜택패스 — 시민 혜택지갑 PWA (Next.js App Router, 모바일 우선)",
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/sync-data.mjs",
+    "dev": "next dev",
+    "prebuild": "node scripts/sync-data.mjs",
+    "build": "next build",
+    "start": "next start",
+    "pretest": "node scripts/sync-data.mjs",
+    "test": "vitest run",
+    "prelint": "node scripts/sync-data.mjs",
+    "lint": "eslint .",
+    "pretypecheck": "node scripts/sync-data.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "icons": "node scripts/gen-icons.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@dbp/rules": "workspace:*",
+    "@dbp/vc": "workspace:*",
+    "html5-qrcode": "2.3.8",
+    "idb-keyval": "6.3.0",
+    "next": "15.5.25",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "viem": "2.56.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "3.3.1",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "26.5.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "15.5.25",
+    "postcss": "8.5.28",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vitest": "5.0.0"
+  }
+}

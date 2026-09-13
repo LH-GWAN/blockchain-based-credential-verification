@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* 고령자·취약계층 우선 (프롬프트 §12.1): 본문 18px 이상, 버튼 48px 이상, WCAG AA 대비 */
+@theme {
+  --color-primary: #1d4ed8;        /* 흰 글자 대비 6.3:1 */
+  --color-primary-dark: #1e40af;
+  --color-primary-soft: #dbeafe;
+  --color-ink: #111827;
+  --color-muted: #4b5563;          /* 흰 배경 대비 7.5:1 */
+  --color-line: #d1d5db;
+  --color-surface: #ffffff;
+  --color-canvas: #f3f4f6;
+  --color-ok: #15803d;
+  --color-ok-soft: #dcfce7;
+  --color-warn: #b45309;
+  --color-warn-soft: #fef3c7;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fee2e2;
+  --font-sans: "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Pretendard", system-ui, -apple-system, sans-serif;
+}
+
+html {
+  font-size: 18px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+/* 키보드 포커스는 항상 보이게 */
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+pre.json {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-all;
+}

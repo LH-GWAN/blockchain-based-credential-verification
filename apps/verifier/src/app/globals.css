@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+/* 검증기관 화면 — 차분한 기관 톤(짙은 보라). 시민 지갑(청록)과 구분한다. */
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    "Noto Sans KR", "Malgun Gothic", "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --color-canvas: #f6f5fa;
+  --color-surface: #ffffff;
+  --color-surface-2: #faf9fd;
+  --color-ink: #1c1a2e;
+  --color-muted: #5b5876;
+  --color-line: #dedbe9;
+
+  --color-accent: #4c1d95;
+  --color-accent-strong: #3b1578;
+  --color-accent-soft: #ede9fe;
+  --color-accent-ring: #8b5cf6;
+
+  --color-pass: #15803d;
+  --color-pass-soft: #dcfce7;
+  --color-fail: #b91c1c;
+  --color-fail-soft: #fee2e2;
+  --color-warn: #b45309;
+  --color-warn-soft: #fef3c7;
+}
+
+/* §12.1: 본문 18px 이상. rem 기반 유틸리티가 함께 커진다. */
+html {
+  font-size: 18px;
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-surface p-6 shadow-sm;
+  }
+  .btn {
+    @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-6 text-lg font-semibold no-underline transition select-none;
+    @apply focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent-ring/40;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-accent text-white hover:bg-accent-strong;
+  }
+  .btn-secondary {
+    @apply border-2 border-accent bg-surface text-accent hover:bg-accent-soft;
+  }
+  .btn-ghost {
+    @apply border border-line bg-surface text-ink hover:bg-surface-2;
+  }
+  .btn-xl {
+    @apply min-h-16 rounded-2xl px-8 text-xl;
+  }
+  .field {
+    @apply min-h-12 w-full rounded-xl border border-line bg-surface px-4 text-lg text-ink;
+    @apply focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent-ring/30;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-sm font-medium text-muted whitespace-nowrap;
+  }
+  .kicker {
+    @apply text-sm font-semibold tracking-wide text-muted uppercase;
+  }
+  .mono {
+    @apply font-mono break-all;
+  }
+}
