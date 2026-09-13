@@ -77,7 +77,7 @@ def main() -> int:
         "| 항목 | 기준 | 결과 | 상태 |", "|---|---|---|---|",
         f"| 판정 정확성 | 합성 시민 {exp['citizenCount']}명 × 정책 {exp['policyCount']}개 = {exp['verdictCount']}건 100% 일치 | Python/TS 엔진 모두 기댓값과 일치 (pytest·vitest 포함) | {mark(py.get('ok') and ts_rules.get('ok'))} |",
         f"| 엔진 동등성 | TS/Py 번들 해시 동일 | vitest 해시 검증 | {mark(ts_rules.get('ok'))} |",
-        f"| 개인정보 최소화 | 기관 전달 항목 ≥70% 감소 | {pii.get('legacyCount')}개 → {pii.get('benefitPassCount')}개 ({pii.get('reductionPercent')}% 감소) | {mark(pii.get('pass'))} |",
+        f"| 개인정보 최소화 | 기관 전달 항목 ≥70% 감소 | " + " · ".join(f"{k}: {pii.get('legacyCount')}개 → {v['benefitPassCount']}개 ({v['reductionPercent']}% 감소)" for k, v in (pii.get('scenarios') or {}).items()) + f" | {mark(pii.get('pass'))} |",
         f"| 보안 | 위조·만료·폐기·재사용·타인 증명서·비활성 발급기관 차단 | services/verifier 테스트 | {mark(py.get('ok'))} |",
         f"| AI 신뢰성·PII 차단 | 인용 검증, 환각 프로브, 페이로드 allowlist | services/ai 테스트 | {mark(py.get('ok'))} |",
         f"| 검증 성능 | p95 < 2,000ms | {('p95 ' + str(bench.get('p95Ms')) + 'ms, 평균 ' + str(bench.get('meanMs')) + 'ms (' + str(bench.get('runs')) + '회)') if bench else '미측정 (scripts/bench_verify.py 실행 필요)'} | {mark(bench and bench.get('p95Ms', 9999) < 2000)} |",

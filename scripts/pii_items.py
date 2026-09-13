@@ -32,28 +32,45 @@ def items_in_vp(vp_jwt: str) -> tuple[list[str], list[str]]:
     return personal, meta
 
 
-def example_vp() -> str:
+SCENARIOS = {
+    "서민금융 상담 대상 확인": [("did:dbp:daegu", "daeguResident"), ("did:dbp:welfare", "incomeBelow50Median")],
+    "햇살론뱅크 대상 확인": [("did:dbp:welfare", "annualIncomeUnder35M")],
+}
+
+
+def example_vp(claims: list[tuple[str, str]]) -> str:
     from dbp_vc import create_vp, generate_holder_key, issue_vc
-    issuer = generate_holder_key(bytes([1]) * 32)
     holder = generate_holder_key(bytes([2]) * 32)
-    vcs = [issue_vc(id=f"urn:uuid:demo-{c}", issuer_did="did:dbp:daegu", issuer_kid="did:dbp:daegu#key-1",
-                    issuer_private_key=issuer.private_key, holder_did=holder.did, claim={"name": c, "value": True},
-                    valid_from="2026-09-01T00:00:00Z", valid_until="2027-09-14T00:00:00Z",
-                    status={"listId": "dbp:status:daegu:list-1", "index": i},
-                    evidence={"bundle": "daegu-eligibility", "version": "2026.1", "bundleHash": "0x" + "00" * 32})
-           for i, c in enumerate(["daeguResident", "incomeBelow50Median"])]
+    vcs = []
+    for i, (issuer_did, c) in enumerate(claims):
+        issuer = generate_holder_key(bytes([1 if issuer_did.endswith("daegu") else 3]) * 32)
+        vcs.append(issue_vc(id=f"urn:uuid:demo-{c}", issuer_did=issuer_did, issuer_kid=issuer_did + "#key-1",
+                            issuer_private_key=issuer.private_key, holder_did=holder.did, claim={"name": c, "value": True},
+                            valid_from="2026-09-01T00:00:00Z", valid_until="2027-09-14T00:00:00Z",
+                            status={"listId": f"dbp:status:{issuer_did.split(':')[-1]}:list-1", "index": i},
+                            evidence={"bundle": "daegu-eligibility", "version": "2026.1", "bundleHash": "0x" + "00" * 32}))
     return create_vp(holder_did=holder.did, holder_private_key=holder.private_key,
                      verifier_did="did:dbp:verifier-imbank-branch-01", nonce="n_demo", vc_jwts=vcs)
 
 
-def main() -> int:
-    vp = sys.argv[1] if len(sys.argv) > 1 else example_vp()
+def measure(vp: str) -> dict:
     personal, meta = items_in_vp(vp)
     reduction = round((1 - len(personal) / len(LEGACY_ITEMS)) * 100)
-    report = {"legacyPersonalItems": LEGACY_ITEMS, "legacyCount": len(LEGACY_ITEMS),
-              "benefitPassPersonalItems": personal, "benefitPassCount": len(personal),
-              "credentialMetadata(not personal data)": meta,
-              "reductionPercent": reduction, "target": ">=70%", "pass": reduction >= 70}
+    return {"benefitPassPersonalItems": personal, "benefitPassCount": len(personal),
+            "credentialMetadata(not personal data)": meta, "reductionPercent": reduction, "pass": reduction >= 70}
+
+
+def main() -> int:
+    if len(sys.argv) > 1:
+        scenarios = {"(제공된 VP)": measure(sys.argv[1])}
+    else:
+        scenarios = {name: measure(example_vp(claims)) for name, claims in SCENARIOS.items()}
+    first = next(iter(scenarios.values()))
+    report = {"legacyPersonalItems": LEGACY_ITEMS, "legacyCount": len(LEGACY_ITEMS), "target": ">=70%",
+              "scenarios": scenarios,
+              # 하위 호환 (리포트 생성기): 대표 시나리오 = 서민금융 상담(2항목)
+              "benefitPassPersonalItems": first["benefitPassPersonalItems"], "benefitPassCount": first["benefitPassCount"],
+              "reductionPercent": first["reductionPercent"], "pass": all(s["pass"] for s in scenarios.values())}
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if report["pass"] else 1
 

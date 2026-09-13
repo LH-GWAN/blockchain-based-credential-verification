@@ -19,9 +19,9 @@ PRESETS = [
     {"id": "new-hope", "label": "새희망홀씨 대상 확인", "purpose": "새희망홀씨 대상 확인",
      "requested": [{"claim": "annualIncomeUnder35M", "expected": True}], "policyId": "new-hope-loan",
      "hint": "소득금액증명 원본 대신 '연소득 3,500만 원 이하 = 참' 1개 항목만 받습니다. 신용평점은 은행이 자체 조회합니다."},
-    {"id": "discount", "label": "수급자·차상위 감면 대상 확인", "purpose": "수급자·차상위 감면 대상 확인",
+    {"id": "discount", "label": "공공요금 감면 대상 확인", "purpose": "공공요금 감면 대상 확인",
      "requested": [{"claim": "incomeBelow50Median", "expected": True}], "policyId": None,
-     "hint": "수급자증명서 원본 대신 '기준 중위소득 50% 이하 = 참' 1개 항목만 받습니다."},
+     "hint": "전기·도시가스·통신 요금 감면 창구가 수급자증명서 원본 대신 '기준 중위소득 50% 이하 = 참' 1개 항목만 받습니다."},
 ]
 REASON_KO = {
     "AUD_MISMATCH": "다른 기관에 제출된 증명입니다",

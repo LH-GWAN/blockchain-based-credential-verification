@@ -99,8 +99,8 @@ export const PRESETS_FALLBACK: readonly Preset[] = [
   },
   {
     id: "discount",
-    label: "수급자·차상위 감면 대상 확인",
-    purpose: "수급자·차상위 감면 대상 확인",
+    label: "공공요금 감면 대상 확인",
+    purpose: "공공요금 감면 대상 확인",
     requested: [{ claim: "incomeBelow50Median", expected: true }],
     hint: "수급자 증명서 원본 대신 소득구간 참/거짓 1개 항목만 받습니다 — 급여 종류·금액은 받지 않습니다.",
   },
