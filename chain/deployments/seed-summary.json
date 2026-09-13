@@ -1,0 +1,39 @@
+{
+  "rpc": "http://127.0.0.1:8546",
+  "chainId": 1337,
+  "bundleHash": "0x0d3e9975565229a6cd3cb494b595dd7ec66650fb17b2f7b2f2694ce982159466",
+  "issuers": {
+    "did:dbp:daegu": {
+      "name": "대구광역시",
+      "controller": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+      "ed25519PublicKeyHex": "9c0598a768768af2ccb82b22ffe4eb02bd30a206c664a11598cb0e6959759d9c"
+    },
+    "did:dbp:imbank": {
+      "name": "iM뱅크",
+      "controller": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+      "ed25519PublicKeyHex": "9c5b26946ab39180cd737a93f25f166264e065d26d0840c1de22361e0d9204d7"
+    }
+  },
+  "txs": [
+    {
+      "registerIssuer": "did:dbp:daegu",
+      "tx": "0xde0f95032c9b87b2497265b5f65f2ca2aa34b94a88f961b9ee4eacd5f6d8564a"
+    },
+    {
+      "registerIssuer": "did:dbp:imbank",
+      "tx": "0x925c55ff1da372cb1816b3a2757bdb1e1a5f7145e913ed19611cac05090703ec"
+    },
+    {
+      "registerBundle": "daegu-eligibility@2026.1",
+      "tx": "0xd6d862908ed589fe149861ad5ef1934fff6a15f8352733a64db300f36485a6e6"
+    },
+    {
+      "publishStatusList": "dbp:status:daegu:list-1",
+      "tx": "0x9987a4778d0586241da6f5c7c5e6c04a129c870f81ba79ae8bf93747d9afb3c4"
+    },
+    {
+      "publishStatusList": "dbp:status:imbank:list-1",
+      "tx": "0xef7c035570e53bb5240b6b556aca771cee1e158f8e3ba44584997f37db1d0ebf"
+    }
+  ]
+}

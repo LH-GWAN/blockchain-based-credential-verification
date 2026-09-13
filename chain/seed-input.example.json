@@ -1,0 +1,30 @@
+{
+  "$comment": "로컬 데모용 예시. 개인키는 Hardhat 기본 계정 #1/#2(공개된 테스트 키). Ed25519 공개키·번들/스키마 해시는 자리표시자이며 실제 값은 packages/vc(ISSUER_ED25519_SEED)와 packages/rules(sha256(JCS(bundle)))에서 생성해 chain/seed-input.json 으로 덮어쓴다. encodedListBase64url 이 빈 문자열이면 131,072비트 빈 목록(gzip+base64url)을 스크립트가 계산한다.",
+  "issuers": [
+    {
+      "did": "did:dbp:daegu",
+      "name": "대구광역시",
+      "ed25519PubKeyHex": "0xa1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "controllerPrivateKey": "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+    },
+    {
+      "did": "did:dbp:imbank",
+      "name": "iM뱅크",
+      "ed25519PubKeyHex": "0xb2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "controllerPrivateKey": "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
+    }
+  ],
+  "bundles": [
+    {
+      "issuerDid": "did:dbp:daegu",
+      "bundle": "daegu-eligibility",
+      "version": "2026.1",
+      "bundleHash": "0xc3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+      "schemaHash": "0xd4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4"
+    }
+  ],
+  "statusLists": [
+    { "issuerDid": "did:dbp:daegu", "listId": "dbp:status:daegu:list-1", "encodedListBase64url": "", "version": 1 },
+    { "issuerDid": "did:dbp:imbank", "listId": "dbp:status:imbank:list-1", "encodedListBase64url": "", "version": 1 }
+  ]
+}

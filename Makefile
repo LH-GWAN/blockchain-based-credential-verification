@@ -7,6 +7,7 @@ help: ## 명령 목록
 setup: ## 의존성 설치 (pnpm + uv)
 	pnpm install
 	uv sync --all-packages
+	./scripts/fix_venv.sh
 
 build: ## TS 패키지 빌드 + 컨트랙트 컴파일
 	pnpm -r --filter './packages/**' build

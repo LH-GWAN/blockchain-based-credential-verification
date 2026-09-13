@@ -4,3 +4,6 @@ packages:
   - "chain"
 allowBuilds:
   esbuild: true  # hardhat 3 → tsx → esbuild postinstall (바이너리 검증만 수행)
+  unrs-resolver: true  # next/eslint 의존성 (네이티브 바이너리)
+  sharp: true
+  '@tailwindcss/oxide': true

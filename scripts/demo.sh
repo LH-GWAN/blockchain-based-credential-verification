@@ -5,6 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 export RULE_EVAL_DATE="${RULE_EVAL_DATE:-2026-09-14}"
 export RPC_URL="${RPC_URL:-http://127.0.0.1:8545}"
+./scripts/fix_venv.sh
 mkdir -p .demo
 PIDS=()
 cleanup() { echo; echo "[demo] 종료 중…"; for p in "${PIDS[@]:-}"; do kill "$p" 2>/dev/null || true; done; }

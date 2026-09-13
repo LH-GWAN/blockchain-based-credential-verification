@@ -1,0 +1,122 @@
+# Hyperledger Besu QBFT 4-validator 로컬 네트워크 (chainId 1337, 가스가격 0)
+# *** UNTESTED: 작성 환경에 docker 데몬이 없어 실행 검증을 하지 못했다. README.md 참고. ***
+#
+# 사전 준비:  cd chain && pnpm besu:keys   (keys/, genesis.json, static-nodes.json 생성)
+# 시작/중지:  docker compose up -d  /  docker compose down
+# RPC:        http://127.0.0.1:8545 (validator1)  →  RPC_URL 로 지정하면 서비스가 그대로 전환된다.
+#
+# 검증자 간 피어링은 discovery 대신 고정 IP 의 static-nodes.json 으로 맺는다(부트노드 불필요).
+
+x-besu: &besu
+  image: hyperledger/besu:latest
+  platform: linux/arm64
+  restart: unless-stopped
+  environment:
+    - BESU_LOGGING=INFO
+  volumes:
+    - ./genesis.json:/config/genesis.json:ro
+    - ./keys:/config/keys:ro
+    - ./static-nodes.json:/config/static-nodes.json:ro
+
+services:
+  validator1:
+    <<: *besu
+    container_name: dbp-besu-validator1
+    command: >
+      --data-path=/data
+      --genesis-file=/config/genesis.json
+      --node-private-key-file=/config/keys/validator1/key
+      --static-nodes-file=/config/static-nodes.json
+      --discovery-enabled=false
+      --p2p-host=172.16.239.11
+      --p2p-port=30303
+      --min-gas-price=0
+      --rpc-http-enabled
+      --rpc-http-host=0.0.0.0
+      --rpc-http-port=8545
+      --rpc-http-api=ETH,NET,WEB3,QBFT,TXPOOL
+      --rpc-http-cors-origins=all
+      --host-allowlist=*
+    volumes:
+      - ./genesis.json:/config/genesis.json:ro
+      - ./keys:/config/keys:ro
+      - ./static-nodes.json:/config/static-nodes.json:ro
+      - ./data/validator1:/data
+    ports:
+      - "${BESU_RPC_PORT:-8545}:8545"
+    networks:
+      besu:
+        ipv4_address: 172.16.239.11
+
+  validator2:
+    <<: *besu
+    container_name: dbp-besu-validator2
+    command: >
+      --data-path=/data
+      --genesis-file=/config/genesis.json
+      --node-private-key-file=/config/keys/validator2/key
+      --static-nodes-file=/config/static-nodes.json
+      --discovery-enabled=false
+      --p2p-host=172.16.239.12
+      --p2p-port=30303
+      --min-gas-price=0
+      --host-allowlist=*
+    volumes:
+      - ./genesis.json:/config/genesis.json:ro
+      - ./keys:/config/keys:ro
+      - ./static-nodes.json:/config/static-nodes.json:ro
+      - ./data/validator2:/data
+    networks:
+      besu:
+        ipv4_address: 172.16.239.12
+
+  validator3:
+    <<: *besu
+    container_name: dbp-besu-validator3
+    command: >
+      --data-path=/data
+      --genesis-file=/config/genesis.json
+      --node-private-key-file=/config/keys/validator3/key
+      --static-nodes-file=/config/static-nodes.json
+      --discovery-enabled=false
+      --p2p-host=172.16.239.13
+      --p2p-port=30303
+      --min-gas-price=0
+      --host-allowlist=*
+    volumes:
+      - ./genesis.json:/config/genesis.json:ro
+      - ./keys:/config/keys:ro
+      - ./static-nodes.json:/config/static-nodes.json:ro
+      - ./data/validator3:/data
+    networks:
+      besu:
+        ipv4_address: 172.16.239.13
+
+  validator4:
+    <<: *besu
+    container_name: dbp-besu-validator4
+    command: >
+      --data-path=/data
+      --genesis-file=/config/genesis.json
+      --node-private-key-file=/config/keys/validator4/key
+      --static-nodes-file=/config/static-nodes.json
+      --discovery-enabled=false
+      --p2p-host=172.16.239.14
+      --p2p-port=30303
+      --min-gas-price=0
+      --host-allowlist=*
+    volumes:
+      - ./genesis.json:/config/genesis.json:ro
+      - ./keys:/config/keys:ro
+      - ./static-nodes.json:/config/static-nodes.json:ro
+      - ./data/validator4:/data
+    networks:
+      besu:
+        ipv4_address: 172.16.239.14
+
+networks:
+  besu:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.239.0/24
