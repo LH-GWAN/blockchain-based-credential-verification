@@ -1,0 +1,46 @@
+{
+  "jwt": "eyJhbGciOiJFZERTQSIsInR5cCI6InZjK2p3dCIsImtpZCI6ImRpZDpkYnA6ZGFlZ3Uja2V5LTEifQ.eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiXSwiaWQiOiJ1cm46dXVpZDowMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJ0eXBlIjpbIlZlcmlmaWFibGVDcmVkZW50aWFsIiwiRGFlZ3VFbGlnaWJpbGl0eUNyZWRlbnRpYWwiXSwiaXNzdWVyIjoiZGlkOmRicDpkYWVndSIsInZhbGlkRnJvbSI6IjIwMjYtMDktMTRUMDA6MDA6MDBaIiwidmFsaWRVbnRpbCI6IjIwMjctMDktMTRUMDA6MDA6MDBaIiwiY3JlZGVudGlhbFN1YmplY3QiOnsiaWQiOiJkaWQ6a2V5Ono2TWtvOWhUZ2dNd2pTVEVhSmFQVWZFNnRxY3kyeHZVNkJuTnEzZTNvOHFWQml5SCIsImluY29tZUJlbG93NTBNZWRpYW4iOnRydWV9LCJjcmVkZW50aWFsU2NoZW1hIjp7ImlkIjoiZGJwOnNjaGVtYTphdG9taWMtY2xhaW06MSIsInR5cGUiOiJKc29uU2NoZW1hIn0sImNyZWRlbnRpYWxTdGF0dXMiOnsidHlwZSI6IkJpdHN0cmluZ1N0YXR1c0xpc3RFbnRyeSIsInN0YXR1c1B1cnBvc2UiOiJyZXZvY2F0aW9uIiwic3RhdHVzTGlzdEluZGV4IjoiMTA0MiIsInN0YXR1c0xpc3RDcmVkZW50aWFsIjoiZGJwOnN0YXR1czpkYWVndTpsaXN0LTEifSwiZXZpZGVuY2UiOlt7InR5cGUiOiJSdWxlRXZhbHVhdGlvbiIsImJ1bmRsZSI6ImRhZWd1LWVsaWdpYmlsaXR5IiwidmVyc2lvbiI6IjIwMjYuMSIsImJ1bmRsZUhhc2giOiIweGIwYjk3YTMyZTg2YzViZWYwOWViNTNmODczMWExNDE5MjAwODhkM2Q2YTNmYzkxZmY0OWNjMTNkOWM3YTYwMjgifV0sImlzcyI6ImRpZDpkYnA6ZGFlZ3UiLCJzdWIiOiJkaWQ6a2V5Ono2TWtvOWhUZ2dNd2pTVEVhSmFQVWZFNnRxY3kyeHZVNkJuTnEzZTNvOHFWQml5SCIsIm5iZiI6MTc4OTM0NDAwMCwiZXhwIjoxODIwODgwMDAwLCJqdGkiOiJ1cm46dXVpZDowMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEifQ.hmh57i8r0uvByT2dg4atQ-833U_9Q1p3xkotCEQpeedHmvTqEmckEKvn3vRg6-IMqk6k2_ma5r23_yxsAugfBQ",
+  "issuerDid": "did:dbp:daegu",
+  "issuerPublicKeyHex": "0x8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+  "holderDid": "did:key:z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH",
+  "payload": {
+    "@context": [
+      "https://www.w3.org/ns/credentials/v2"
+    ],
+    "id": "urn:uuid:00000000-0000-4000-8000-000000000001",
+    "type": [
+      "VerifiableCredential",
+      "DaeguEligibilityCredential"
+    ],
+    "issuer": "did:dbp:daegu",
+    "validFrom": "2026-09-14T00:00:00Z",
+    "validUntil": "2027-09-14T00:00:00Z",
+    "credentialSubject": {
+      "id": "did:key:z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH",
+      "incomeBelow50Median": true
+    },
+    "credentialSchema": {
+      "id": "dbp:schema:atomic-claim:1",
+      "type": "JsonSchema"
+    },
+    "credentialStatus": {
+      "type": "BitstringStatusListEntry",
+      "statusPurpose": "revocation",
+      "statusListIndex": "1042",
+      "statusListCredential": "dbp:status:daegu:list-1"
+    },
+    "evidence": [
+      {
+        "type": "RuleEvaluation",
+        "bundle": "daegu-eligibility",
+        "version": "2026.1",
+        "bundleHash": "0xb0b97a32e86c5bef09eb53f8731a141920088d3d6a3fc91ff49cc13d9c7a6028"
+      }
+    ],
+    "iss": "did:dbp:daegu",
+    "sub": "did:key:z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH",
+    "nbf": 1789344000,
+    "exp": 1820880000,
+    "jti": "urn:uuid:00000000-0000-4000-8000-000000000001"
+  }
+}

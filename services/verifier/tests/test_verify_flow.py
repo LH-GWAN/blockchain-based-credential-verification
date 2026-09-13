@@ -46,7 +46,7 @@ class FakeLedger:
         return "0xfaketx"
 
 
-def _vc(holder_did, claim, index, issuer_key=ISSUER, valid_until="2027-09-14T00:00:00Z", valid_from="2026-09-14T00:00:00Z", bhash=BHASH):
+def _vc(holder_did, claim, index, issuer_key=ISSUER, valid_until="2027-09-14T00:00:00Z", valid_from="2026-09-01T00:00:00Z", bhash=BHASH):
     return issue_vc(id=f"urn:uuid:{claim}-{index}", issuer_did=ISSUER_DID, issuer_kid=ISSUER_DID + "#key-1",
                     issuer_private_key=issuer_key.private_key, holder_did=holder_did, claim={"name": claim, "value": True},
                     valid_from=valid_from, valid_until=valid_until, status={"listId": "dbp:status:daegu:list-1", "index": index},
@@ -117,7 +117,7 @@ def test_forged_and_wrong_holder(env):
 
 def test_expired_credential_and_unknown_issuer(env):
     client, ledger, holder, vcs = env
-    old = _vc(holder.did, "daeguResident", 12, valid_until="2026-01-01T00:00:00Z")
+    old = _vc(holder.did, "daeguResident", 12, valid_from="2025-01-01T00:00:00Z", valid_until="2026-01-01T00:00:00Z")
     _, _, res = _present(client, holder, [old, vcs[1]])
     assert "EXPIRED" in res["reasonCodes"]
     ledger.issuers[ISSUER_DID]["active"] = False

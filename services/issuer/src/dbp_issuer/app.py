@@ -81,6 +81,16 @@ def create_app(settings: Settings | None = None, ledger: Ledger | None = None, s
     def policies():
         return load_policies()
 
+    @app.get("/ledger/deployment")
+    def ledger_deployment():
+        """공동원장 컨트랙트 주소·ABI (공개 정보). 지갑이 직접 원장을 읽어 규칙 해시·영수증을 대조할 때 사용."""
+        try:
+            from dbp_ledger import load_deployment
+            d = load_deployment()
+            return {"chainId": d.chain_id, "rpcUrl": os.environ.get("PUBLIC_RPC_URL", settings.rpc_url), "contracts": d.contracts}
+        except Exception as e:
+            raise HTTPException(503, f"DEPLOYMENT_UNAVAILABLE:{e}")
+
     @app.get("/citizens")
     def citizens():
         """모사 로그인용 식별자 목록 (개인정보 없음)."""

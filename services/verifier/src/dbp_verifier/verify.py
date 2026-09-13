@@ -52,7 +52,7 @@ class Timer:
 
 def _check_one_vc(vc_jwt: str, holder_did: str, ledger: ReadOnlyLedger, now: float) -> tuple[dict, list[str]]:
     reasons: list[str] = []
-    vc = decode_vc(vc_jwt)
+    vc = decode_vc(vc_jwt)["vc"]
     issuer_did = vc["issuer"]
     status = vc.get("credentialStatus", {})
     ev = (vc.get("evidence") or [{}])[0]
@@ -158,6 +158,7 @@ def verify_presentation(vp_jwt: str, *, verifier_did: str, requested: list[dict]
     t.lap("vpSignature")
 
     vcs = (payload.get("vp") or {}).get("verifiableCredential") or []
+    presented: set[str] = set()  # 제출은 됐지만 검증에 실패한 claim 도 포함 (CLAIM_MISSING 과 구분)
     for vc_jwt in vcs:
         try:
             info, reasons = _check_one_vc(vc_jwt, out.holder_did or "", ledger, now)
@@ -165,16 +166,18 @@ def verify_presentation(vp_jwt: str, *, verifier_did: str, requested: list[dict]
             info, reasons = {"error": "VC_MALFORMED"}, ["VC_SIG_INVALID"]
         out.credentials.append(info)
         out.reason_codes.extend(reasons)
-        if info.get("claim") is not None and not reasons:
-            out.claims[info["claim"]] = bool(info["value"])
-            out.issuers[info["claim"]] = info.get("issuerName") or info.get("issuerDid")
+        if info.get("claim") is not None:
+            presented.add(info["claim"])
+            if not reasons:
+                out.claims[info["claim"]] = bool(info["value"])
+                out.issuers[info["claim"]] = info.get("issuerName") or info.get("issuerDid")
     t.lap("credentials")
 
     for req in requested:
         c, exp = req["claim"], bool(req.get("expected", True))
-        if c not in out.claims:
+        if c not in presented:
             out.reason_codes.append("CLAIM_MISSING")
-        elif out.claims[c] != exp:
+        elif c in out.claims and out.claims[c] != exp:
             out.reason_codes.append("CLAIM_FALSE")
     t.lap("claims")
 

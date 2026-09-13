@@ -1,0 +1,48 @@
+{
+  "obj": {
+    "z": [
+      1,
+      true,
+      null,
+      "x"
+    ],
+    "a": {
+      "nested": "quote\"and\\slash\nnewline\ttab",
+      "ctrl": "\u0001\u001f",
+      "가": "대구광역시"
+    },
+    "B": 0,
+    "0": 9007199254740991,
+    "_": {
+      "": [],
+      "empty": {}
+    },
+    "bundle": "daegu-eligibility",
+    "version": "2026.1",
+    "rule": {
+      "incomeBelow50Median": {
+        "<=": [
+          {
+            "*": [
+              {
+                "var": "monthlyIncomeKRW"
+              },
+              100
+            ]
+          },
+          {
+            "*": [
+              {
+                "var": "medianIncomeKRW"
+              },
+              50
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "canonical": "{\"0\":9007199254740991,\"B\":0,\"_\":{\"\":[],\"empty\":{}},\"a\":{\"ctrl\":\"\\u0001\\u001f\",\"nested\":\"quote\\\"and\\\\slash\\nnewline\\ttab\",\"가\":\"대구광역시\"},\"bundle\":\"daegu-eligibility\",\"rule\":{\"incomeBelow50Median\":{\"<=\":[{\"*\":[{\"var\":\"monthlyIncomeKRW\"},100]},{\"*\":[{\"var\":\"medianIncomeKRW\"},50]}]}},\"version\":\"2026.1\",\"z\":[1,true,null,\"x\"]}",
+  "hash": "0xb0b97a32e86c5bef09eb53f8731a141920088d3d6a3fc91ff49cc13d9c7a6028",
+  "sha256": "b0b97a32e86c5bef09eb53f8731a141920088d3d6a3fc91ff49cc13d9c7a6028"
+}

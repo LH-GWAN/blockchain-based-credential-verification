@@ -44,7 +44,7 @@ def test_issue_then_revoke(env):
     assert issued == {"daeguResident", "incomeBelow50Median", "ageOver65"}
     assert [d["claim"] for d in body["denied"]] == ["incomeBelow32Median"]
     # VC 에는 사실 하나(불리언)만, 원본 수치 없음
-    vc = decode_vc(body["credentials"][0]["vcJwt"])
+    vc = decode_vc(body["credentials"][0]["vcJwt"])["vc"]
     subj = vc["credentialSubject"]
     assert set(subj) == {"id", body["credentials"][0]["claim"]}
     text = json.dumps(body, ensure_ascii=False)
