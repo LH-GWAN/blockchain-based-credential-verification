@@ -36,4 +36,21 @@ report: ## 테스트 리포트 생성 → docs/TEST_REPORT.md
 demo: ## 체인 + 서비스 + 앱 전체 기동 (docs/DEMO.md 참고)
 	./scripts/demo.sh
 
-.PHONY: help setup build test chain deploy seed expected report demo
+compose-up: ## docker compose 로 전체 스택 기동 (네트워크 격리 포함)
+	docker compose up --build -d
+
+compose-down: ## compose 스택 종료
+	docker compose down -v
+
+demo-isolation: ## 검증기관 컨테이너에서 발급기관 접속이 차단됨을 확인 (compose 기동 상태에서)
+	@echo "verifier → issuer-daegu:8001 (차단되어야 함)"; \
+	docker compose exec -T verifier python -c "import urllib.request,sys; \
+	  urllib.request.urlopen('http://issuer-daegu:8001/health', timeout=3)" 2>&1 | tail -1 || echo "✅ 차단됨: 검증기관은 발급기관에 닿을 수 없습니다"
+	@echo "verifier → chain:8545 (허용되어야 함)"; \
+	docker compose exec -T verifier python -c "import urllib.request; \
+	  print('✅ 원장 접근 가능:', urllib.request.urlopen(urllib.request.Request('http://chain:8545', data=b'{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_chainId\",\"params\":[]}', headers={'content-type':'application/json'}), timeout=3).read().decode())"
+
+bench: ## 검증 성능 벤치 (make demo 기동 상태에서) → docs/bench.json
+	uv run python scripts/bench_verify.py 50
+
+.PHONY: help setup build test chain deploy seed expected report demo compose-up compose-down demo-isolation bench
