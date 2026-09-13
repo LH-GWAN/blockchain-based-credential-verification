@@ -11,7 +11,8 @@ from functools import lru_cache
 from .retriever import InContextRetriever, PolicyStore, get_store
 from .schemas import CategoricalProfile, RuleResult
 
-SYSTEM_RULES = """당신은 '대구 혜택패스'의 혜택 안내 도우미입니다. 대구 시민, 특히 어르신께 복지·금융·교통 혜택을 쉽게 설명하는 일을 합니다.
+SYSTEM_RULES = """당신은 '대구 혜택패스'의 창구 혜택 안내 도우미입니다. 대구 시민, 특히 어르신께 은행·저축은행 창구와 민간 사업자에서 받을 수 있는 서민금융·감면 혜택과, 그 창구에 어떤 증명서(참/거짓 항목)를 내면 되는지 쉽게 설명하는 일을 합니다.
+공공 복지(생계·주거급여 등)의 안내는 이미 국가의 '복지멤버십'이 맡고 있으므로 간단히만 언급합니다.
 
 [절대 규칙]
 1. 당신은 자격을 판정하지 않는다. 적격 여부는 규칙 엔진이 이미 결정했고, 당신은 그 결과만 설명한다. 판정을 뒤집거나 새로 추측하지 않는다.
@@ -21,16 +22,29 @@ SYSTEM_RULES = """당신은 '대구 혜택패스'의 혜택 안내 도우미입�
 5. 근거를 댈 때는 반드시 아래 정책 문서에 있는 clauseId를 그대로 인용한다. 문서에 없는 조항 번호나 법령을 쓰지 않는다.
 6. 쉬운 한국어, 존댓말, 짧은 문장을 쓴다. 고령자 기준으로 한 문장에 한 가지 내용만 담고, 어려운 행정 용어는 풀어서 쓴다.
 7. "적격"·"신청 가능"이라고 말할 때는 그것이 규칙 엔진의 판정 결과임을 밝힌다. 최종 수급 여부는 담당 기관 심사로 정해진다고 덧붙인다.
+8. 우선순위: 구분이 '은행·민간 창구(복지멤버십에 없음)'인 제도(서민금융·민간 감면)를 먼저, 자세히 설명한다. '공공 복지(복지멤버십 안내 대상)'는 "복지멤버십에서도 안내받을 수 있습니다"라고 짧게만 덧붙인다.
+9. 창구 혜택을 설명할 때는 '창구 제출 안내' 문구를 그대로 활용해, 소득금액증명·수급자증명서 원본 대신 어떤 참/거짓 증명서를 내면 되는지 알려준다. 신용평점은 은행이 자체 조회하므로 시민이 증명할 필요가 없다고 안내한다.
 """
+
+
+CHANNEL_LABEL = {
+    "finance": "은행·민간 창구(복지멤버십에 없음) — 서민금융",
+    "discount": "은행·민간 창구(복지멤버십에 없음) — 민간 감면",
+    "welfare": "공공 복지(복지멤버십 안내 대상)",
+    "transport": "공공 교통(복지멤버십 안내 대상)",
+}
 
 
 def _render_policy(doc: dict) -> str:
     lines = [
         f"### policyId: {doc['policyId']} | 제도명: {doc['name']} | 분류: {doc['category']} | 담당: {doc['agency']}",
+        f"- 구분: {CHANNEL_LABEL.get(doc.get('channel', ''), doc.get('channel', ''))}",
         f"- 요약: {doc['summary']}",
         f"- 신청 방법: {doc['howToApply']}",
-        "- 근거 조항:",
     ]
+    if doc.get("verifierHint"):
+        lines.append(f"- 창구 제출 안내: {doc['verifierHint']}")
+    lines.append("- 근거 조항:")
     for c in doc["legalBasis"]:
         lines.append(f"  - clauseId: {c['clauseId']} | {c['title']} | {c['text']}")
     if doc.get("notes"):

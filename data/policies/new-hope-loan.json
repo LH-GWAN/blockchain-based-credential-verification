@@ -1,0 +1,37 @@
+{
+  "policyId": "new-hope-loan",
+  "name": "새희망홀씨",
+  "category": "금융",
+  "channel": "finance",
+  "welfareMembership": false,
+  "verifierHint": "은행 창구에 '연소득 3,500만 원 이하 = 참' 증명서 제출. 신용평점은 은행이 자체 조회",
+  "agency": "시중은행(iM뱅크 등) 자체 서민금융 상품",
+  "summary": "은행이 자체 재원으로 공급하는 서민 대상 신용대출입니다. 연소득 3,500만 원 이하이거나, 신용평점 하위 20%이면서 연소득 4,500만 원 이하이면 신청할 수 있습니다.",
+  "howToApply": "취급 은행 창구 또는 은행 앱에서 신청",
+  "legalBasis": [
+    {
+      "clauseId": "new-hope-c1",
+      "title": "새희망홀씨 지원 대상 (은행권 서민금융 상품 안내)",
+      "text": "연소득 3,500만 원 이하, 또는 신용평점 하위 20%이면서 연소득 4,500만 원 이하인 분.",
+      "sourceUrl": "https://www.fss.or.kr"
+    },
+    {
+      "clauseId": "new-hope-c2",
+      "title": "2025년 정책서민금융 공급 계획 (금융위원회 보도자료 2025.1.9)",
+      "text": "새희망홀씨 4조 1,000억 원 등 정책서민금융 약 10조 7,500억 원을 공급하며 대부분이 민간 금융기관 창구를 통해 공급된다.",
+      "sourceUrl": "https://www.fsc.go.kr"
+    }
+  ],
+  "basisVerified": true,
+  "requiredClaims": [
+    {
+      "claim": "annualIncomeUnder35M",
+      "expected": true
+    }
+  ],
+  "ruleRef": {
+    "bundle": "daegu-eligibility",
+    "version": "2026.1"
+  },
+  "notes": "규칙은 햇살론뱅크와 동일. 은행별 세부 요건(재직·연체 이력)은 은행 심사. 복지멤버십 안내 대상 아님."
+}

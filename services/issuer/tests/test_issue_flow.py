@@ -33,7 +33,7 @@ def _holder_proof(client, holder):
 def test_issue_then_revoke(env):
     client, ledger, settings = env
     holder = generate_holder_key()
-    req = ["daeguResident", "incomeBelow50Median", "incomeBelow32Median", "ageOver65"]
+    req = ["daeguResident", "hasStudentChild", "ageOver65"]
     r = client.post("/credentials/issue", json={
         "citizenId": "C-001", "holderDid": holder.did, "holderProof": _holder_proof(client, holder),
         "requestedClaims": req, "consent": {"scope": req, "ts": "2026-09-14T09:00:00Z"},
@@ -41,8 +41,8 @@ def test_issue_then_revoke(env):
     assert r.status_code == 200, r.text
     body = r.json()
     issued = {c["claim"] for c in body["credentials"]}
-    assert issued == {"daeguResident", "incomeBelow50Median", "ageOver65"}
-    assert [d["claim"] for d in body["denied"]] == ["incomeBelow32Median"]
+    assert issued == {"daeguResident", "ageOver65"}
+    assert [d["claim"] for d in body["denied"]] == ["hasStudentChild"]
     # VC 에는 사실 하나(불리언)만, 원본 수치 없음
     vc = decode_vc(body["credentials"][0]["vcJwt"])["vc"]
     subj = vc["credentialSubject"]
@@ -60,13 +60,16 @@ def test_issue_then_revoke(env):
     assert client.app.state.svc.is_revoked_locally(rv["statusListIndex"]) is True
 
 
-def test_bank_issuer_only_knows_its_fields(tmp_path, monkeypatch):
+def test_welfare_issuer_only_knows_its_fields(tmp_path, monkeypatch):
+    """복지기관은 소득·수급 사실만, 대구시는 주민등록 사실만 발급한다. 신용평점(self)은 누구도 발급하지 않는다."""
     monkeypatch.setenv("RULE_EVAL_DATE", "2026-09-14")
-    settings = Settings(issuer_id="imbank", db_path=str(tmp_path / "imbank.db"))
+    settings = Settings(issuer_id="welfare", db_path=str(tmp_path / "welfare.db"))
     client = TestClient(create_app(settings, ledger=FakeLedger(bundle_hash(load_bundle())), store=Store(settings.db_path)))
     holder = generate_holder_key()
     wk = client.get("/.well-known/issuer").json()
-    assert {c["claim"] for c in wk["claims"]} == {"creditBottom20", "annualIncomeUnder35M"}
+    assert {c["claim"] for c in wk["claims"]} == {"isBenefitRecipient", "incomeBelow32Median", "incomeBelow48Median",
+                                                 "incomeBelow50Median", "incomeBelowBasicPensionLine",
+                                                 "annualIncomeUnder35M", "annualIncomeUnder45M"}
     r = client.post("/credentials/issue", json={
         "citizenId": "C-001", "holderDid": holder.did, "holderProof": _holder_proof(client, holder),
         "requestedClaims": ["daeguResident"], "consent": {"scope": ["daeguResident"], "ts": "2026-09-14T09:00:00Z"},
@@ -76,7 +79,13 @@ def test_bank_issuer_only_knows_its_fields(tmp_path, monkeypatch):
         "citizenId": "C-001", "holderDid": holder.did, "holderProof": _holder_proof(client, holder),
         "requestedClaims": ["creditBottom20"], "consent": {"scope": ["creditBottom20"], "ts": "2026-09-14T09:00:00Z"},
     })
-    assert r.status_code == 200 and r.json()["credentials"][0]["claim"] == "creditBottom20"
+    assert r.status_code == 400 and "CLAIM_NOT_ISSUED_HERE" in r.text
+    r = client.post("/credentials/issue", json={
+        "citizenId": "C-001", "holderDid": holder.did, "holderProof": _holder_proof(client, holder),
+        "requestedClaims": ["annualIncomeUnder35M", "incomeBelow50Median"],
+        "consent": {"scope": ["annualIncomeUnder35M", "incomeBelow50Median"], "ts": "2026-09-14T09:00:00Z"},
+    })
+    assert r.status_code == 200 and {c["claim"] for c in r.json()["credentials"]} == {"annualIncomeUnder35M", "incomeBelow50Median"}
 
 
 def test_rule_hash_mismatch_blocks_issuance(tmp_path, monkeypatch):

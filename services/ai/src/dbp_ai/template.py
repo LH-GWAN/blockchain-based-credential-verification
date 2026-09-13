@@ -1,7 +1,7 @@
 """템플릿 provider — LLM 없이도 시연이 멈추지 않도록 규칙 항목을 결정론적으로 문장화한다.
 
 - 추천: summary + howToApply + legalBasis[0] 로 설명을 만들고 legalBasis[0].clauseId 를 인용한다.
-- 정렬: 복지 → 금융 → 교통 → (그 외 분류) → policyId.
+- 정렬: 은행 서민금융(finance) → 민간 감면(discount) → 공공 복지(welfare) → 교통(transport) → 제도명.
 - 상담: 등록된 제도를 물으면 규칙 엔진 결과만 전하고, 미등록 제도는 "등록되어 있지 않습니다" 라고만 답한다 (판정 없음).
 """
 from __future__ import annotations
@@ -12,13 +12,13 @@ from collections.abc import Iterable, Iterator
 from .retriever import PROGRAM_SUFFIXES, PolicyStore
 from .schemas import CategoricalProfile, Recommendation, RuleResult
 
-CATEGORY_RANK = {"복지": 0, "금융": 1, "교통": 2}
+CHANNEL_RANK = {"finance": 0, "discount": 1, "welfare": 2, "transport": 3}
 
 NOT_REGISTERED = "등록되어 있지 않습니다"
 
 
-def order_key(policy: dict) -> tuple[int, str]:
-    return (CATEGORY_RANK.get(policy.get("category", ""), 3), policy["policyId"])
+def order_key(policy: dict) -> tuple[int, str, str]:
+    return (CHANNEL_RANK.get(policy.get("channel", ""), 4), policy["name"], policy["policyId"])
 
 
 def sort_policies(policies: Iterable[dict]) -> list[dict]:
@@ -33,7 +33,9 @@ def template_item(policy: dict) -> Recommendation:
         "규칙 엔진이 확인한 결과, 이 제도의 신청 기준을 충족합니다. "
         f"근거는 {clause['title']}입니다. {clause['text']}"
     )
-    next_steps = f"{policy['howToApply']}. 최종 수급 여부는 담당 기관 심사로 정해집니다."
+    hint = f" 창구 제출: {policy['verifierHint']}." if policy.get("verifierHint") else ""
+    membership = " 이 제도는 복지멤버십에서도 안내받을 수 있습니다." if policy.get("welfareMembership") else ""
+    next_steps = f"{policy['howToApply']}.{hint}{membership} 최종 수급 여부는 담당 기관 심사로 정해집니다."
     return Recommendation(
         policyId=policy["policyId"],
         headline=f"{name} — 신청하실 수 있습니다",

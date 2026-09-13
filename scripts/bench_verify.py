@@ -14,6 +14,7 @@ import httpx
 from dbp_vc import create_vp, generate_holder_key, sign_jws
 
 ISSUER = "http://localhost:8001"
+WELFARE = "http://localhost:8003"
 VERIFIER = "http://localhost:8002"
 
 
@@ -24,12 +25,18 @@ def main() -> int:
         ch = c.post(f"{ISSUER}/credentials/challenge", json={"holderDid": holder.did}).json()
         proof = sign_jws(header={"alg": "EdDSA", "typ": "holder-proof+jwt"},
                          payload={"iss": holder.did, "aud": ch["aud"], "nonce": ch["nonce"]}, private_key=holder.private_key)
-        req = ["daeguResident", "incomeBelow50Median"]
+        req = ["daeguResident"]
         issued = c.post(f"{ISSUER}/credentials/issue", json={
             "citizenId": "C-001", "holderDid": holder.did, "holderProof": proof,
             "requestedClaims": req, "consent": {"scope": req, "ts": "2026-09-14T09:00:00Z"}}).json()
-        vcs = [x["vcJwt"] for x in issued["credentials"]]
-        assert len(vcs) == 2, issued
+        ch2 = c.post(f"{WELFARE}/credentials/challenge", json={"holderDid": holder.did}).json()
+        proof2 = sign_jws(header={"alg": "EdDSA", "typ": "holder-proof+jwt"},
+                          payload={"iss": holder.did, "aud": ch2["aud"], "nonce": ch2["nonce"]}, private_key=holder.private_key)
+        issued2 = c.post(f"{WELFARE}/credentials/issue", json={
+            "citizenId": "C-001", "holderDid": holder.did, "holderProof": proof2,
+            "requestedClaims": ["incomeBelow50Median"], "consent": {"scope": ["incomeBelow50Median"], "ts": "2026-09-14T09:00:00Z"}}).json()
+        vcs = [x["vcJwt"] for x in issued["credentials"] + issued2["credentials"]]
+        assert len(vcs) == 2, (issued, issued2)
         totals, server = [], []
         verdicts = {}
         for _ in range(runs):

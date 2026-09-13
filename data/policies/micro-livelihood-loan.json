@@ -2,6 +2,9 @@
   "policyId": "micro-livelihood-loan",
   "name": "소액생계비대출 (불법사금융예방대출)",
   "category": "금융",
+  "channel": "finance",
+  "welfareMembership": false,
+  "verifierHint": "서민금융통합지원센터에 '연소득 3,500만 원 이하 = 참' 증명서 제출. 신용평점은 센터가 자체 조회",
   "agency": "서민금융진흥원 / 서민금융통합지원센터 (대구센터)",
   "summary": "신용평점 하위 20%이고 연소득 3,500만 원 이하인 분에게 최대 100만 원을 당일 지원하는 정책 서민금융 상품입니다. 기초수급자·차상위계층은 신용평점 기준 없이 신청할 수 있습니다.",
   "howToApply": "서민금융진흥원 앱·홈페이지에서 방문 예약 후 서민금융통합지원센터 대면 상담",
@@ -21,9 +24,14 @@
   ],
   "basisVerified": true,
   "requiredClaims": [
-    { "claim": "annualIncomeUnder35M", "expected": true },
-    { "claim": "creditBottom20", "expected": true }
+    {
+      "claim": "annualIncomeUnder35M",
+      "expected": true
+    }
   ],
-  "ruleRef": { "bundle": "daegu-eligibility", "version": "2026.1" },
-  "notes": "신용·연소득 claim은 iM뱅크(did:dbp:imbank)가 발급한다. 규칙은 '연소득 3,500만 원 이하 AND (신용평점 하위 20% OR 수급자 OR 차상위)'."
+  "ruleRef": {
+    "bundle": "daegu-eligibility",
+    "version": "2026.1"
+  },
+  "notes": "연소득 claim 은 복지기관(사회보장정보원 모사)이 발급한다. 신용평점 하위 20% 여부는 창구가 자체 조회하므로 VC 로 만들지 않는다(지갑 사전 판정에만 본인 신용구간 사용). 규칙: 연소득 3,500만 원 이하 AND (신용 하위 20% OR 수급자 OR 차상위)."
 }

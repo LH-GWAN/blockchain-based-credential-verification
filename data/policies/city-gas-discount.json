@@ -1,0 +1,31 @@
+{
+  "policyId": "city-gas-discount",
+  "name": "도시가스 요금 경감",
+  "category": "생활",
+  "channel": "discount",
+  "welfareMembership": false,
+  "verifierHint": "도시가스 회사 고객센터에 '기준 중위소득 50% 이하 = 참' 증명서 제출",
+  "agency": "산업통상자원부 / 지역 도시가스사",
+  "summary": "기초생활수급자·차상위계층 등에게 도시가스 요금(취사·난방)을 경감합니다.",
+  "howToApply": "관할 도시가스 회사 고객센터 또는 행정복지센터 신청",
+  "legalBasis": [
+    {
+      "clauseId": "gas-discount-c1",
+      "title": "사회적배려대상자에 대한 도시가스요금 경감지침 (산업통상자원부)",
+      "text": "생계·의료·주거·교육급여 수급자, 차상위계층, 장애인, 국가유공자 등은 도시가스 요금 경감 대상이다.",
+      "sourceUrl": "https://www.law.go.kr"
+    }
+  ],
+  "basisVerified": true,
+  "requiredClaims": [
+    {
+      "claim": "incomeBelow50Median",
+      "expected": true
+    }
+  ],
+  "ruleRef": {
+    "bundle": "daegu-eligibility",
+    "version": "2026.1"
+  },
+  "notes": "규칙: 수급자 OR 차상위(50% 이하)."
+}

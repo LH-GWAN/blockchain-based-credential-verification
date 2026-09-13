@@ -39,7 +39,8 @@ POLICY_ALIASES: dict[str, list[str]] = {
     "telecom-discount": ["통신요금 감면", "통신요금감면", "통신비 감면", "통신비감면", "이동통신 요금감면", "요금감면", "휴대폰 요금 감면"],
 }
 
-_PROMPT_FIELDS = ("policyId", "name", "category", "agency", "summary", "howToApply", "notes", "basisVerified")
+_PROMPT_FIELDS = ("policyId", "name", "category", "agency", "summary", "howToApply", "notes", "basisVerified",
+                  "channel", "welfareMembership", "verifierHint")
 _CLAUSE_FIELDS = ("clauseId", "title", "text")
 
 
@@ -116,7 +117,7 @@ class PolicyStore:
         for p in self.policies:
             terms.add(_norm(p["name"]))
             terms.update(_norm(a) for a in POLICY_ALIASES.get(p["policyId"], []))
-            corpus = [p.get("name", ""), p.get("agency", ""), p.get("summary", ""), p.get("howToApply", ""), p.get("notes", "")]
+            corpus = [p.get("name", ""), p.get("agency", ""), p.get("summary", ""), p.get("howToApply", ""), p.get("notes", ""), p.get("verifierHint", "")]
             corpus += [c.get("title", "") + " " + c.get("text", "") for c in p["legalBasis"]]
             for chunk in corpus:
                 terms.update(_norm(t) for t in extract_program_terms(chunk))

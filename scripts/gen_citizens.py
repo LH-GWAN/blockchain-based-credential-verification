@@ -75,9 +75,12 @@ def main() -> None:
     rows.append(citizen(24, birth="1992-03-03", sido="대구광역시", sigungu="북구", hs=1, income=2_916_666, credit="bottom20", annual=35_000_000))
     rows.append(citizen(25, birth="1992-03-03", sido="대구광역시", sigungu="북구", hs=1, income=2_916_667, credit="bottom20", annual=35_000_001))
     rows.append(citizen(26, birth="1988-08-08", sido="대구광역시", sigungu="남구", hs=3, income=2_000_000, credit="other"))
-    # 9) 무작위 4명 (seed 고정)
+    # 9) 연소득 4,500만 경계 (신용 하위 20% + 3,500만 초과): 정확히 / +1원
+    rows.append(citizen(27, birth="1975-04-04", sido="대구광역시", sigungu="서구", hs=2, income=3_750_000, credit="bottom20", annual=45_000_000))
+    rows.append(citizen(28, birth="1975-04-04", sido="대구광역시", sigungu="서구", hs=2, income=3_750_001, credit="bottom20", annual=45_000_001))
+    # 10) 무작위 2명 (seed 고정)
     rng = random.Random(20260914)
-    for idx in range(27, 31):
+    for idx in range(29, 31):
         hs = rng.randint(1, 6)
         income = rng.randint(500_000, 6_000_000)
         rows.append(citizen(idx, birth=f"{rng.randint(1945, 2000)}-{rng.randint(1, 12):02d}-{rng.randint(1, 28):02d}",

@@ -2,6 +2,9 @@
   "policyId": "near-poor",
   "name": "차상위계층 확인",
   "category": "복지",
+  "channel": "welfare",
+  "welfareMembership": true,
+  "verifierHint": "행정복지센터에서 차상위 확인. 이후 은행·감면 창구에는 '기준 중위소득 50% 이하 = 참' 증명서만 제출",
   "agency": "보건복지부 / 대구광역시 각 구·군",
   "summary": "기초생활보장 수급자는 아니지만 소득인정액이 기준 중위소득의 50% 이하인 가구를 차상위계층으로 확인해 각종 감면·지원 혜택의 근거가 됩니다.",
   "howToApply": "주소지 행정복지센터에서 차상위계층 확인서 발급 신청",
@@ -15,9 +18,18 @@
   ],
   "basisVerified": true,
   "requiredClaims": [
-    { "claim": "incomeBelow50Median", "expected": true },
-    { "claim": "isBenefitRecipient", "expected": false }
+    {
+      "claim": "incomeBelow50Median",
+      "expected": true
+    },
+    {
+      "claim": "isBenefitRecipient",
+      "expected": false
+    }
   ],
-  "ruleRef": { "bundle": "daegu-eligibility", "version": "2026.1" },
+  "ruleRef": {
+    "bundle": "daegu-eligibility",
+    "version": "2026.1"
+  },
   "notes": ""
 }

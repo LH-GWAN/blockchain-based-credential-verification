@@ -2,6 +2,9 @@
   "policyId": "telecom-discount",
   "name": "통신요금 감면 (취약계층 요금감면)",
   "category": "생활",
+  "channel": "discount",
+  "welfareMembership": false,
+  "verifierHint": "통신사 대리점에 '기준 중위소득 50% 이하 = 참' 증명서 제출 (수급자증명서 원본 불필요)",
   "agency": "과학기술정보통신부 / 이동통신 3사",
   "summary": "기초생활수급자·차상위계층 등에게 이동전화 기본료·통화료를 감면합니다.",
   "howToApply": "통신사 대리점 방문, 통신사 고객센터(114), 또는 복지로·정부24 온라인 신청",
@@ -20,7 +23,15 @@
     }
   ],
   "basisVerified": true,
-  "requiredClaims": [ { "claim": "incomeBelow50Median", "expected": true } ],
-  "ruleRef": { "bundle": "daegu-eligibility", "version": "2026.1" },
+  "requiredClaims": [
+    {
+      "claim": "incomeBelow50Median",
+      "expected": true
+    }
+  ],
+  "ruleRef": {
+    "bundle": "daegu-eligibility",
+    "version": "2026.1"
+  },
   "notes": "규칙은 '수급자 또는 기준 중위소득 50% 이하(차상위)'로 구현. 검증기관 요청 예시는 차상위 기준(50% 이하)만 사용."
 }

@@ -3,10 +3,26 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
+# 검증기관은 금융 창구뿐이다 (은행·저축은행). 공공기관 사이의 확인은 행정정보 공동이용이 이미 담당한다.
 VERIFIERS = {
     "imbank-branch-01": {"did": "did:dbp:verifier-imbank-branch-01", "name": "iM뱅크 칠성동지점", "kind": "bank"},
-    "bukgu-welfare-01": {"did": "did:dbp:verifier-bukgu-welfare-01", "name": "대구 북구 행정복지센터", "kind": "welfare"},
+    "im-savings-01": {"did": "did:dbp:verifier-im-savings-01", "name": "iM저축은행 대구지점 (모사)", "kind": "savings"},
 }
+# 창구 용도 프리셋: 어떤 참/거짓 항목만 받으면 되는지 (소득금액증명 원본 대신)
+PRESETS = [
+    {"id": "consult", "label": "서민금융 상담 대상 확인", "purpose": "서민금융 상담 대상 확인",
+     "requested": [{"claim": "daeguResident", "expected": True}, {"claim": "incomeBelow50Median", "expected": True}],
+     "policyId": None, "hint": "대구 거주 여부와 기준 중위소득 50% 이하 여부, 두 항목의 참/거짓만 받습니다."},
+    {"id": "sunshine-bank", "label": "햇살론뱅크 대상 확인", "purpose": "햇살론뱅크 대상 확인",
+     "requested": [{"claim": "annualIncomeUnder35M", "expected": True}], "policyId": "sunshine-loan-bank",
+     "hint": "소득금액증명 원본 대신 '연소득 3,500만 원 이하 = 참' 1개 항목만 받습니다. 신용평점은 은행이 자체 조회합니다."},
+    {"id": "new-hope", "label": "새희망홀씨 대상 확인", "purpose": "새희망홀씨 대상 확인",
+     "requested": [{"claim": "annualIncomeUnder35M", "expected": True}], "policyId": "new-hope-loan",
+     "hint": "소득금액증명 원본 대신 '연소득 3,500만 원 이하 = 참' 1개 항목만 받습니다. 신용평점은 은행이 자체 조회합니다."},
+    {"id": "discount", "label": "수급자·차상위 감면 대상 확인", "purpose": "수급자·차상위 감면 대상 확인",
+     "requested": [{"claim": "incomeBelow50Median", "expected": True}], "policyId": None,
+     "hint": "수급자증명서 원본 대신 '기준 중위소득 50% 이하 = 참' 1개 항목만 받습니다."},
+]
 REASON_KO = {
     "AUD_MISMATCH": "다른 기관에 제출된 증명입니다",
     "NONCE_MISSING": "1회용 확인번호가 없습니다",

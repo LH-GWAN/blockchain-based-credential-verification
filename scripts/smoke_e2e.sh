@@ -23,7 +23,7 @@ echo "[smoke] 시드"; uv run python scripts/seed_ledger.py | tail -4
 
 echo "[smoke] 서비스 기동"
 (ISSUER_ID=daegu ISSUER_PORT=8001 ISSUER_DB_PATH=.smoke/issuer-daegu.db uv run python -m dbp_issuer > .smoke/issuer-daegu.log 2>&1) & PIDS+=($!)
-(ISSUER_ID=imbank ISSUER_PORT=8003 ISSUER_DB_PATH=.smoke/issuer-imbank.db uv run python -m dbp_issuer > .smoke/issuer-imbank.log 2>&1) & PIDS+=($!)
+(ISSUER_ID=welfare ISSUER_PORT=8003 ISSUER_DB_PATH=.smoke/issuer-welfare.db uv run python -m dbp_issuer > .smoke/issuer-welfare.log 2>&1) & PIDS+=($!)
 (VERIFIER_PORT=8002 uv run python -m dbp_verifier > .smoke/verifier.log 2>&1) & PIDS+=($!)
 wait_http http://localhost:8001/health; wait_http http://localhost:8003/health; wait_http http://localhost:8002/health
 curl -s http://localhost:8001/health; echo; curl -s http://localhost:8002/health; echo
@@ -40,17 +40,17 @@ def issue(base, claims, cid="C-001"):
     proof = sign_jws(header={"alg":"EdDSA","typ":"holder-proof+jwt"}, payload={"iss":h.did,"aud":ch["aud"],"nonce":ch["nonce"]}, private_key=h.private_key)
     r = httpx.post(f"{base}/credentials/issue", json={"citizenId":cid,"holderDid":h.did,"holderProof":proof,"requestedClaims":claims,"consent":{"scope":claims,"ts":"2026-09-14T09:00:00Z"}}, timeout=60)
     r.raise_for_status(); return r.json()
-d = issue(D, ["daeguResident","incomeBelow50Median","incomeBelow32Median"])
-b = issue(B, ["creditBottom20","annualIncomeUnder35M"])
+d = issue(D, ["daeguResident","ageOver65","hasStudentChild"])
+b = issue(B, ["incomeBelow50Median","incomeBelow32Median","annualIncomeUnder35M"])
 print(" 대구시 발급:", [c["claim"] for c in d["credentials"]], "거부:", [x["claim"] for x in d["denied"]], "동의영수증 tx:", (d["consentReceipt"]["txHash"] or "")[:14])
-print(" iM뱅크 발급:", [c["claim"] for c in b["credentials"]], "tx:", (b["consentReceipt"]["txHash"] or "")[:14])
+print(" 복지기관 발급:", [c["claim"] for c in b["credentials"]], "거부:", [x["claim"] for x in b["denied"]], "tx:", (b["consentReceipt"]["txHash"] or "")[:14])
 vcs = {c["claim"]: c for c in d["credentials"] + b["credentials"]}
 def present(claims, requested):
     r = httpx.post(f"{V}/requests", json={"requested":[{"claim":c,"expected":True} for c in requested]}).json()
     vp = create_vp(holder_did=h.did, holder_private_key=h.private_key, verifier_did=r["verifier"], nonce=r["nonce"], vc_jwts=[vcs[c]["vcJwt"] for c in claims])
     return httpx.post(f"{V}/present", json={"requestId":r["requestId"],"vpJwt":vp}, timeout=60).json()
-res = present(["daeguResident","creditBottom20"], ["daeguResident","creditBottom20"])
-print(" 두 발급기관 혼합 제출:", res["verdict"], res["reasonCodes"], "발급기관:", res["issuers"], f"{res['timingsMs']['total']}ms")
+res = present(["daeguResident","annualIncomeUnder35M"], ["daeguResident","annualIncomeUnder35M"])
+print(" 두 발급기관 혼합 제출(햇살론뱅크 용도):", res["verdict"], res["reasonCodes"], "발급기관:", res["issuers"], f"{res['timingsMs']['total']}ms")
 assert res["verdict"] == "PASS"
 rv = httpx.post(f"{D}/admin/credentials/{vcs['incomeBelow50Median']['jti']}/revoke", timeout=60).json()
 print(" 폐기:", rv["revoked"], "상태목록 v", rv["statusListVersion"], "tx:", (rv["txHash"] or "")[:14])

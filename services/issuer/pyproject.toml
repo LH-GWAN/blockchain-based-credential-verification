@@ -1,7 +1,7 @@
 [project]
 name = "dbp-issuer"
 version = "0.1.0"
-description = "대구 혜택패스 발급기관 서버 (대구광역시 / iM뱅크 모사)"
+description = "대구 혜택패스 발급기관 서버 (대구광역시 / 사회보장정보원 복지기관 모사)"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115",

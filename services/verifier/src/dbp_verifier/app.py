@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from dbp_rules import load_bundle
 from dbp_vc import create_vp, generate_holder_key, random_salt, receipt_hash, sha256_hex
 
-from .config import REASON_KO, VERIFIERS, Settings
+from .config import PRESETS, REASON_KO, VERIFIERS, Settings
 from .verify import decode_jwt_unverified, verify_presentation
 
 log = logging.getLogger("dbp_verifier")
@@ -177,7 +177,13 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
 
     @app.get("/claims")
     def claims():
-        return [{"claim": c, "label": l} for c, l in labels.items()]
+        # 창구가 요청할 수 있는 항목 = VC 로 발급되는 사실만 (issuerOf == "self" 제외)
+        issuer_of = bundle["claims"]["issuerOf"]
+        return [{"claim": c, "label": l} for c, l in labels.items() if issuer_of.get(c) != "self"]
+
+    @app.get("/presets")
+    def presets():
+        return PRESETS
 
     @app.post("/requests")
     def create_request(body: RequestIn):

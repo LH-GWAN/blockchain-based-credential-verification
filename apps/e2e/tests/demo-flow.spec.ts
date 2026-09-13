@@ -10,6 +10,7 @@ import { join } from 'node:path';
 const WALLET = process.env.WALLET_URL ?? 'http://localhost:3010';
 const VERIFIER_APP = process.env.VERIFIER_APP_URL ?? 'http://localhost:3001';
 const ISSUER_DAEGU = process.env.ISSUER_DAEGU_URL ?? 'http://localhost:8001';
+const ISSUER_WELFARE = process.env.ISSUER_WELFARE_URL ?? 'http://localhost:8003';
 const SHOTS = join(process.cwd(), '..', '..', 'docs', 'screenshots');
 mkdirSync(SHOTS, { recursive: true });
 
@@ -23,8 +24,9 @@ async function newContexts(browser: Browser) {
   return { wallet, verifier };
 }
 
-async function createVerifierRequest(verifier: Page): Promise<string> {
+async function createVerifierRequest(verifier: Page, preset?: string): Promise<string> {
   await verifier.goto(`${VERIFIER_APP}/`);
+  if (preset) await verifier.getByRole('button', { name: preset }).first().click();
   await verifier.getByRole('button', { name: '요청 QR 만들기' }).click();
   const codeEl = verifier.getByLabel(/^확인 코드/);
   await expect(codeEl).toBeVisible();
@@ -57,6 +59,8 @@ test('①~⑤ 전체 시연 흐름', async ({ browser }) => {
   await expect(wallet.getByText('이 판정은 내 휴대폰 안에서만 계산되었습니다 (개인정보 전송 없음)')).toBeVisible();
   await expect(wallet.getByText('발급 가능').first()).toBeVisible();
   await expect(wallet.getByText(/규칙 기준 미충족 — 기준 중위소득 32% 이하 여부/).first()).toBeVisible();
+  // 신용평점은 창구가 자체 조회 — 증명서로 발급되지 않는다
+  await expect(wallet.getByText(/신용평점 하위 20% 여부/).first()).toBeVisible();
   await shot(wallet, '02-wallet-precheck');
   await wallet.getByRole('button', { name: '증명서 받기' }).click();
 
@@ -65,8 +69,9 @@ test('①~⑤ 전체 시연 흐름', async ({ browser }) => {
   await expect(wallet.getByText('증명서에 담기지 않는 정보: 이름 · 주민등록번호 · 주소 · 소득 금액')).toBeVisible();
   await shot(wallet, '03-wallet-consent-daegu');
   await wallet.getByRole('button', { name: '동의하고 발급받기' }).click();
-  // iM뱅크 동의 화면
-  await expect(wallet.getByText('iM뱅크에 다음 증명서 발급을 요청합니다')).toBeVisible();
+  // 복지기관(사회보장정보원) 동의 화면 — 소득·수급 사실은 공공 복지기관이 발급한다
+  await expect(wallet.getByText('사회보장정보원(복지기관)에 다음 증명서 발급을 요청합니다')).toBeVisible();
+  await shot(wallet, '03b-wallet-consent-welfare');
   await wallet.getByRole('button', { name: '동의하고 발급받기' }).click();
 
   await expect(wallet.getByText('발급 완료').first()).toBeVisible();
@@ -77,10 +82,13 @@ test('①~⑤ 전체 시연 흐름', async ({ browser }) => {
   expect(cardsText).not.toContain('김복례');
   await shot(wallet, '04-wallet-credentials');
 
-  // ── ② AI 혜택 추천 ────────────────────────────────────────────────────────
+  // ── ② 창구 혜택 안내 (은행·민간 먼저, 공공 복지는 복지멤버십 안내 대상으로 짧게) ──
   await wallet.goto(`${WALLET}/benefits`);
-  await expect(wallet.getByText('지금 신청 가능한 혜택').first()).toBeVisible();
+  await expect(wallet.getByText(/은행·민간 창구 혜택/).first()).toBeVisible();
+  await expect(wallet.getByText(/공공 복지/).first()).toBeVisible();
   await expect(wallet.getByText('지금은 해당되지 않는 혜택').first()).toBeVisible();
+  await expect(wallet.getByText('햇살론뱅크').first()).toBeVisible({ timeout: 60_000 });
+  await expect(wallet.getByText(/창구에 제출할 증명서/).first()).toBeVisible();
   await expect(wallet.getByText('근거 조항').first()).toBeVisible({ timeout: 60_000 });
   await shot(wallet, '05-wallet-benefits');
   await wallet.getByRole('button', { name: 'AI가 받은 정보 보기' }).click();
@@ -95,6 +103,7 @@ test('①~⑤ 전체 시연 흐름', async ({ browser }) => {
   await shot(verifier, '07-verifier-request');
   await presentWithCode(wallet, code);
   await expect(wallet.getByText('iM뱅크 칠성동지점', { exact: false }).first()).toBeVisible();
+  await expect(wallet.getByText('(사회보장정보원(복지기관) 발급)', { exact: false }).first()).toBeVisible();
   await shot(wallet, '08-wallet-present-confirm');
   await wallet.getByRole('button', { name: '동의하고 제출' }).click();
   await expect(wallet.getByText('자격 충족').first()).toBeVisible();
@@ -105,6 +114,7 @@ test('①~⑤ 전체 시연 흐름', async ({ browser }) => {
   await expect(verifier.getByText('자격 충족').first()).toBeVisible();
   await expect(verifier.getByText(/총 소요/).first()).toBeVisible();
   await expect(verifier.getByText('대구광역시').first()).toBeVisible();
+  await expect(verifier.getByText('사회보장정보원(복지기관)').first()).toBeVisible();
   await expect(verifier.getByText('원장 트랜잭션').first()).toBeVisible();
   await expect(verifier.locator('main')).toContainText(/0x[0-9a-f]{64}/, { timeout: 40_000 }); // 영수증 txHash
   await shot(verifier, '10-verifier-result-pass');
@@ -112,11 +122,22 @@ test('①~⑤ 전체 시연 흐름', async ({ browser }) => {
   expect(verifierText).not.toContain('김복례');
   expect(verifierText).not.toContain('1000000');
 
+  // ── ③' 햇살론뱅크 용도: 소득금액증명 원본 대신 '연소득 3,500만 원 이하 = 참' 1개 항목만 ──
+  const code3 = await createVerifierRequest(verifier, '햇살론뱅크 대상 확인');
+  await presentWithCode(wallet, code3);
+  await expect(wallet.getByText('연소득 3,500만 원 이하 여부', { exact: false }).first()).toBeVisible();
+  await wallet.getByRole('button', { name: '동의하고 제출' }).click();
+  await expect(wallet.getByText('자격 충족').first()).toBeVisible();
+  await verifier.waitForURL(/\/result\//, { timeout: 30_000 });
+  await expect(verifier.getByText('자격 충족').first()).toBeVisible();
+  await expect(verifier.getByText(/정책 판정 재현/).first()).toBeVisible();
+  await shot(verifier, '10b-verifier-result-sunshine-bank');
+
   // ── ⑤ 폐기 → 재제출 차단 ──────────────────────────────────────────────────
-  const admin = await (await fetch(`${ISSUER_DAEGU}/admin/credentials`)).json();
+  const admin = await (await fetch(`${ISSUER_WELFARE}/admin/credentials`)).json();
   const target = admin.credentials.find((c: { claim: string }) => c.claim === 'incomeBelow50Median');
   expect(target).toBeTruthy();
-  const rv = await (await fetch(`${ISSUER_DAEGU}/admin/credentials/${target.jti}/revoke`, { method: 'POST' })).json();
+  const rv = await (await fetch(`${ISSUER_WELFARE}/admin/credentials/${target.jti}/revoke`, { method: 'POST' })).json();
   expect(rv.revoked).toBe(true);
 
   const code2 = await createVerifierRequest(verifier);

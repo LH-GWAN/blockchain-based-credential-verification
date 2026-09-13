@@ -8,8 +8,8 @@
       "controllerPrivateKey": "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
     },
     {
-      "did": "did:dbp:imbank",
-      "name": "iM뱅크",
+      "did": "did:dbp:welfare",
+      "name": "사회보장정보원(복지기관)",
       "ed25519PubKeyHex": "0xb2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
       "controllerPrivateKey": "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
     }
@@ -25,6 +25,6 @@
   ],
   "statusLists": [
     { "issuerDid": "did:dbp:daegu", "listId": "dbp:status:daegu:list-1", "encodedListBase64url": "", "version": 1 },
-    { "issuerDid": "did:dbp:imbank", "listId": "dbp:status:imbank:list-1", "encodedListBase64url": "", "version": 1 }
+    { "issuerDid": "did:dbp:welfare", "listId": "dbp:status:welfare:list-1", "encodedListBase64url": "", "version": 1 }
   ]
 }

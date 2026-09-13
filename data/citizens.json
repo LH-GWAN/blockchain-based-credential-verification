@@ -394,6 +394,36 @@
     {
       "citizenId": "C-027",
       "name": "서혜진",
+      "birthDate": "1975-04-04",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "서구"
+      },
+      "householdSize": 2,
+      "monthlyIncomeKRW": 3750000,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "bottom20",
+      "annualIncomeKRW": 45000000
+    },
+    {
+      "citizenId": "C-028",
+      "name": "신종석",
+      "birthDate": "1975-04-04",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "서구"
+      },
+      "householdSize": 2,
+      "monthlyIncomeKRW": 3750001,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "bottom20",
+      "annualIncomeKRW": 45000001
+    },
+    {
+      "citizenId": "C-029",
+      "name": "권명자",
       "birthDate": "1974-11-12",
       "residence": {
         "sido": "대구광역시",
@@ -407,8 +437,8 @@
       "annualIncomeKRW": 68585796
     },
     {
-      "citizenId": "C-028",
-      "name": "신종석",
+      "citizenId": "C-030",
+      "name": "김다은",
       "birthDate": "1997-09-22",
       "residence": {
         "sido": "대구광역시",
@@ -420,36 +450,6 @@
       "hasStudentChild": true,
       "creditScoreTier": "other",
       "annualIncomeKRW": 34975812
-    },
-    {
-      "citizenId": "C-029",
-      "name": "권명자",
-      "birthDate": "1966-04-04",
-      "residence": {
-        "sido": "대구광역시",
-        "sigungu": "남구"
-      },
-      "householdSize": 6,
-      "monthlyIncomeKRW": 1867393,
-      "isBasicLivelihoodRecipient": false,
-      "hasStudentChild": false,
-      "creditScoreTier": "other",
-      "annualIncomeKRW": 22408716
-    },
-    {
-      "citizenId": "C-030",
-      "name": "김다은",
-      "birthDate": "1973-01-15",
-      "residence": {
-        "sido": "대구광역시",
-        "sigungu": "남구"
-      },
-      "householdSize": 3,
-      "monthlyIncomeKRW": 4463053,
-      "isBasicLivelihoodRecipient": false,
-      "hasStudentChild": false,
-      "creditScoreTier": "bottom20",
-      "annualIncomeKRW": 53556636
     }
   ]
 }

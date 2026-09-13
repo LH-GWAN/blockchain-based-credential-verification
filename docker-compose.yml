@@ -60,17 +60,17 @@ services:
       deployer: { condition: service_completed_successfully }
     networks: [net-citizen, net-issuer]
 
-  issuer-imbank:
+  issuer-welfare:
     <<: *python-base
     command: ["uv", "run", "python", "-m", "dbp_issuer"]
     environment:
       <<: *python-env
-      ISSUER_ID: imbank
+      ISSUER_ID: welfare
       ISSUER_PORT: "8003"
-      ISSUER_DB_PATH: /data/issuer-imbank.db
+      ISSUER_DB_PATH: /data/issuer-welfare.db
     volumes:
       - ./chain/deployments:/app/chain/deployments:ro
-      - issuer-imbank-data:/data
+      - issuer-welfare-data:/data
     ports: ["8003:8003"]
     depends_on:
       deployer: { condition: service_completed_successfully }
@@ -107,7 +107,7 @@ services:
       args: { APP: wallet }
     environment:
       NEXT_PUBLIC_ISSUER_DAEGU_URL: http://localhost:8001
-      NEXT_PUBLIC_ISSUER_IMBANK_URL: http://localhost:8003
+      NEXT_PUBLIC_ISSUER_WELFARE_URL: http://localhost:8003
       NEXT_PUBLIC_VERIFIER_URL: http://localhost:8002
       NEXT_PUBLIC_AI_URL: http://localhost:8004
       NEXT_PUBLIC_RPC_URL: http://localhost:8545
@@ -134,4 +134,4 @@ networks:
 
 volumes:
   issuer-daegu-data: {}
-  issuer-imbank-data: {}
+  issuer-welfare-data: {}

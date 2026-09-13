@@ -23,19 +23,19 @@ def test_persona_template_recommend(client, recommend_body, persona):
         assert it["headline"] and it["explanation"] and it["nextSteps"]
         assert store.by_id[it["policyId"]]["legalBasis"][0]["clauseId"] == it["citations"][0]
 
-    # 정렬: 복지 → 금융 → 교통, 그다음 policyId
-    assert [it["policyId"] for it in items] == ["basic-pension", "nbl-housing", "near-poor"]
+    # 정렬: 은행 서민금융(finance) 먼저, 제도명 가나다순 → 새희망홀씨, 소액생계비대출, 햇살론뱅크
+    assert [it["policyId"] for it in items] == ["new-hope-loan", "micro-livelihood-loan", "sunshine-loan-bank"]
 
 
-def test_template_ordering_across_categories(client, recommend_body):
-    """복지 정책이 1개뿐이면 금융 → 교통 순으로 이어진다."""
+def test_template_ordering_across_channels(client, recommend_body):
+    """서민금융 1개 → 민간 감면 → 공공 복지 순으로 이어진다 (교통은 마지막)."""
     keep = {"basic-pension", "micro-livelihood-loan", "daegu-metro-free", "telecom-discount"}
     recommend_body["ruleResults"] = [
         {**rr, "eligible": rr["eligible"] and rr["policyId"] in keep} for rr in recommend_body["ruleResults"]
     ]
     r = client.post("/recommend", json=recommend_body)
     assert [it["policyId"] for it in r.json()["recommendations"]] == [
-        "basic-pension", "micro-livelihood-loan", "daegu-metro-free"]
+        "micro-livelihood-loan", "telecom-discount", "basic-pension"]
 
 
 def test_no_eligible_policies_yields_empty_list(client, recommend_body):

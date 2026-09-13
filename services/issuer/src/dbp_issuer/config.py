@@ -4,16 +4,16 @@ import hashlib
 import os
 from dataclasses import dataclass, field
 
-ISSUER_NAMES = {"daegu": "대구광역시", "imbank": "iM뱅크"}
-# 발급기관별로 아는 원본 필드 (실서비스: 대구시=주민등록·복지 DB, 은행=KYC·신용정보)
+ISSUER_NAMES = {"daegu": "대구광역시", "welfare": "사회보장정보원(복지기관)"}
+# 발급기관별로 아는 원본 필드 (실서비스: 대구시=주민등록·가구, 복지기관=사회보장정보시스템의 소득인정액·수급·소득자료)
+# 은행은 발급기관이 아니다 — 검증기관일 뿐이며 신용평점은 창구가 자체 조회한다.
 ISSUER_KNOWN_FIELDS = {
-    "daegu": ["citizenId", "birthDate", "residence", "householdSize", "monthlyIncomeKRW",
-              "isBasicLivelihoodRecipient", "hasStudentChild"],
-    "imbank": ["citizenId", "creditScoreTier", "annualIncomeKRW"],
+    "daegu": ["citizenId", "birthDate", "residence", "householdSize", "hasStudentChild"],
+    "welfare": ["citizenId", "householdSize", "monthlyIncomeKRW", "isBasicLivelihoodRecipient", "annualIncomeKRW"],
 }
 DEFAULT_EVM_KEYS = {
     "daegu": "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d",   # hardhat #1
-    "imbank": "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a",  # hardhat #2
+    "welfare": "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a",  # hardhat #2
 }
 
 

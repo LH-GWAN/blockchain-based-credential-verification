@@ -1,0 +1,37 @@
+{
+  "policyId": "sunshine-loan-bank",
+  "name": "햇살론뱅크",
+  "category": "금융",
+  "channel": "finance",
+  "welfareMembership": false,
+  "verifierHint": "은행 창구에 '연소득 3,500만 원 이하 = 참' 증명서 제출. 소득금액증명 원본 불필요. 신용평점은 은행이 자체 조회",
+  "agency": "서민금융진흥원 보증 / 시중은행(iM뱅크 등) 창구",
+  "summary": "정책서민금융을 성실히 이용한 분이 은행에서 받을 수 있는 보증부 대출입니다. 연소득 3,500만 원 이하이거나, 신용평점 하위 20%이면서 연소득 4,500만 원 이하이면 대상입니다.",
+  "howToApply": "취급 은행 창구 또는 은행 앱에서 신청 (서민금융진흥원 보증 심사 포함)",
+  "legalBasis": [
+    {
+      "clauseId": "sunshine-bank-c1",
+      "title": "햇살론뱅크 지원 대상 (서민금융진흥원 상품 안내)",
+      "text": "연소득 3,500만 원 이하, 또는 신용평점 하위 20%이면서 연소득 4,500만 원 이하인 분 중 정책서민금융 이용 후 성실상환 등 요건을 충족한 분.",
+      "sourceUrl": "https://www.kinfa.or.kr"
+    },
+    {
+      "clauseId": "sunshine-bank-c2",
+      "title": "서민의 금융생활 지원에 관한 법률 제2조·제3조",
+      "text": "서민금융진흥원은 서민의 금융생활 안정을 위한 보증·대출 지원 사업을 수행한다.",
+      "sourceUrl": "https://www.law.go.kr/법령/서민의금융생활지원에관한법률"
+    }
+  ],
+  "basisVerified": true,
+  "requiredClaims": [
+    {
+      "claim": "annualIncomeUnder35M",
+      "expected": true
+    }
+  ],
+  "ruleRef": {
+    "bundle": "daegu-eligibility",
+    "version": "2026.1"
+  },
+  "notes": "규칙: 연소득 3,500만 원 이하 OR (신용 하위 20% AND 연소득 4,500만 원 이하). 정책서민금융 이용 이력·성실상환 요건은 은행 심사로 두고 MVP 규칙에서 제외. 복지멤버십 안내 대상이 아닌 민간 창구 상품."
+}

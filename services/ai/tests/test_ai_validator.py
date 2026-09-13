@@ -35,7 +35,7 @@ def test_fake_llm_only_valid_item_survives_and_list_is_topped_up(client, recomme
     llm_items = [it for it in items if it["source"] == "llm"]
     assert [it["policyId"] for it in llm_items] == ["nbl-housing"]
     assert llm_items[0]["citations"] == ["nbl-housing-c2"]
-    assert {it["policyId"] for it in items if it["source"] == "template"} == {"basic-pension", "near-poor"}
+    assert {it["policyId"] for it in items if it["source"] == "template"} == {"new-hope-loan", "micro-livelihood-loan"}
     assert all(it["policyId"] != "daegu-youth-happiness" for it in items)
 
 

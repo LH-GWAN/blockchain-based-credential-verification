@@ -2,6 +2,9 @@
   "policyId": "nbl-housing",
   "name": "주거급여",
   "category": "복지",
+  "channel": "welfare",
+  "welfareMembership": true,
+  "verifierHint": "행정복지센터 신청. 은행 창구 제출 대상 아님",
   "agency": "국토교통부 / 대구광역시 각 구·군",
   "summary": "소득인정액이 기준 중위소득의 48% 이하인 가구에 임차료(임차가구) 또는 수선비(자가가구)를 지원합니다.",
   "howToApply": "주소지 행정복지센터 방문 신청 또는 복지로 온라인 신청. 임대차계약서 필요",
@@ -20,7 +23,15 @@
     }
   ],
   "basisVerified": true,
-  "requiredClaims": [ { "claim": "incomeBelow48Median", "expected": true } ],
-  "ruleRef": { "bundle": "daegu-eligibility", "version": "2026.1" },
+  "requiredClaims": [
+    {
+      "claim": "incomeBelow48Median",
+      "expected": true
+    }
+  ],
+  "ruleRef": {
+    "bundle": "daegu-eligibility",
+    "version": "2026.1"
+  },
   "notes": "MVP는 소득인정액을 월 소득으로 단순화."
 }

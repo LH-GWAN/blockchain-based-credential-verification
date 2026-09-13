@@ -2,6 +2,9 @@
   "policyId": "nbl-education",
   "name": "교육급여",
   "category": "복지",
+  "channel": "welfare",
+  "welfareMembership": true,
+  "verifierHint": "행정복지센터·교육청 신청",
   "agency": "교육부 / 대구광역시교육청",
   "summary": "소득인정액이 기준 중위소득의 50% 이하인 가구의 초·중·고 학생에게 교육활동지원비 등을 지원합니다.",
   "howToApply": "주소지 행정복지센터 또는 복지로·교육비 원클릭 신청",
@@ -21,9 +24,18 @@
   ],
   "basisVerified": true,
   "requiredClaims": [
-    { "claim": "incomeBelow50Median", "expected": true },
-    { "claim": "hasStudentChild", "expected": true }
+    {
+      "claim": "incomeBelow50Median",
+      "expected": true
+    },
+    {
+      "claim": "hasStudentChild",
+      "expected": true
+    }
   ],
-  "ruleRef": { "bundle": "daegu-eligibility", "version": "2026.1" },
+  "ruleRef": {
+    "bundle": "daegu-eligibility",
+    "version": "2026.1"
+  },
   "notes": "학생 자녀 유무는 합성 프로필의 hasStudentChild 필드로 단순화."
 }

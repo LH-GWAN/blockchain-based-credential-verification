@@ -4,7 +4,7 @@
 
 ## P0 — 없으면 제출 불가
 - [x] 저장소 뼈대 (pnpm workspace, uv workspace, .env.example, .gitignore)
-- [x] `data/`: 기준 중위소득 2026(고시 확인 완료), 정책 9종, 합성 시민 30명, 기댓값 270건
+- [x] `data/`: 기준 중위소득 2026(고시 확인 완료), 정책 13종(개정: 은행 서민금융·민간 감면 추가), 합성 시민 30명, 기댓값 390건
 - [x] `packages/rules/py`: JSON Logic 부분집합 엔진, 번들 조합·해시, 참조 구현, 테스트 14건
 - [x] `packages/rules/ts`: Python 과 동일 의미의 TS 미러 (해시 동일성 테스트)
 - [x] `packages/vc`: did:key, VC/VP JWS(EdDSA), Bitstring Status List, JCS 해시 (TS/Py 교차 검증)

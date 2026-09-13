@@ -24,6 +24,12 @@ export interface PolicyMeta {
   requiredClaims: RequiredClaim[];
   ruleRef: { bundle: string; version: string };
   notes?: string;
+  /** 제출 창구 종류: 'welfare' | 'finance' | 'discount' | 'transport'. */
+  channel?: string;
+  /** 복지멤버십(163종)이 이미 안내하는 공공 복지인지. */
+  welfareMembership?: boolean;
+  /** 창구에 무엇을 제출하는지 한 줄 안내. */
+  verifierHint?: string;
 }
 
 /** policyId → 메타데이터 (Python `policy_index`). */

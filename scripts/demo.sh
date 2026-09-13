@@ -25,9 +25,9 @@ echo "[demo] 컨트랙트 배포 + 원장 시드"
 pnpm --filter @dbp/chain deploy:localhost > .demo/deploy.log 2>&1
 uv run python scripts/seed_ledger.py | tail -3
 
-echo "[demo] 발급기관(대구시 8001, iM뱅크 8003) · 검증기관(8002) · AI(8004) 기동"
+echo "[demo] 발급기관(대구시 8001, 복지기관 8003) · 검증기관(8002) · AI(8004) 기동"
 (ISSUER_ID=daegu ISSUER_PORT=8001 ISSUER_DB_PATH=.demo/issuer-daegu.db uv run python -m dbp_issuer > .demo/issuer-daegu.log 2>&1) & PIDS+=($!)
-(ISSUER_ID=imbank ISSUER_PORT=8003 ISSUER_DB_PATH=.demo/issuer-imbank.db uv run python -m dbp_issuer > .demo/issuer-imbank.log 2>&1) & PIDS+=($!)
+(ISSUER_ID=welfare ISSUER_PORT=8003 ISSUER_DB_PATH=.demo/issuer-welfare.db uv run python -m dbp_issuer > .demo/issuer-welfare.log 2>&1) & PIDS+=($!)
 (VERIFIER_PORT=8002 uv run python -m dbp_verifier > .demo/verifier.log 2>&1) & PIDS+=($!)
 (AI_PORT=8004 uv run python -m dbp_ai > .demo/ai.log 2>&1) & PIDS+=($!)
 wait_http http://localhost:8001/health; wait_http http://localhost:8003/health; wait_http http://localhost:8002/health; wait_http http://localhost:8004/health
@@ -45,7 +45,7 @@ cat <<MSG
   ✅ 시연 준비 완료
      시민 지갑       http://localhost:$WALLET_PORT   (모바일 폭으로 보세요)
      검증기관 화면   http://localhost:$VERIFIER_APP_PORT
-     발급기관 관리   http://localhost:8001/docs  (대구시)  ·  http://localhost:8003/docs (iM뱅크)
+     발급기관 관리   http://localhost:8001/docs  (대구시)  ·  http://localhost:8003/docs (복지기관)
      로그            .demo/*.log
   docs/DEMO.md 의 ①~⑤ 순서대로 진행하세요. 종료: Ctrl+C
 

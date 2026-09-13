@@ -2,6 +2,9 @@
   "policyId": "energy-voucher",
   "name": "에너지바우처",
   "category": "복지",
+  "channel": "welfare",
+  "welfareMembership": true,
+  "verifierHint": "행정복지센터 신청",
   "agency": "산업통상자원부 / 한국에너지공단 / 대구광역시 각 구·군",
   "summary": "생계·의료·주거·교육급여 수급 가구 중 노인·장애인·영유아 등이 포함된 세대에 냉난방 에너지 비용을 바우처로 지원합니다.",
   "howToApply": "주소지 행정복지센터 방문 신청 또는 복지로 온라인 신청 (매년 5월~12월)",
@@ -21,9 +24,18 @@
   ],
   "basisVerified": true,
   "requiredClaims": [
-    { "claim": "isBenefitRecipient", "expected": true },
-    { "claim": "ageOver65", "expected": true }
+    {
+      "claim": "isBenefitRecipient",
+      "expected": true
+    },
+    {
+      "claim": "ageOver65",
+      "expected": true
+    }
   ],
-  "ruleRef": { "bundle": "daegu-eligibility", "version": "2026.1" },
+  "ruleRef": {
+    "bundle": "daegu-eligibility",
+    "version": "2026.1"
+  },
   "notes": "세대원 특성기준 중 '노인(65세 이상)'만 구현. 주거급여 신청 후 수급자가 되면 신청 가능하다는 안내를 AI 설명에 포함."
 }
