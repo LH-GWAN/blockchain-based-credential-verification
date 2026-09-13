@@ -24,6 +24,9 @@ make setup      # pnpm install + uv sync --all-packages
 make build      # TS 패키지 빌드 + 컨트랙트 컴파일
 make test       # Python + TS + 컨트랙트 테스트
 make demo       # 체인 → 배포·시드 → 발급기관 2 → 검증기관 → AI → 지갑·검증기관 앱
+make e2e        # (make demo 상태에서) Playwright 로 시연 ①~⑤ 자동 재현 + docs/screenshots 갱신
+make smoke      # 헤드리스 통합: 체인 기동부터 발급·검증·폐기·공격·벤치·PII 스캔까지
+make report     # docs/TEST_REPORT.md 재생성
 ```
 
 `make demo` 후: 시민 지갑 http://localhost:3000 · 검증기관 http://localhost:3001 · 발급기관 API http://localhost:8001/docs (대구시) / 8003 (iM뱅크) · 검증 API 8002 · AI 8004.
@@ -46,6 +49,14 @@ chain/                 Solidity 컨트랙트 4종 · Hardhat · 배포/시드 ·
 data/                  기준 중위소득 2026(고시 확인) · 정책 9종 · 합성 시민 30명 · 기댓값
 scripts/               시드 · 시연 · 벤치 · PII 지표 · 리포트
 ```
+
+## 화면
+
+| 시민 지갑 (PWA) | 검증기관 화면 |
+|---|---|
+| ![](docs/screenshots/04-wallet-credentials.png) | ![](docs/screenshots/10-verifier-result-pass.png) |
+
+전체 14장: [docs/screenshots/](docs/screenshots/) (Playwright E2E 가 자동 생성)
 
 ## 원장에 올라가는 것 / 올라가지 않는 것
 

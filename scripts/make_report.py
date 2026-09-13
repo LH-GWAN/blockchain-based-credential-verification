@@ -62,6 +62,8 @@ def main() -> int:
     ts_vc = vitest_summary("@dbp/vc", "packages/vc/ts")
     hh = hardhat_summary()
     bench = json.loads((ROOT / "docs/bench.json").read_text()) if (ROOT / "docs/bench.json").exists() else None
+    last = ROOT / "apps/e2e/test-results/.last-run.json"
+    e2e = json.loads(last.read_text()) if last.exists() else None
     commit = run(["git", "rev-parse", "--short", "HEAD"])[1].strip()
     now = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
 
@@ -80,6 +82,7 @@ def main() -> int:
         f"| AI 신뢰성·PII 차단 | 인용 검증, 환각 프로브, 페이로드 allowlist | services/ai 테스트 | {mark(py.get('ok'))} |",
         f"| 검증 성능 | p95 < 2,000ms | {('p95 ' + str(bench.get('p95Ms')) + 'ms, 평균 ' + str(bench.get('meanMs')) + 'ms (' + str(bench.get('runs')) + '회)') if bench else '미측정 (scripts/bench_verify.py 실행 필요)'} | {mark(bench and bench.get('p95Ms', 9999) < 2000)} |",
         f"| 원장 무기록 | 체인 calldata·이벤트에 PII 0건 | chain/scripts/scan-pii.ts | {bench.get('piiScan', '미실행') if bench else '미실행'} |",
+        f"| 시연 재현 | ①~⑤ 전 과정 + 공격 4종 자동 재현 | Playwright `apps/e2e` (마지막 실행: {e2e.get('status') if e2e else '미실행'}) | {mark(e2e and e2e.get('status') == 'passed')} |",
         "", "## 스위트별 결과", "",
         f"- Python (pytest): {py}", f"- @dbp/rules (vitest): {ts_rules}", f"- @dbp/vc (vitest): {ts_vc}", f"- @dbp/chain (hardhat): {hh}", "",
         "## 개인정보 최소화 상세", "", "```json", json.dumps(pii, ensure_ascii=False, indent=2), "```", "",

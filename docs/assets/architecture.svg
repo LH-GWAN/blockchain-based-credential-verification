@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1240" width="1800" height="1240" font-family="Apple SD Gothic Neo, Noto Sans KR, Malgun Gothic, sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#44506b"/>
+    </marker>
+  </defs>
+
+  <rect width="1800" height="1240" fill="#ffffff"/>
+
+  <text x="900" y="58" text-anchor="middle" font-size="36" font-weight="700" fill="#1a202c">대구 혜택패스 시스템 구조도</text>
+  <text x="900" y="96" text-anchor="middle" font-size="19" fill="#5a6478">AI는 탐색·설명, 규칙 엔진은 판정, 블록체인은 신뢰 검증 — 개인정보 원문은 단말과 발급기관을 벗어나지 않는다</text>
+
+  <!-- ================= Panel A : 발급기관 ================= -->
+  <rect x="40" y="130" width="440" height="660" rx="14" fill="#f2f6fb" stroke="#c3d5ea" stroke-width="2"/>
+  <path d="M40,144 a14,14 0 0 1 14,-14 h412 a14,14 0 0 1 14,14 v40 h-440 z" fill="#1e4e8c"/>
+  <text x="260" y="167" text-anchor="middle" font-size="22" font-weight="700" fill="#ffffff">발급기관</text>
+
+  <rect x="62" y="223" width="396" height="150" rx="10" fill="#ffffff" stroke="#c3d5ea" stroke-width="1.6"/>
+  <text x="260" y="259" text-anchor="middle" font-size="18" font-weight="700" fill="#1e4e8c">대구시 · 복지기관 · 은행</text>
+  <text x="260" y="293" text-anchor="middle" font-size="15" fill="#3f4a5c">자격 선정기준을 JSON Logic</text>
+  <text x="260" y="319" text-anchor="middle" font-size="15" fill="#3f4a5c">규칙으로 코드화</text>
+  <text x="260" y="345" text-anchor="middle" font-size="15" fill="#3f4a5c">규칙 · 스키마 버전을 원장에 등록</text>
+
+  <rect x="62" y="412" width="396" height="150" rx="10" fill="#ffffff" stroke="#c3d5ea" stroke-width="1.6"/>
+  <text x="260" y="448" text-anchor="middle" font-size="18" font-weight="700" fill="#1e4e8c">발급기관 서버</text>
+  <text x="260" y="482" text-anchor="middle" font-size="15" fill="#3f4a5c">지갑과 동일한 규칙 버전으로</text>
+  <text x="260" y="508" text-anchor="middle" font-size="15" fill="#3f4a5c">최종 자격 판정</text>
+  <text x="260" y="534" text-anchor="middle" font-size="15" fill="#3f4a5c">판정 결과에 Ed25519 전자서명</text>
+
+  <rect x="62" y="601" width="396" height="150" rx="10" fill="#fff8e6" stroke="#e5c26a" stroke-width="1.6"/>
+  <text x="260" y="637" text-anchor="middle" font-size="18" font-weight="700" fill="#8a6a10">원본 심사자료는 기관 내부에</text>
+  <text x="260" y="671" text-anchor="middle" font-size="15" fill="#5c4a12">소득금액 · 주민번호 등 원본은</text>
+  <text x="260" y="697" text-anchor="middle" font-size="15" fill="#5c4a12">기관 밖으로 나가지 않고,</text>
+  <text x="260" y="723" text-anchor="middle" font-size="15" fill="#5c4a12">증명서에는 충족 여부만 담긴다</text>
+
+  <!-- ================= Panel B : 시민 ================= -->
+  <rect x="680" y="130" width="440" height="660" rx="14" fill="#f1f8f6" stroke="#bcdfd6" stroke-width="2"/>
+  <path d="M680,144 a14,14 0 0 1 14,-14 h412 a14,14 0 0 1 14,14 v40 h-440 z" fill="#0f7b6c"/>
+  <text x="900" y="167" text-anchor="middle" font-size="22" font-weight="700" fill="#ffffff">시민 혜택지갑 (PWA)</text>
+
+  <rect x="702" y="223" width="396" height="150" rx="10" fill="#ffffff" stroke="#bcdfd6" stroke-width="1.6"/>
+  <text x="900" y="259" text-anchor="middle" font-size="18" font-weight="700" fill="#0f7b6c">AI 혜택 탐색 · 설명</text>
+  <text x="900" y="293" text-anchor="middle" font-size="15" fill="#3f4a5c">RAG 기반 추천 + 근거 조항 인용</text>
+  <text x="900" y="319" text-anchor="middle" font-size="15" fill="#3f4a5c">근거를 인용하지 못하면 비노출</text>
+  <text x="900" y="345" text-anchor="middle" font-size="15" fill="#3f4a5c">원본 대신 범주값만 입력받음</text>
+
+  <rect x="702" y="412" width="396" height="150" rx="10" fill="#ffffff" stroke="#bcdfd6" stroke-width="1.6"/>
+  <text x="900" y="448" text-anchor="middle" font-size="18" font-weight="700" fill="#0f7b6c">규칙 엔진 사전 판정</text>
+  <text x="900" y="482" text-anchor="middle" font-size="15" fill="#3f4a5c">단말 안에서 실행</text>
+  <text x="900" y="508" text-anchor="middle" font-size="15" fill="#3f4a5c">개인정보 외부 전송 없이</text>
+  <text x="900" y="534" text-anchor="middle" font-size="15" fill="#3f4a5c">해당 제도를 미리 선별</text>
+
+  <rect x="702" y="601" width="396" height="150" rx="10" fill="#ffffff" stroke="#bcdfd6" stroke-width="1.6"/>
+  <text x="900" y="637" text-anchor="middle" font-size="18" font-weight="700" fill="#0f7b6c">원자적 자격 VC 보관</text>
+  <text x="900" y="669" text-anchor="middle" font-size="14.5" fill="#1a5c52">"대구 거주 + 기준 중위소득 50% 이하 = 참"</text>
+  <text x="900" y="699" text-anchor="middle" font-size="15" fill="#3f4a5c">이름 · 주민번호 · 소득금액은</text>
+  <text x="900" y="725" text-anchor="middle" font-size="15" fill="#3f4a5c">단말을 벗어나지 않는다</text>
+
+  <!-- ================= Panel C : 검증기관 ================= -->
+  <rect x="1320" y="130" width="440" height="660" rx="14" fill="#f6f3fc" stroke="#d5c9ec" stroke-width="2"/>
+  <path d="M1320,144 a14,14 0 0 1 14,-14 h412 a14,14 0 0 1 14,14 v40 h-440 z" fill="#5b3f9e"/>
+  <text x="1540" y="167" text-anchor="middle" font-size="22" font-weight="700" fill="#ffffff">검증기관 (은행 창구 · 복지기관)</text>
+
+  <rect x="1342" y="223" width="396" height="150" rx="10" fill="#ffffff" stroke="#d5c9ec" stroke-width="1.6"/>
+  <text x="1540" y="259" text-anchor="middle" font-size="18" font-weight="700" fill="#5b3f9e">검증 요청 QR 생성</text>
+  <text x="1540" y="293" text-anchor="middle" font-size="15" fill="#3f4a5c">요청 항목 + 1회성 nonce</text>
+  <text x="1540" y="319" text-anchor="middle" font-size="15" fill="#3f4a5c">예: 거주지 · 소득기준 충족 여부</text>
+  <text x="1540" y="345" text-anchor="middle" font-size="15" fill="#3f4a5c">재사용 · 복제 제출 차단</text>
+
+  <rect x="1342" y="412" width="396" height="150" rx="10" fill="#ffffff" stroke="#d5c9ec" stroke-width="1.6"/>
+  <text x="1540" y="448" text-anchor="middle" font-size="18" font-weight="700" fill="#5b3f9e">검증 결과 화면</text>
+  <text x="1540" y="482" text-anchor="middle" font-size="15" fill="#3f4a5c">자격 충족 여부 · 발급기관 ·</text>
+  <text x="1540" y="508" text-anchor="middle" font-size="15" fill="#3f4a5c">유효상태만 표시</text>
+  <text x="1540" y="534" text-anchor="middle" font-size="15" fill="#3f4a5c">서명 검증 포함 2초 이내</text>
+
+  <rect x="1342" y="601" width="396" height="150" rx="10" fill="#fff8e6" stroke="#e5c26a" stroke-width="1.6"/>
+  <text x="1540" y="637" text-anchor="middle" font-size="18" font-weight="700" fill="#8a6a10">발급기관에 직접 조회하지 않음</text>
+  <text x="1540" y="671" text-anchor="middle" font-size="15" fill="#5c4a12">발급기관이 시민의 제출 시점 ·</text>
+  <text x="1540" y="697" text-anchor="middle" font-size="15" fill="#5c4a12">상대를 알 수 없으므로</text>
+  <text x="1540" y="723" text-anchor="middle" font-size="15" fill="#5c4a12">이용 이력 추적이 차단된다</text>
+
+  <!-- ================= Arrows : A <-> B ================= -->
+  <text x="580" y="465" text-anchor="middle" font-size="14" font-weight="600" fill="#2d3748">① 규칙 정의 배포</text>
+  <text x="580" y="483" text-anchor="middle" font-size="13" fill="#5a6478">(동일 규칙 버전 공유)</text>
+  <line x1="490" y1="499" x2="670" y2="499" stroke="#44506b" stroke-width="2.4" marker-end="url(#ah)"/>
+
+  <text x="580" y="634" text-anchor="middle" font-size="14" font-weight="600" fill="#2d3748">③ 자격 VC 발급 요청</text>
+  <text x="580" y="652" text-anchor="middle" font-size="13" fill="#5a6478">(시민 동의)</text>
+  <line x1="670" y1="668" x2="490" y2="668" stroke="#44506b" stroke-width="2.4" marker-end="url(#ah)"/>
+
+  <text x="580" y="700" text-anchor="middle" font-size="14" font-weight="600" fill="#2d3748">④ 원자적 자격 VC 발급</text>
+  <text x="580" y="718" text-anchor="middle" font-size="13" fill="#5a6478">(Ed25519 서명)</text>
+  <line x1="490" y1="734" x2="670" y2="734" stroke="#44506b" stroke-width="2.4" marker-end="url(#ah)"/>
+
+  <!-- ================= Arrows : B <-> C ================= -->
+  <text x="1220" y="634" text-anchor="middle" font-size="14" font-weight="600" fill="#2d3748">⑤ 검증 요청 QR</text>
+  <text x="1220" y="652" text-anchor="middle" font-size="13" fill="#5a6478">(요청 항목 + nonce)</text>
+  <line x1="1310" y1="668" x2="1130" y2="668" stroke="#44506b" stroke-width="2.4" marker-end="url(#ah)"/>
+
+  <text x="1220" y="700" text-anchor="middle" font-size="14" font-weight="600" fill="#2d3748">⑥ 항목 동의 후</text>
+  <text x="1220" y="718" text-anchor="middle" font-size="13" fill="#5a6478">서명 제출 (VP)</text>
+  <line x1="1130" y1="734" x2="1310" y2="734" stroke="#44506b" stroke-width="2.4" marker-end="url(#ah)"/>
+
+  <!-- ================= Arrows : to ledger ================= -->
+  <line x1="260" y1="790" x2="260" y2="842" stroke="#44506b" stroke-width="2.4" marker-end="url(#ah)"/>
+  <text x="280" y="808" font-size="14" font-weight="600" fill="#2d3748">② 공개키 · 스키마 ·</text>
+  <text x="280" y="828" font-size="13" fill="#5a6478">규칙 버전 등록</text>
+
+  <line x1="1540" y1="790" x2="1540" y2="842" stroke="#44506b" stroke-width="2.4" marker-end="url(#ah)"/>
+  <text x="1520" y="808" text-anchor="end" font-size="14" font-weight="600" fill="#2d3748">⑦ 발급기관 · 폐기</text>
+  <text x="1520" y="828" text-anchor="end" font-size="13" fill="#5a6478">상태 조회</text>
+
+  <!-- ================= Ledger ================= -->
+  <rect x="40" y="850" width="1720" height="300" rx="14" fill="#f7f8fa" stroke="#cbd2dc" stroke-width="2"/>
+  <path d="M40,864 a14,14 0 0 1 14,-14 h1692 a14,14 0 0 1 14,14 v40 h-1720 z" fill="#2d3748"/>
+  <text x="900" y="887" text-anchor="middle" font-size="21" font-weight="700" fill="#ffffff">블록체인 공동원장 — Hyperledger Besu 권한형 네트워크 (QBFT)</text>
+
+  <line x1="910" y1="922" x2="910" y2="1122" stroke="#cbd2dc" stroke-width="1.6"/>
+
+  <text x="80" y="952" font-size="19" font-weight="700" fill="#1e7a4f">✓  원장에 기록하는 것</text>
+  <text x="80" y="994" font-size="15" fill="#35414f">· 발급기관 공개키 (DID 문서)</text>
+  <text x="80" y="1028" font-size="15" fill="#35414f">· 증명서 스키마 · 규칙 버전 해시</text>
+  <text x="80" y="1062" font-size="15" fill="#35414f">· 폐기 · 정지 상태 목록 (Bitstring Status List)</text>
+  <text x="80" y="1096" font-size="15" fill="#35414f">· 동의 · 제출 영수증의 솔트 포함 해시</text>
+
+  <text x="950" y="952" font-size="19" font-weight="700" fill="#b3261e">✕  원장에 기록하지 않는 것</text>
+  <text x="950" y="994" font-size="15" fill="#35414f">· 이름 · 주민등록번호 · 주소</text>
+  <text x="950" y="1028" font-size="15" fill="#35414f">· 소득금액 · 장애정보 · 계좌내역</text>
+  <text x="950" y="1062" font-size="15" fill="#35414f">· AI 상담 내용</text>
+  <text x="950" y="1096" font-size="15" fill="#35414f">· 발급된 증명서 원문</text>
+
+  <text x="900" y="1200" text-anchor="middle" font-size="16" fill="#5a6478">※ 기관에 전달되는 정보는 자격 충족 여부(참/거짓)와 발급기관 · 유효상태뿐이며, 판정 근거가 된 원본 수치는 어디에도 공유되지 않는다</text>
+</svg>
