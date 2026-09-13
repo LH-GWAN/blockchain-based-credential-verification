@@ -1,0 +1,455 @@
+{
+  "notice": "전원 가명·합성 데이터. 실존 인물과 무관.",
+  "citizens": [
+    {
+      "citizenId": "C-001",
+      "name": "김복례",
+      "birthDate": "1958-03-12",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "북구"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 1000000,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "bottom20",
+      "annualIncomeKRW": 12000000
+    },
+    {
+      "citizenId": "C-002",
+      "name": "박순자",
+      "birthDate": "1970-05-01",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "남구"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 820556,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 9846672
+    },
+    {
+      "citizenId": "C-003",
+      "name": "최영희",
+      "birthDate": "1970-05-01",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "남구"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 820557,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 9846684
+    },
+    {
+      "citizenId": "C-004",
+      "name": "정철수",
+      "birthDate": "1961-12-31",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "동구"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 1230834,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 14770008
+    },
+    {
+      "citizenId": "C-005",
+      "name": "강민수",
+      "birthDate": "1961-12-31",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "동구"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 1230835,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 14770020
+    },
+    {
+      "citizenId": "C-006",
+      "name": "조지영",
+      "birthDate": "1990-07-07",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "서구"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 1282119,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 15385428
+    },
+    {
+      "citizenId": "C-007",
+      "name": "윤현우",
+      "birthDate": "1990-07-07",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "서구"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 1282120,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 15385440
+    },
+    {
+      "citizenId": "C-008",
+      "name": "장수진",
+      "birthDate": "1980-01-15",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "군위군"
+      },
+      "householdSize": 2,
+      "monthlyIncomeKRW": 2015660,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 24187920
+    },
+    {
+      "citizenId": "C-009",
+      "name": "임미경",
+      "birthDate": "1980-01-15",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "북구"
+      },
+      "householdSize": 3,
+      "monthlyIncomeKRW": 2572337,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": true,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 30868044
+    },
+    {
+      "citizenId": "C-010",
+      "name": "한동현",
+      "birthDate": "1980-01-15",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "남구"
+      },
+      "householdSize": 4,
+      "monthlyIncomeKRW": 3117474,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": true,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 37409688
+    },
+    {
+      "citizenId": "C-011",
+      "name": "오은주",
+      "birthDate": "1980-01-15",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "동구"
+      },
+      "householdSize": 5,
+      "monthlyIncomeKRW": 3820345,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": true,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 45844140
+    },
+    {
+      "citizenId": "C-012",
+      "name": "서성호",
+      "birthDate": "1980-01-15",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "서구"
+      },
+      "householdSize": 6,
+      "monthlyIncomeKRW": 4587101,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": true,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 55045212
+    },
+    {
+      "citizenId": "C-013",
+      "name": "신정숙",
+      "birthDate": "1961-09-14",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "중구"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 1500000,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 18000000
+    },
+    {
+      "citizenId": "C-014",
+      "name": "권태영",
+      "birthDate": "1961-09-15",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "중구"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 1500000,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 18000000
+    },
+    {
+      "citizenId": "C-015",
+      "name": "김하늘",
+      "birthDate": "1958-12-31",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "수성구"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 2470000,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 29640000
+    },
+    {
+      "citizenId": "C-016",
+      "name": "이보람",
+      "birthDate": "1959-01-01",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "수성구"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 2470001,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 29640012
+    },
+    {
+      "citizenId": "C-017",
+      "name": "박경호",
+      "birthDate": "1955-06-06",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "달서구"
+      },
+      "householdSize": 2,
+      "monthlyIncomeKRW": 3952000,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 47424000
+    },
+    {
+      "citizenId": "C-018",
+      "name": "최말순",
+      "birthDate": "1955-06-06",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "달서구"
+      },
+      "householdSize": 2,
+      "monthlyIncomeKRW": 3952001,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 47424012
+    },
+    {
+      "citizenId": "C-019",
+      "name": "정옥분",
+      "birthDate": "1957-02-02",
+      "residence": {
+        "sido": "경상북도",
+        "sigungu": "경산시"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 900000,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "bottom20",
+      "annualIncomeKRW": 10800000
+    },
+    {
+      "citizenId": "C-020",
+      "name": "강재훈",
+      "birthDate": "1957-02-02",
+      "residence": {
+        "sido": "경상북도",
+        "sigungu": "구미시"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 900000,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "bottom20",
+      "annualIncomeKRW": 10800000
+    },
+    {
+      "citizenId": "C-021",
+      "name": "조소연",
+      "birthDate": "1957-02-02",
+      "residence": {
+        "sido": "부산광역시",
+        "sigungu": "해운대구"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 900000,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "bottom20",
+      "annualIncomeKRW": 10800000
+    },
+    {
+      "citizenId": "C-022",
+      "name": "윤기태",
+      "birthDate": "1950-10-10",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "달성군"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 700000,
+      "isBasicLivelihoodRecipient": true,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 8400000
+    },
+    {
+      "citizenId": "C-023",
+      "name": "장유진",
+      "birthDate": "1985-10-10",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "군위군"
+      },
+      "householdSize": 2,
+      "monthlyIncomeKRW": 1200000,
+      "isBasicLivelihoodRecipient": true,
+      "hasStudentChild": true,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 14400000
+    },
+    {
+      "citizenId": "C-024",
+      "name": "임병철",
+      "birthDate": "1992-03-03",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "북구"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 2916666,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "bottom20",
+      "annualIncomeKRW": 35000000
+    },
+    {
+      "citizenId": "C-025",
+      "name": "한선미",
+      "birthDate": "1992-03-03",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "북구"
+      },
+      "householdSize": 1,
+      "monthlyIncomeKRW": 2916667,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "bottom20",
+      "annualIncomeKRW": 35000001
+    },
+    {
+      "citizenId": "C-026",
+      "name": "오광수",
+      "birthDate": "1988-08-08",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "남구"
+      },
+      "householdSize": 3,
+      "monthlyIncomeKRW": 2000000,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 24000000
+    },
+    {
+      "citizenId": "C-027",
+      "name": "서혜진",
+      "birthDate": "1974-11-12",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "북구"
+      },
+      "householdSize": 4,
+      "monthlyIncomeKRW": 5715483,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 68585796
+    },
+    {
+      "citizenId": "C-028",
+      "name": "신종석",
+      "birthDate": "1997-09-22",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "서구"
+      },
+      "householdSize": 6,
+      "monthlyIncomeKRW": 2914651,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": true,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 34975812
+    },
+    {
+      "citizenId": "C-029",
+      "name": "권명자",
+      "birthDate": "1966-04-04",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "남구"
+      },
+      "householdSize": 6,
+      "monthlyIncomeKRW": 1867393,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "other",
+      "annualIncomeKRW": 22408716
+    },
+    {
+      "citizenId": "C-030",
+      "name": "김다은",
+      "birthDate": "1973-01-15",
+      "residence": {
+        "sido": "대구광역시",
+        "sigungu": "남구"
+      },
+      "householdSize": 3,
+      "monthlyIncomeKRW": 4463053,
+      "isBasicLivelihoodRecipient": false,
+      "hasStudentChild": false,
+      "creditScoreTier": "bottom20",
+      "annualIncomeKRW": 53556636
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "policyId": "near-poor",
+  "name": "차상위계층 확인",
+  "category": "복지",
+  "agency": "보건복지부 / 대구광역시 각 구·군",
+  "summary": "기초생활보장 수급자는 아니지만 소득인정액이 기준 중위소득의 50% 이하인 가구를 차상위계층으로 확인해 각종 감면·지원 혜택의 근거가 됩니다.",
+  "howToApply": "주소지 행정복지센터에서 차상위계층 확인서 발급 신청",
+  "legalBasis": [
+    {
+      "clauseId": "near-poor-c1",
+      "title": "국민기초생활 보장법 제2조 제10호(차상위계층)",
+      "text": "차상위계층이란 수급권자에 해당하지 아니하는 계층으로서 소득인정액이 기준 중위소득의 100분의 50 이하인 사람을 말한다.",
+      "sourceUrl": "https://www.law.go.kr/법령/국민기초생활보장법/제2조"
+    }
+  ],
+  "basisVerified": true,
+  "requiredClaims": [
+    { "claim": "incomeBelow50Median", "expected": true },
+    { "claim": "isBenefitRecipient", "expected": false }
+  ],
+  "ruleRef": { "bundle": "daegu-eligibility", "version": "2026.1" },
+  "notes": ""
+}

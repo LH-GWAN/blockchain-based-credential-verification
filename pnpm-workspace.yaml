@@ -1,0 +1,6 @@
+packages:
+  - "apps/*"
+  - "packages/*/ts"
+  - "chain"
+allowBuilds:
+  esbuild: true  # hardhat 3 → tsx → esbuild postinstall (바이너리 검증만 수행)

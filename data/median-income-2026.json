@@ -1,0 +1,29 @@
+{
+  "year": 2026,
+  "title": "2026년 기준 중위소득 (월, 원)",
+  "source": "보건복지부 고시 제2025-135호 「2026년 기준 중위소득 및 생계·의료급여 선정기준과 최저보장수준」",
+  "sourceUrl": "https://www.mohw.go.kr/board.es?mid=a10409020000&bid=0026&list_no=1487112&act=view",
+  "pressReleaseUrl": "https://www.mohw.go.kr/board.es?mid=a10503000000&bid=0027&act=view&list_no=1487098",
+  "verified": true,
+  "verifiedOn": "2026-09-14",
+  "byHouseholdSize": {
+    "1": 2564238,
+    "2": 4199292,
+    "3": 5359036,
+    "4": 6494738,
+    "5": 7959053,
+    "6": 9556461
+  },
+  "benefitLinePercent": {
+    "livelihood": 32,
+    "medical": 40,
+    "housing": 48,
+    "education": 50
+  },
+  "basicPension2026": {
+    "source": "보건복지부 보도자료 「2026년 노인 단독가구, 소득인정액 월 247만 원 이하면 기초연금 받는다」",
+    "sourceUrl": "https://www.mohw.go.kr/board.es?act=view&bid=0027&list_no=1488478&mid=a10503010100",
+    "singleKRW": 2470000,
+    "coupleKRW": 3952000
+  }
+}

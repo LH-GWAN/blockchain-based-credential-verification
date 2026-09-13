@@ -1,0 +1,26 @@
+{
+  "policyId": "telecom-discount",
+  "name": "통신요금 감면 (취약계층 요금감면)",
+  "category": "생활",
+  "agency": "과학기술정보통신부 / 이동통신 3사",
+  "summary": "기초생활수급자·차상위계층 등에게 이동전화 기본료·통화료를 감면합니다.",
+  "howToApply": "통신사 대리점 방문, 통신사 고객센터(114), 또는 복지로·정부24 온라인 신청",
+  "legalBasis": [
+    {
+      "clauseId": "telecom-discount-c1",
+      "title": "전기통신사업법 제4조(보편적 역무의 제공 등)",
+      "text": "전기통신사업자는 보편적 역무를 제공하거나 그 제공에 따른 손실을 보전할 의무가 있으며, 보편적 역무에는 장애인·저소득층 등에 대한 요금감면 서비스가 포함된다.",
+      "sourceUrl": "https://www.law.go.kr/법령/전기통신사업법/제4조"
+    },
+    {
+      "clauseId": "telecom-discount-c2",
+      "title": "요금감면 대상 (기초생활수급자·차상위계층)",
+      "text": "생계·의료·주거·교육급여 수급자와 차상위계층(차상위계층 확인서 발급 대상 등)은 이동전화 요금감면 대상이다.",
+      "sourceUrl": "https://www.gov.kr"
+    }
+  ],
+  "basisVerified": true,
+  "requiredClaims": [ { "claim": "incomeBelow50Median", "expected": true } ],
+  "ruleRef": { "bundle": "daegu-eligibility", "version": "2026.1" },
+  "notes": "규칙은 '수급자 또는 기준 중위소득 50% 이하(차상위)'로 구현. 검증기관 요청 예시는 차상위 기준(50% 이하)만 사용."
+}

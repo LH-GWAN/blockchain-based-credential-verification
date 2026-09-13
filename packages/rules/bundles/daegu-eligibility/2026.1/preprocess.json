@@ -1,0 +1,13 @@
+{
+  "description": "규칙 평가 전에 원본 프로필에서 파생값을 계산한다. 이 명세는 번들 해시에 포함된다.",
+  "evalDateEnv": "RULE_EVAL_DATE",
+  "derived": [
+    { "name": "age", "op": "ageOn", "from": "birthDate" },
+    { "name": "birthYear", "op": "birthYear", "from": "birthDate" },
+    { "name": "residenceSido", "op": "get", "path": "residence.sido" },
+    { "name": "householdSizeClamped", "op": "clampInt", "from": "householdSize", "min": 1, "max": 6 },
+    { "name": "medianIncomeKRW", "op": "lookup", "table": "medianIncomeByHouseholdSize", "keyExpr": { "var": "householdSizeClamped" } },
+    { "name": "householdKind", "op": "expr", "expr": { "if": [ { "==": [ { "var": "householdSize" }, 1 ] }, "single", "couple" ] } },
+    { "name": "basicPensionLineKRW", "op": "lookup", "table": "basicPensionLineByHouseholdKind", "keyExpr": { "var": "householdKind" } }
+  ]
+}

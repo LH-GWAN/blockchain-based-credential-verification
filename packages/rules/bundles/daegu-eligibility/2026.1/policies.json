@@ -1,0 +1,14 @@
+{
+  "description": "원자적 사실(불리언 claim) → 정책 적격. 지갑과 검증기관 모두 이 규칙만으로 판정할 수 있다(원본 프로필 불필요).",
+  "rules": {
+    "nbl-livelihood": { "var": "incomeBelow32Median" },
+    "nbl-housing": { "var": "incomeBelow48Median" },
+    "nbl-education": { "and": [ { "var": "incomeBelow50Median" }, { "var": "hasStudentChild" } ] },
+    "near-poor": { "and": [ { "var": "incomeBelow50Median" }, { "!": [ { "var": "isBenefitRecipient" } ] } ] },
+    "basic-pension": { "and": [ { "var": "ageOver65" }, { "var": "incomeBelowBasicPensionLine" } ] },
+    "energy-voucher": { "and": [ { "var": "isBenefitRecipient" }, { "var": "ageOver65" } ] },
+    "telecom-discount": { "or": [ { "var": "isBenefitRecipient" }, { "var": "incomeBelow50Median" } ] },
+    "micro-livelihood-loan": { "and": [ { "var": "annualIncomeUnder35M" }, { "or": [ { "var": "creditBottom20" }, { "var": "isBenefitRecipient" }, { "var": "incomeBelow50Median" } ] } ] },
+    "daegu-metro-free": { "and": [ { "var": "daeguResident" }, { "var": "daeguMetroFreeAge" } ] }
+  }
+}

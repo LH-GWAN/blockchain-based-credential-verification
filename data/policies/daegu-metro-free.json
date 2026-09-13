@@ -1,0 +1,23 @@
+{
+  "policyId": "daegu-metro-free",
+  "name": "대구 어르신 통합무임 교통카드 (도시철도 무임)",
+  "category": "교통",
+  "agency": "대구광역시 교통국 / 대구교통공사",
+  "summary": "2026년 기준 1958년생 이전 출생(68세 이상) 대구 어르신은 도시철도를, 72세 이상은 시내버스·도시철도를 통합 무임으로 이용할 수 있습니다. 2028년까지 70세로 단계 조정 예정입니다.",
+  "howToApply": "주소지 행정복지센터 또는 대구교통공사 역무실에서 어르신 통합무임 교통카드 발급",
+  "legalBasis": [
+    {
+      "clauseId": "daegu-metro-c1",
+      "title": "대구광역시 2026년 어르신 통합무임 교통카드 안내",
+      "text": "2026년 1월 1일부터 시내버스 무임 연령은 72세 이상, 도시철도 무임 연령은 68세 이상(1958년생 이전 출생자)으로 조정한다. 대구시와 경산·영천·김천·구미·칠곡·고령·성주·청도 9개 지자체의 시내버스·도시철도·대경선·대구DRT에 적용.",
+      "sourceUrl": "https://www.khan.co.kr/article/202512311142001"
+    }
+  ],
+  "basisVerified": true,
+  "requiredClaims": [
+    { "claim": "daeguResident", "expected": true },
+    { "claim": "daeguMetroFreeAge", "expected": true }
+  ],
+  "ruleRef": { "bundle": "daegu-eligibility", "version": "2026.1" },
+  "notes": "도시철도 무임(1958년생 이전)만 구현. 시내버스 통합무임(72세 이상)은 별도 claim으로 확장 가능."
+}

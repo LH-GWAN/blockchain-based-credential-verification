@@ -1,0 +1,851 @@
+{
+  "evalDate": "2026-09-14",
+  "bundle": "daegu-eligibility",
+  "version": "2026.1",
+  "bundleHash": "0x0d3e9975565229a6cd3cb494b595dd7ec66650fb17b2f7b2f2694ce982159466",
+  "citizenCount": 30,
+  "policyCount": 9,
+  "verdictCount": 270,
+  "rows": [
+    {
+      "citizenId": "C-001",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": true,
+        "daeguMetroFreeAge": true,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": true,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": true,
+        "nbl-education": false,
+        "near-poor": true,
+        "basic-pension": true,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": true
+      }
+    },
+    {
+      "citizenId": "C-002",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": true,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": true,
+        "nbl-housing": true,
+        "nbl-education": false,
+        "near-poor": true,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-003",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": true,
+        "nbl-education": false,
+        "near-poor": true,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-004",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": true,
+        "nbl-education": false,
+        "near-poor": true,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-005",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": false,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": false,
+        "nbl-education": false,
+        "near-poor": true,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-006",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": false,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": false,
+        "nbl-education": false,
+        "near-poor": true,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-007",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": false,
+        "incomeBelow50Median": false,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": false,
+        "nbl-education": false,
+        "near-poor": false,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": false,
+        "micro-livelihood-loan": false,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-008",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": false,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": true,
+        "nbl-education": false,
+        "near-poor": true,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-009",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": false,
+        "hasStudentChild": true,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": true,
+        "nbl-education": true,
+        "near-poor": true,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-010",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": false,
+        "hasStudentChild": true,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": false
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": true,
+        "nbl-education": true,
+        "near-poor": true,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": false,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-011",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": false,
+        "hasStudentChild": true,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": false
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": true,
+        "nbl-education": true,
+        "near-poor": true,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": false,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-012",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": false,
+        "hasStudentChild": true,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": false,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": false
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": true,
+        "nbl-education": true,
+        "near-poor": true,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": false,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-013",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": true,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": false,
+        "incomeBelow50Median": false,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": false,
+        "nbl-education": false,
+        "near-poor": false,
+        "basic-pension": true,
+        "energy-voucher": false,
+        "telecom-discount": false,
+        "micro-livelihood-loan": false,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-014",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": false,
+        "incomeBelow50Median": false,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": false,
+        "nbl-education": false,
+        "near-poor": false,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": false,
+        "micro-livelihood-loan": false,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-015",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": true,
+        "daeguMetroFreeAge": true,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": false,
+        "incomeBelow50Median": false,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": false,
+        "nbl-education": false,
+        "near-poor": false,
+        "basic-pension": true,
+        "energy-voucher": false,
+        "telecom-discount": false,
+        "micro-livelihood-loan": false,
+        "daegu-metro-free": true
+      }
+    },
+    {
+      "citizenId": "C-016",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": true,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": false,
+        "incomeBelow50Median": false,
+        "incomeBelowBasicPensionLine": false,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": false,
+        "nbl-education": false,
+        "near-poor": false,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": false,
+        "micro-livelihood-loan": false,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-017",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": true,
+        "daeguMetroFreeAge": true,
+        "singlePersonHousehold": false,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": false,
+        "incomeBelow50Median": false,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": false
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": false,
+        "nbl-education": false,
+        "near-poor": false,
+        "basic-pension": true,
+        "energy-voucher": false,
+        "telecom-discount": false,
+        "micro-livelihood-loan": false,
+        "daegu-metro-free": true
+      }
+    },
+    {
+      "citizenId": "C-018",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": true,
+        "daeguMetroFreeAge": true,
+        "singlePersonHousehold": false,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": false,
+        "incomeBelow50Median": false,
+        "incomeBelowBasicPensionLine": false,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": false
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": false,
+        "nbl-education": false,
+        "near-poor": false,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": false,
+        "micro-livelihood-loan": false,
+        "daegu-metro-free": true
+      }
+    },
+    {
+      "citizenId": "C-019",
+      "claims": {
+        "daeguResident": false,
+        "ageOver65": true,
+        "daeguMetroFreeAge": true,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": true,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": true,
+        "nbl-education": false,
+        "near-poor": true,
+        "basic-pension": true,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-020",
+      "claims": {
+        "daeguResident": false,
+        "ageOver65": true,
+        "daeguMetroFreeAge": true,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": true,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": true,
+        "nbl-education": false,
+        "near-poor": true,
+        "basic-pension": true,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-021",
+      "claims": {
+        "daeguResident": false,
+        "ageOver65": true,
+        "daeguMetroFreeAge": true,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": true,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": true,
+        "nbl-education": false,
+        "near-poor": true,
+        "basic-pension": true,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-022",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": true,
+        "daeguMetroFreeAge": true,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": true,
+        "incomeBelow32Median": true,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": true,
+        "nbl-housing": true,
+        "nbl-education": false,
+        "near-poor": false,
+        "basic-pension": true,
+        "energy-voucher": true,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": true
+      }
+    },
+    {
+      "citizenId": "C-023",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": false,
+        "hasStudentChild": true,
+        "isBenefitRecipient": true,
+        "incomeBelow32Median": true,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": true,
+        "nbl-housing": true,
+        "nbl-education": true,
+        "near-poor": false,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-024",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": false,
+        "incomeBelow50Median": false,
+        "incomeBelowBasicPensionLine": false,
+        "creditBottom20": true,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": false,
+        "nbl-education": false,
+        "near-poor": false,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": false,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-025",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": true,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": false,
+        "incomeBelow50Median": false,
+        "incomeBelowBasicPensionLine": false,
+        "creditBottom20": true,
+        "annualIncomeUnder35M": false
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": false,
+        "nbl-education": false,
+        "near-poor": false,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": false,
+        "micro-livelihood-loan": false,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-026",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": false,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": true,
+        "nbl-education": false,
+        "near-poor": true,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-027",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": false,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": false,
+        "incomeBelow50Median": false,
+        "incomeBelowBasicPensionLine": false,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": false
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": false,
+        "nbl-education": false,
+        "near-poor": false,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": false,
+        "micro-livelihood-loan": false,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-028",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": false,
+        "hasStudentChild": true,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": true,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": true,
+        "nbl-housing": true,
+        "nbl-education": true,
+        "near-poor": true,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-029",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": false,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": true,
+        "incomeBelow48Median": true,
+        "incomeBelow50Median": true,
+        "incomeBelowBasicPensionLine": true,
+        "creditBottom20": false,
+        "annualIncomeUnder35M": true
+      },
+      "policies": {
+        "nbl-livelihood": true,
+        "nbl-housing": true,
+        "nbl-education": false,
+        "near-poor": true,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": true,
+        "micro-livelihood-loan": true,
+        "daegu-metro-free": false
+      }
+    },
+    {
+      "citizenId": "C-030",
+      "claims": {
+        "daeguResident": true,
+        "ageOver65": false,
+        "daeguMetroFreeAge": false,
+        "singlePersonHousehold": false,
+        "hasStudentChild": false,
+        "isBenefitRecipient": false,
+        "incomeBelow32Median": false,
+        "incomeBelow48Median": false,
+        "incomeBelow50Median": false,
+        "incomeBelowBasicPensionLine": false,
+        "creditBottom20": true,
+        "annualIncomeUnder35M": false
+      },
+      "policies": {
+        "nbl-livelihood": false,
+        "nbl-housing": false,
+        "nbl-education": false,
+        "near-poor": false,
+        "basic-pension": false,
+        "energy-voucher": false,
+        "telecom-discount": false,
+        "micro-livelihood-loan": false,
+        "daegu-metro-free": false
+      }
+    }
+  ]
+}

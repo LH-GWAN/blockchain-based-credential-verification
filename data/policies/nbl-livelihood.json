@@ -1,0 +1,26 @@
+{
+  "policyId": "nbl-livelihood",
+  "name": "생계급여",
+  "category": "복지",
+  "agency": "보건복지부 / 대구광역시 각 구·군",
+  "summary": "소득인정액이 기준 중위소득의 32% 이하인 가구에 생계비를 현금으로 지원합니다.",
+  "howToApply": "주소지 행정복지센터 방문 신청 또는 복지로(bokjiro.go.kr) 온라인 신청",
+  "legalBasis": [
+    {
+      "clauseId": "nbl-livelihood-c1",
+      "title": "국민기초생활 보장법 제8조(생계급여의 내용 등)",
+      "text": "생계급여 수급권자는 소득인정액이 생계급여 선정기준 이하인 사람으로 한다. 생계급여 선정기준은 기준 중위소득의 100분의 30 이상으로 한다.",
+      "sourceUrl": "https://www.law.go.kr/법령/국민기초생활보장법/제8조"
+    },
+    {
+      "clauseId": "nbl-livelihood-c2",
+      "title": "2026년 기준 중위소득 및 생계·의료급여 선정기준과 최저보장수준 (보건복지부 고시 제2025-135호)",
+      "text": "2026년 생계급여 선정기준은 기준 중위소득의 32%로 한다. 1인 가구 820,556원, 4인 가구 2,078,316원.",
+      "sourceUrl": "https://www.mohw.go.kr/board.es?mid=a10409020000&bid=0026&list_no=1487112&act=view"
+    }
+  ],
+  "basisVerified": true,
+  "requiredClaims": [ { "claim": "incomeBelow32Median", "expected": true } ],
+  "ruleRef": { "bundle": "daegu-eligibility", "version": "2026.1" },
+  "notes": "MVP는 소득인정액(소득평가액+재산의 소득환산액) 대신 월 소득으로 단순화했다. 부양의무자 기준은 제외."
+}

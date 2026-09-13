@@ -1,0 +1,45 @@
+{
+  "description": "원본 프로필(+파생값) → 원자적 사실(불리언). 퍼센트 비교는 정수 연산만 사용한다(소득×100 <= 기준×퍼센트).",
+  "issuerOf": {
+    "daeguResident": "did:dbp:daegu",
+    "ageOver65": "did:dbp:daegu",
+    "daeguMetroFreeAge": "did:dbp:daegu",
+    "singlePersonHousehold": "did:dbp:daegu",
+    "hasStudentChild": "did:dbp:daegu",
+    "isBenefitRecipient": "did:dbp:daegu",
+    "incomeBelow32Median": "did:dbp:daegu",
+    "incomeBelow48Median": "did:dbp:daegu",
+    "incomeBelow50Median": "did:dbp:daegu",
+    "incomeBelowBasicPensionLine": "did:dbp:daegu",
+    "creditBottom20": "did:dbp:imbank",
+    "annualIncomeUnder35M": "did:dbp:imbank"
+  },
+  "labels": {
+    "daeguResident": "대구 거주 여부",
+    "ageOver65": "65세 이상 여부",
+    "daeguMetroFreeAge": "도시철도 무임 연령(1958년생 이전) 여부",
+    "singlePersonHousehold": "1인 가구 여부",
+    "hasStudentChild": "초·중·고 학생 자녀 유무",
+    "isBenefitRecipient": "기초생활보장 급여 수급 여부",
+    "incomeBelow32Median": "기준 중위소득 32% 이하 여부",
+    "incomeBelow48Median": "기준 중위소득 48% 이하 여부",
+    "incomeBelow50Median": "기준 중위소득 50% 이하 여부",
+    "incomeBelowBasicPensionLine": "기초연금 선정기준액 이하 여부",
+    "creditBottom20": "신용평점 하위 20% 여부",
+    "annualIncomeUnder35M": "연소득 3,500만 원 이하 여부"
+  },
+  "rules": {
+    "daeguResident": { "==": [ { "var": "residenceSido" }, "대구광역시" ] },
+    "ageOver65": { ">=": [ { "var": "age" }, 65 ] },
+    "daeguMetroFreeAge": { "<=": [ { "var": "birthYear" }, 1958 ] },
+    "singlePersonHousehold": { "==": [ { "var": "householdSize" }, 1 ] },
+    "hasStudentChild": { "==": [ { "var": "hasStudentChild" }, true ] },
+    "isBenefitRecipient": { "==": [ { "var": "isBasicLivelihoodRecipient" }, true ] },
+    "incomeBelow32Median": { "<=": [ { "*": [ { "var": "monthlyIncomeKRW" }, 100 ] }, { "*": [ { "var": "medianIncomeKRW" }, 32 ] } ] },
+    "incomeBelow48Median": { "<=": [ { "*": [ { "var": "monthlyIncomeKRW" }, 100 ] }, { "*": [ { "var": "medianIncomeKRW" }, 48 ] } ] },
+    "incomeBelow50Median": { "<=": [ { "*": [ { "var": "monthlyIncomeKRW" }, 100 ] }, { "*": [ { "var": "medianIncomeKRW" }, 50 ] } ] },
+    "incomeBelowBasicPensionLine": { "<=": [ { "var": "monthlyIncomeKRW" }, { "var": "basicPensionLineKRW" } ] },
+    "creditBottom20": { "==": [ { "var": "creditScoreTier" }, "bottom20" ] },
+    "annualIncomeUnder35M": { "<=": [ { "var": "annualIncomeKRW" }, 35000000 ] }
+  }
+}

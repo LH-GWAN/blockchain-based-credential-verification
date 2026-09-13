@@ -1,0 +1,29 @@
+{
+  "policyId": "micro-livelihood-loan",
+  "name": "소액생계비대출 (불법사금융예방대출)",
+  "category": "금융",
+  "agency": "서민금융진흥원 / 서민금융통합지원센터 (대구센터)",
+  "summary": "신용평점 하위 20%이고 연소득 3,500만 원 이하인 분에게 최대 100만 원을 당일 지원하는 정책 서민금융 상품입니다. 기초수급자·차상위계층은 신용평점 기준 없이 신청할 수 있습니다.",
+  "howToApply": "서민금융진흥원 앱·홈페이지에서 방문 예약 후 서민금융통합지원센터 대면 상담",
+  "legalBasis": [
+    {
+      "clauseId": "micro-loan-c1",
+      "title": "서민의 금융생활 지원에 관한 법률 제2조·제3조 (서민금융진흥원의 서민금융 지원)",
+      "text": "서민금융진흥원은 금융 이용에 어려움을 겪는 서민의 금융생활 안정을 위해 자금 대출 등 지원 사업을 수행한다.",
+      "sourceUrl": "https://www.law.go.kr/법령/서민의금융생활지원에관한법률"
+    },
+    {
+      "clauseId": "micro-loan-c2",
+      "title": "소액생계비대출 신청 자격 (서민금융진흥원 상품 안내, 2026)",
+      "text": "신용평점 하위 20% 이하이면서 연소득 3,500만 원 이하. 2026년부터 기초생활수급자·차상위계층·근로장려금 수급자는 신용평점 기준을 적용하지 않는다.",
+      "sourceUrl": "https://www.kinfa.or.kr"
+    }
+  ],
+  "basisVerified": true,
+  "requiredClaims": [
+    { "claim": "annualIncomeUnder35M", "expected": true },
+    { "claim": "creditBottom20", "expected": true }
+  ],
+  "ruleRef": { "bundle": "daegu-eligibility", "version": "2026.1" },
+  "notes": "신용·연소득 claim은 iM뱅크(did:dbp:imbank)가 발급한다. 규칙은 '연소득 3,500만 원 이하 AND (신용평점 하위 20% OR 수급자 OR 차상위)'."
+}

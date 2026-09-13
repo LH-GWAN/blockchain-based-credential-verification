@@ -1,0 +1,13 @@
+{
+  "name": "daegu-benefit-pass",
+  "private": true,
+  "version": "0.1.0",
+  "description": "대구 혜택패스 — AI가 혜택을 찾고, 블록체인이 자격만 증명한다",
+  "packageManager": "pnpm@12.4.1",
+  "scripts": {
+    "build": "pnpm -r --filter './packages/**' build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint"
+  },
+  "engines": { "node": ">=20" }
+}

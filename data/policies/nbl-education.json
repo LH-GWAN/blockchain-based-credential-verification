@@ -1,0 +1,29 @@
+{
+  "policyId": "nbl-education",
+  "name": "교육급여",
+  "category": "복지",
+  "agency": "교육부 / 대구광역시교육청",
+  "summary": "소득인정액이 기준 중위소득의 50% 이하인 가구의 초·중·고 학생에게 교육활동지원비 등을 지원합니다.",
+  "howToApply": "주소지 행정복지센터 또는 복지로·교육비 원클릭 신청",
+  "legalBasis": [
+    {
+      "clauseId": "nbl-education-c1",
+      "title": "국민기초생활 보장법 제12조(교육급여)",
+      "text": "교육급여 수급권자는 소득인정액이 교육급여 선정기준 이하인 사람으로 한다. 교육급여 선정기준은 기준 중위소득의 100분의 50 이상으로 한다.",
+      "sourceUrl": "https://www.law.go.kr/법령/국민기초생활보장법/제12조"
+    },
+    {
+      "clauseId": "nbl-education-c2",
+      "title": "교육급여 지원 대상 (초·중·고 재학생)",
+      "text": "교육급여는 수급자 가구의 초등학교·중학교·고등학교 재학생을 대상으로 한다.",
+      "sourceUrl": "https://www.bokjiro.go.kr"
+    }
+  ],
+  "basisVerified": true,
+  "requiredClaims": [
+    { "claim": "incomeBelow50Median", "expected": true },
+    { "claim": "hasStudentChild", "expected": true }
+  ],
+  "ruleRef": { "bundle": "daegu-eligibility", "version": "2026.1" },
+  "notes": "학생 자녀 유무는 합성 프로필의 hasStudentChild 필드로 단순화."
+}

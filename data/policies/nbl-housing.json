@@ -1,0 +1,26 @@
+{
+  "policyId": "nbl-housing",
+  "name": "주거급여",
+  "category": "복지",
+  "agency": "국토교통부 / 대구광역시 각 구·군",
+  "summary": "소득인정액이 기준 중위소득의 48% 이하인 가구에 임차료(임차가구) 또는 수선비(자가가구)를 지원합니다.",
+  "howToApply": "주소지 행정복지센터 방문 신청 또는 복지로 온라인 신청. 임대차계약서 필요",
+  "legalBasis": [
+    {
+      "clauseId": "nbl-housing-c1",
+      "title": "주거급여법 제5조(수급권자의 범위)",
+      "text": "수급권자는 소득인정액이 주거급여 선정기준 이하인 사람으로 한다. 주거급여 선정기준은 기준 중위소득의 100분의 43 이상으로 한다.",
+      "sourceUrl": "https://www.law.go.kr/법령/주거급여법/제5조"
+    },
+    {
+      "clauseId": "nbl-housing-c2",
+      "title": "2026년 주거급여 선정기준 (기준 중위소득의 48%)",
+      "text": "2026년 주거급여 선정기준은 기준 중위소득의 48%로 2025년과 동일하다. 1인 가구 1,230,834원, 4인 가구 3,117,474원.",
+      "sourceUrl": "https://www.mohw.go.kr/board.es?mid=a10503000000&bid=0027&act=view&list_no=1487098"
+    }
+  ],
+  "basisVerified": true,
+  "requiredClaims": [ { "claim": "incomeBelow48Median", "expected": true } ],
+  "ruleRef": { "bundle": "daegu-eligibility", "version": "2026.1" },
+  "notes": "MVP는 소득인정액을 월 소득으로 단순화."
+}

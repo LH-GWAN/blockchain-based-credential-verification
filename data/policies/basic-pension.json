@@ -1,0 +1,29 @@
+{
+  "policyId": "basic-pension",
+  "name": "기초연금",
+  "category": "복지",
+  "agency": "보건복지부 / 국민연금공단",
+  "summary": "만 65세 이상이고 소득인정액이 선정기준액(2026년 단독가구 247만 원, 부부가구 395만 2천 원) 이하인 어르신에게 매월 기초연금을 지급합니다.",
+  "howToApply": "국민연금공단 지사 또는 주소지 행정복지센터 방문, 복지로 온라인 신청. 만 65세 생일 한 달 전부터 신청 가능",
+  "legalBasis": [
+    {
+      "clauseId": "basic-pension-c1",
+      "title": "기초연금법 제3조(기초연금 수급권자의 범위 등)",
+      "text": "기초연금은 65세 이상인 사람으로서 소득인정액이 선정기준액 이하인 사람에게 지급한다.",
+      "sourceUrl": "https://www.law.go.kr/법령/기초연금법/제3조"
+    },
+    {
+      "clauseId": "basic-pension-c2",
+      "title": "2026년 기초연금 선정기준액 (보건복지부 고시)",
+      "text": "2026년 기초연금 선정기준액은 단독가구 월 247만 원, 부부가구 월 395만 2천 원이다.",
+      "sourceUrl": "https://www.mohw.go.kr/board.es?act=view&bid=0027&list_no=1488478&mid=a10503010100"
+    }
+  ],
+  "basisVerified": true,
+  "requiredClaims": [
+    { "claim": "ageOver65", "expected": true },
+    { "claim": "incomeBelowBasicPensionLine", "expected": true }
+  ],
+  "ruleRef": { "bundle": "daegu-eligibility", "version": "2026.1" },
+  "notes": "MVP는 1인 가구를 단독가구, 2인 이상을 부부가구 기준으로 단순화하고 소득인정액을 월 소득으로 대체."
+}
