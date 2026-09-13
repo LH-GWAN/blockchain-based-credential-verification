@@ -1,6 +1,5 @@
 """인용 검증기 + 가짜 Anthropic 클라이언트: 환각 항목은 걸러지고 템플릿으로 채워진다."""
-from conftest import FakeAnthropic
-
+from ai_testing import FakeAnthropic
 from dbp_ai import llm
 from dbp_ai.retriever import get_store
 from dbp_ai.schemas import LLMRecommendation, RecommendationResponse

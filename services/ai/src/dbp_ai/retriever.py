@@ -10,9 +10,10 @@ MVP 는 정책이 10개 이하이므로 벡터 DB 없이 정책 문서 전체를
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable, Protocol
+from typing import Protocol
 
 from dbp_rules import load_policies
 
@@ -73,7 +74,7 @@ class PolicyStore:
         self.known_terms: set[str] = self._build_known_terms()
 
     @classmethod
-    def load(cls, root: Path | None = None) -> "PolicyStore":
+    def load(cls, root: Path | None = None) -> PolicyStore:
         return cls(load_policies(root))
 
     # ---- 조회 ----

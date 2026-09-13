@@ -1,6 +1,5 @@
 """/chat SSE 스트리밍, 세션 메모리, DELETE, 스트림 실패 폴백."""
-from conftest import FakeAnthropic, parse_sse
-
+from ai_testing import FakeAnthropic, parse_sse
 from dbp_ai import chat, llm
 
 

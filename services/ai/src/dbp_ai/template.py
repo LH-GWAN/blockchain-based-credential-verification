@@ -7,9 +7,9 @@
 from __future__ import annotations
 
 import re
-from typing import Iterable, Iterator
+from collections.abc import Iterable, Iterator
 
-from .retriever import PolicyStore, PROGRAM_SUFFIXES
+from .retriever import PROGRAM_SUFFIXES, PolicyStore
 from .schemas import CategoricalProfile, Recommendation, RuleResult
 
 CATEGORY_RANK = {"복지": 0, "금융": 1, "교통": 2}

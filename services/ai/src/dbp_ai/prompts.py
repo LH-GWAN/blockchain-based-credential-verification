@@ -5,8 +5,8 @@
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
 from functools import lru_cache
-from typing import Iterable
 
 from .retriever import InContextRetriever, PolicyStore, get_store
 from .schemas import CategoricalProfile, RuleResult

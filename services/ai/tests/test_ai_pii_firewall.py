@@ -2,8 +2,7 @@
 import json
 import re
 
-from conftest import PROBE_MESSAGE
-
+from ai_testing import PROBE_MESSAGE
 from dbp_ai import llm
 from dbp_ai.schemas import LLMRecommendation, RecommendationResponse
 

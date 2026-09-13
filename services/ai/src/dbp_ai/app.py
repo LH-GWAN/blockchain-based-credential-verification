@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Iterator
+from collections.abc import Iterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

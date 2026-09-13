@@ -8,7 +8,7 @@ LLM 추천 항목을 다음 기준으로 걸러낸다.
 """
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from .retriever import PolicyStore
 from .schemas import LLMRecommendation, Recommendation
@@ -40,7 +40,7 @@ def validate_llm_recommendations(items: Iterable[LLMRecommendation], eligible_id
         if not it.headline.strip() or not it.explanation.strip():
             dropped.append({"policyId": pid, "reason": "empty-text"})
             continue
-        unknown = store.unknown_program_terms(" ".join([it.headline, it.explanation, it.nextSteps]))
+        unknown = store.unknown_program_terms(f"{it.headline} {it.explanation} {it.nextSteps}")
         if unknown:
             dropped.append({"policyId": pid, "reason": "unknown-program-name", "terms": unknown})
             continue

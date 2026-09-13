@@ -1,6 +1,5 @@
 """템플릿 provider 로 페르소나(C-001) 추천 — 정확히 3개, 모두 유효 인용, 부적격 정책 0건."""
-from conftest import INELIGIBLE_FOR_PERSONA
-
+from ai_testing import INELIGIBLE_FOR_PERSONA
 from dbp_ai.retriever import get_store
 
 

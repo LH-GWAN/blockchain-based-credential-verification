@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Iterator
+from collections.abc import Iterator
 
 from . import llm
 from .prompts import build_chat_context_block, cached_system_blocks

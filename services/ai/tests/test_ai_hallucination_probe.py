@@ -1,6 +1,5 @@
 """환각 프로브: 존재하지 않는 제도 → "등록되어 있지 않" + 자격 판정 없음."""
-from conftest import PROBE_MESSAGE, VERDICT_MARKERS, FakeAnthropic
-
+from ai_testing import PROBE_MESSAGE, VERDICT_MARKERS, FakeAnthropic
 from dbp_ai import llm
 from dbp_ai.prompts import SYSTEM_RULES, system_prompt_text
 from dbp_ai.retriever import get_store

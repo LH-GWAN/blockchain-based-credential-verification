@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import logging
 import time
-from datetime import datetime, timezone
-from typing import Any, Iterator
+from collections.abc import Iterator
+from datetime import UTC, datetime
+from typing import Any
 
 from .config import Settings
 from .schemas import RecommendationResponse
@@ -80,7 +81,7 @@ def _get_client() -> Any:
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def record_payload(kind: str, provider_name: str, payload: dict, model: str | None) -> None:

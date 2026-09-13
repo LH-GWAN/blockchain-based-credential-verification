@@ -18,7 +18,7 @@ class Settings:
     timeout_s: float
 
     @classmethod
-    def from_env(cls) -> "Settings":
+    def from_env(cls) -> Settings:
         provider = (os.environ.get("LLM_PROVIDER") or "anthropic").strip().lower()
         if provider not in ("anthropic", "template"):
             provider = "anthropic"

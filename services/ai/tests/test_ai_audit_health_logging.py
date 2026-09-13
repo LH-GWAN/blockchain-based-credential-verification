@@ -1,8 +1,7 @@
 """감사 엔드포인트, 헬스, 로그 위생."""
 import logging
 
-from conftest import FakeAnthropic
-
+from ai_testing import FakeAnthropic
 from dbp_ai import llm
 from dbp_ai.schemas import LLMRecommendation, RecommendationResponse
 
