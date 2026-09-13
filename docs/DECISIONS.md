@@ -32,7 +32,8 @@
 
 ## D-07 로컬 체인 기본값은 Hardhat, Besu QBFT 는 compose 프로필
 - 무엇: 개발·테스트·기본 시연은 Hardhat 노드(chainId 31337). Besu QBFT 4노드 compose 는 `chain/besu/` 에 제공.
-- 왜: 이 머신에서 Docker 데몬이 꺼져 있어 Besu 를 검증할 수 없었다. 컨트랙트·클라이언트는 `RPC_URL` 만 바꾸면 동일하게 동작한다.
+- 왜: 개발·테스트 반복 속도(Hardhat 즉시 채굴). Besu QBFT 는 2026-09-14 실제 기동해 배포·발급·검증·폐기·PII 스캔까지 검증했다 (`chain/besu/README.md`). 컨트랙트·클라이언트는 `RPC_URL` 만 바꾸면 동일하게 동작한다.
+- 실서비스: Besu QBFT 권한형 네트워크에 대구시·은행·복지기관이 validator 로 참여.
 
 ## D-08 AI 는 규칙 엔진 결과 안에서만 고른다
 - 무엇: `/recommend` 후보는 규칙 엔진이 적격으로 판정한 정책뿐. LLM 출력은 인용 검증기를 통과해야 노출되고, 실패 시 템플릿 설명으로 대체.

@@ -1,0 +1,13 @@
+{
+  "runs": 50,
+  "verdicts": {
+    "PASS": 50
+  },
+  "meanMs": 12.2,
+  "p50Ms": 12.1,
+  "p95Ms": 13.2,
+  "maxMs": 13.5,
+  "serverMeanMs": 10.8,
+  "target": "p95 < 2000ms",
+  "pass": true
+}

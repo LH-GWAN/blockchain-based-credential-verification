@@ -1,8 +1,8 @@
 # Besu QBFT 4-validator 로컬 네트워크
 
-> **UNTESTED** — 이 디렉터리는 작성 환경에 docker 데몬이 없어 실제 기동을 검증하지 못했다.
-> 구조는 공식 Besu QBFT 튜토리얼(`operator generate-blockchain-config` 산출물)을 따르며,
-> 첫 실행에서 문제가 있으면 `docs/DECISIONS.md` 에 사유를 적고 Hardhat node 폴백을 유지한다(§13 P1-1).
+> **검증 완료 (2026-09-14, macOS arm64, Docker 29.6)** — 4 validator 모두 healthy, 2초 블록 생성,
+> 컨트랙트 배포·시드·발급(0.7초, 블록 대기 포함)·검증(28ms)·폐기 차단·PII 스캔(44블록, findings=0)까지 확인했다.
+> 호스트 포트는 `BESU_RPC_PORT` 로 바꿀 수 있다 (기본 8545; Hardhat 과 동시에 띄우려면 `BESU_RPC_PORT=8546`).
 
 - 이미지: `hyperledger/besu:latest` (arm64 지원), `platform: linux/arm64` 명시
 - chainId **1337**, 블록 주기 2초, `--min-gas-price=0` + 제네시스 `zeroBaseFee: true` → 가스비 0
@@ -21,7 +21,7 @@
 cd chain
 pnpm besu:keys                      # keys/, genesis.json, static-nodes.json 생성(결정론적, 재실행해도 동일)
 cd besu
-docker compose up -d                # 4 validator 기동
+docker compose up -d                # 4 validator 기동  (BESU_RPC_PORT=8546 docker compose up -d 로 포트 변경 가능)
 docker compose logs -f validator1   # 블록 생성 로그 확인 (Ctrl+C)
 
 # 검증자 4명 확인
@@ -32,7 +32,7 @@ curl -s -X POST -H 'Content-Type: application/json' \
 # 컨트랙트 배포 + 시드 (chain/ 에서)
 RPC_URL=http://127.0.0.1:8545 pnpm deploy:besu
 RPC_URL=http://127.0.0.1:8545 pnpm seed:besu
-RPC_URL=http://127.0.0.1:8545 pnpm scan-pii -- --names 김복례
+RPC_URL=http://127.0.0.1:8545 pnpm scan-pii --names 김복례
 
 docker compose down                 # 중지 (체인 데이터 유지)
 docker compose down && rm -rf data  # 중지 + 체인 초기화 (data/ 는 gitignore)
