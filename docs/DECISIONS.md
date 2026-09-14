@@ -83,3 +83,8 @@
 - 무엇: `data/legacy-documents.json`(소득금액증명·주민등록표 등본·수급자증명서의 서식 항목과 출처, claim→서류 매핑) → `scripts/pii_items.py` 가 프리셋별 조회형 항목 수·보유형 항목 수·감소율을 계산하고 예시 VP 로 보유형 항목 수를 실측해 `data/comparison.json` 을 만든다. 검증 서비스는 같은 함수(`dbp_verifier.comparison.build_comparison`)로 검증 결과마다 `comparison` 블록을 붙이고, 앱은 그 값만 표시한다.
 - 왜: 프리셋이 늘어도 화면이 자동으로 따라오고, "실제 API 호출 결과가 아니라 서식 기준 비교"라는 정직성 표기를 데이터에 같이 담기 위해.
 - 결과: 햇살론뱅크·새희망홀씨 10→1 (90%), 서민금융 상담 13→2 (85%), 공공요금 감면 13→1 (92%). 종전 "10개 항목 기준 80%" 지표는 이 계산으로 대체했다.
+
+## D-20 (2026-09-14) compose 네트워크 격리는 프로브가 잡아낸 결함을 고친 뒤에야 성립했다
+- 무엇: 초기 compose 토폴로지는 지갑용 `net-citizen` 을 발급기관·검증기관이 함께 써서, `make demo-isolation` 프로브(`scripts/isolation_probe.py`)를 실제로 돌리자 검증기관 컨테이너가 발급기관 `/health` 에 닿았다(격리 실패). 브라우저는 published 호스트 포트로 서비스에 접근하므로 컨테이너끼리 공유 네트워크가 필요 없다는 점을 반영해 발급기관은 `net-issuer` 만, 검증기관은 `net-verifier` 만, AI 는 `net-egress` 만 갖도록 바꿨다. 수정 후 프로브 통과(발급기관 호스트명 해석 불가, 원장 접근 가능), 결과는 `docs/screenshots/17-isolation-terminal.{txt,png}`.
+- 왜 기록하나: "검증기관은 발급기관에 접속하지 않는다"는 3성질 ③의 근거를 문서 주장이 아니라 실행 검사로 두기 위해. 프로브는 격리가 깨지면 종료코드 1 을 낸다.
+- 부수 수정: Hardhat 3 노드 실행을 `pnpm exec hardhat node --hostname 0.0.0.0` 로, `localhost` 네트워크 URL 을 `RPC_URL` 로 덮어쓸 수 있게, 컨테이너는 내부망이라 solc 컴파일을 이미지 빌드 시점에 수행하고 `UV_NO_SYNC=1` 로 런타임 동기화를 막았다. Next 이미지는 `data/` 를 복사해야 지갑 prebuild 가 통과한다(전체 `make compose-up` 은 재빌드 필요).

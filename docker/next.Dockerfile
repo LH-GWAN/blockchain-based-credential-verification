@@ -6,6 +6,8 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/vc/ts packages/vc/ts
 COPY packages/rules/ts packages/rules/ts
 COPY apps/${APP} apps/${APP}
+COPY data data
+COPY packages/rules/bundles packages/rules/bundles
 RUN pnpm install --frozen-lockfile
 RUN pnpm -r --filter './packages/**' build && pnpm --filter ./apps/${APP} build
 

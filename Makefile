@@ -49,13 +49,8 @@ capture-isolation: ## make demo-isolation 출력을 docs/screenshots/17-isolatio
 compose-down: ## compose 스택 종료
 	docker compose down -v
 
-demo-isolation: ## 검증기관 컨테이너에서 발급기관 접속이 차단됨을 확인 (compose 기동 상태에서)
-	@echo "verifier → issuer-daegu:8001 (차단되어야 함)"; \
-	docker compose exec -T verifier python -c "import urllib.request,sys; \
-	  urllib.request.urlopen('http://issuer-daegu:8001/health', timeout=3)" 2>&1 | tail -1 || echo "✅ 차단됨: 검증기관은 발급기관에 닿을 수 없습니다"
-	@echo "verifier → chain:8545 (허용되어야 함)"; \
-	docker compose exec -T verifier python -c "import urllib.request; \
-	  print('✅ 원장 접근 가능:', urllib.request.urlopen(urllib.request.Request('http://chain:8545', data=b'{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_chainId\",\"params\":[]}', headers={'content-type':'application/json'}), timeout=3).read().decode())"
+demo-isolation: ## 검증기관 컨테이너에서 발급기관 접속이 차단되고 원장만 열려 있음을 확인 (compose 기동 상태에서)
+	@docker compose exec -T verifier python - < scripts/isolation_probe.py
 
 bench: ## 검증 성능 벤치 (make demo 기동 상태에서) → docs/bench.json
 	uv run python scripts/bench_verify.py 50

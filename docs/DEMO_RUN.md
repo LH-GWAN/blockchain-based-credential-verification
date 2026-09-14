@@ -20,8 +20,12 @@
 ## Besu QBFT 4-validator (chainId 1337)
 - 배포·시드·발급(0.7초)·검증(28ms)·폐기 차단·PII 스캔 44블록 0건 (컨트랙트·클라이언트는 개정으로 바뀌지 않음)
 
+## compose 네트워크 격리 (⑦ 후반, `make compose-isolation-up` → `make demo-isolation`)
+- 체인·배포·발급기관 2·검증기관을 호스트 포트 없이 기동(로컬 `make demo` 와 동시 운용). 배포·시드 컨테이너 내부 완료.
+- 프로브 결과(`docs/screenshots/17-isolation-terminal.txt`): verifier → issuer-daegu:8001 **차단**(호스트명 해석 불가) · verifier → issuer-welfare:8003 **차단** · verifier → chain:8545 **접근 가능** → "격리 검사 통과".
+- 첫 실행에서는 발급기관·검증기관이 `net-citizen` 을 공유해 **격리 실패**가 검출되었고, 토폴로지를 고친 뒤 통과했다(D-20). 실패를 잡아낸 프로브 자체가 시연 자산이다.
+
 ## 미완료·주의
-- `17-isolation-terminal.png`: compose 스택(`make compose-up`) 기동 후 `make demo-isolation` 출력 캡처. 재부팅 뒤 Docker 이미지 빌드가 베이스 이미지 다운로드 시간 초과로 1회 실패해 재시도 중이었다 — 아래 "compose 결과" 절 참조.
 - `ANTHROPIC_API_KEY` 미설정: AI 설명은 템플릿 제공자. 키를 넣으면 `claude-opus-5` 경로가 동작하며 인용 검증기가 동일하게 적용된다.
 - 고령자 사용성 평가 미실시. 카메라 QR 스캔 미검증(6자리 코드로 대체).
 - 개발 서버 주의: 같은 앱 디렉터리에 `next dev` 두 개를 띄우거나 dev 중 `next build` 를 실행하면 `.next` 가 깨져 500 이 난다 → 해당 앱 dev 서버만 재시작.

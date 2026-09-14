@@ -44,6 +44,7 @@ make demo       # 체인 → 배포·시드 → 발급기관 2 → 검증기관 
 make e2e        # (make demo 상태에서) Playwright 로 시연 ①~⑤ 자동 재현 + docs/screenshots 갱신
 make smoke      # 헤드리스 통합: 체인 기동부터 발급·검증·폐기·공격·벤치·PII 스캔까지
 make report     # docs/TEST_REPORT.md 재생성
+make compose-isolation-up && make demo-isolation   # (Docker) 검증기관 컨테이너가 발급기관에 닿지 않음을 검사
 ```
 
 `make demo` 후: 시민 지갑 http://localhost:3000 · 검증기관(은행 창구) http://localhost:3001 · 발급기관 API http://localhost:8001/docs (대구시) / 8003 (복지기관) · 검증 API 8002 · AI 8004.
@@ -73,7 +74,7 @@ scripts/               시드 · 시연 · 벤치 · PII 지표 · 리포트
 |---|---|---|
 | ![](docs/screenshots/04-wallet-credentials.png) | ![](docs/screenshots/10b-verifier-result-sunshine-bank.png) | ![](docs/screenshots/15-verifier-comparison.png) |
 
-전체 19장: [docs/screenshots/](docs/screenshots/) (Playwright E2E 가 자동 생성)
+전체 20장: [docs/screenshots/](docs/screenshots/) (Playwright E2E 와 `make capture-isolation` 이 자동 생성)
 
 ## 원장에 올라가는 것 / 올라가지 않는 것
 
@@ -96,7 +97,7 @@ scripts/               시드 · 시연 · 벤치 · PII 지표 · 리포트
 | 개인정보 최소화 (조회형 대비) | 기관 전달 항목 70% 이상 감소 | 햇살론뱅크 10→1 (90%), 서민금융 상담 13→2 (85%) — `data/comparison.json` |
 | 보안 | 위조·만료·폐기·재사용·타인 증명서·비활성 발급기관 차단 | `services/verifier/tests` + `/demo/attack` |
 | AI 신뢰성 | 인용 없는 추천 비노출, 존재하지 않는 제도 차단, 페이로드 allowlist | `services/ai` 테스트 |
-| 네트워크 격리 | 검증기관 → 발급기관 접속 불가, 발급기관 정지 후에도 검증 PASS | `docker-compose.yml` (net-issuer 미포함), E2E `E2E_ISSUER_DOWN_CMD` |
+| 네트워크 격리 | 검증기관 → 발급기관 접속 불가(프로브 통과), 발급기관 정지 후에도 검증 PASS | `make compose-isolation-up && make demo-isolation`, E2E `E2E_ISSUER_DOWN_CMD` |
 | 재사용 | 같은 VC 로 다른 창구·다른 용도 통과 (재발급 0건) | E2E ③′ |
 
 ## 고지

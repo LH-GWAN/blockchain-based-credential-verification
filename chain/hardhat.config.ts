@@ -41,8 +41,9 @@ export default defineConfig({
   networks: {
     hardhat: { type: "edr-simulated", chainId: 31337 },
     localhost: {
+      // RPC_URL 로 덮어쓸 수 있다 (docker compose 에서는 http://chain:8545)
       type: "http",
-      url: "http://127.0.0.1:8545",
+      url: process.env.RPC_URL || "http://127.0.0.1:8545",
       chainId: 31337,
       accounts,
     },

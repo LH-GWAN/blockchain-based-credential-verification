@@ -1,0 +1,13 @@
+$ docker compose ps --format 'table {{.Service}}\t{{.State}}'
+SERVICE          STATE
+chain            running
+issuer-daegu     running
+issuer-welfare   running
+verifier         running
+
+$ make demo-isolation
+검증기관 컨테이너(verifier)에서 실행 — 검증기관은 net-issuer 에 속하지 않는다
+✅ 차단됨: verifier → issuer-daegu:8001/health   (발급기관, 차단되어야 함) → URLError: <urlopen error [Errno -3] Temporary failure in name resolution>
+✅ 차단됨: verifier → issuer-welfare:8003/health (발급기관, 차단되어야 함) → URLError: <urlopen error [Errno -3] Temporary failure in name resolution>
+✅ 접근 가능: verifier → chain:8545 eth_chainId     (공동원장, 허용되어야 함) → {"jsonrpc":"2.0","id":1,"result":"0x7a69"}
+격리 검사 통과: 검증기관은 발급기관에 닿지 않고 원장에만 닿는다

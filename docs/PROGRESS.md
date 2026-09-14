@@ -27,3 +27,4 @@
 - 비교 패널(§12.5): `data/legacy-documents.json` → `scripts/pii_items.py` → `data/comparison.json`; 검증 서비스 `comparison` 블록·`GET /comparison`; 검증기관 앱 "같은 상담, 두 경로 비교" 패널(모바일 세로 스택). 햇살론뱅크 10→1 (90%)
 - E2E 확장: ⑥ 패널·감소율 검증, ③′ iM저축은행+새희망홀씨 재사용(재발급 0건 확인), ⑦ 발급기관 정지 후 PASS(`E2E_ISSUER_DOWN_CMD`). 스크린샷 10c·15·15b·16 추가
 - 미완료: 실제 LLM 키 품질 확인(키 없음), 시연 영상(선택), 사용성 평가
+- compose 격리 프로브(`make demo-isolation`) 실행 → 초기 토폴로지 격리 실패 검출 → 수정 후 통과, `17-isolation-terminal.png` 확보 (D-20). Dockerfile: 빌드 시 solc 컴파일, UV_NO_SYNC, data 복사

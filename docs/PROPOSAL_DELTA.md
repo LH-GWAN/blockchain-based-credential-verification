@@ -8,7 +8,7 @@
 | 남은 문제 = 조회형의 한계 4가지, 핵심 솔루션 = 보유형의 3성질 | README 도입부, `docs/DECISIONS.md` D-18, 검증기관 앱 금지 문구 테스트(§2-9) |
 | 5) "① 같은 상담, 두 경로 비교 — 조회형으로 은행이 받게 되는 항목 전체와 혜택패스가 보낸 참 1개를 나란히, 남는 기록 건수 함께 표시" | 검증기관 `/result/[id]` "같은 상담, 두 경로 비교" 패널, `docs/screenshots/15-verifier-comparison.png`, 모바일 `15b` |
 | 공공 마이데이터 이용 내역 3년 보관 (고시 제27조 제2항) | `data/legacy-documents.json` `records.pull`, 패널 좌열 "남는 기록" |
-| "검증이 추적을 만들지 않는다(핵심)" | 발급기관 정지 후 검증 PASS (`docs/screenshots/16-verifier-issuer-down.png`, E2E `E2E_ISSUER_DOWN_CMD`), compose 네트워크 격리 |
+| "검증이 추적을 만들지 않는다(핵심)" | 발급기관 정지 후 검증 PASS (`16-verifier-issuer-down.png`), compose 격리 프로브 통과 (`17-isolation-terminal.png`, `make demo-isolation`) |
 | "1회 발급 → N개 창구" | E2E ③′: 같은 VC 로 iM뱅크(햇살론뱅크) → iM저축은행(새희망홀씨) 통과, 복지기관 발급 건수 증가 0 (`10c-verifier-result-reuse-savings.png`) |
 | 발급기관 = 대구광역시 + 사회보장정보원 모사, 검증기관 = iM뱅크·iM저축은행 | `services/issuer/config.py`, `services/verifier/config.py` |
 | 정책 13종(공공 7 + 은행 서민금융 3 + 민간 감면 3), 판정 390건 100% | `data/policies/`, `docs/TEST_REPORT.md` |
@@ -19,11 +19,10 @@
 | 서술 | 실제(계산 근거: `data/comparison.json`, 서식 항목 기준) | 권장 |
 |---|---|---|
 | "개인정보 항목 80% 감소(10개 → 2개)", "단일 항목 용도는 90%(10 → 1)" | 햇살론뱅크·새희망홀씨: 소득금액증명 10항목 → 1 (**90%**) ✓ / 서민금융 상담: 소득금액증명+주민등록표 등본 13항목 → 2 (**85%**) / 공공요금 감면: 13 → 1 (**92%**) | 종전 "종이 서류 10개 항목" 기준 대신 조회형 서류 항목 기준으로 갱신: "햇살론뱅크 10→1(90%), 서민금융 상담 13→2(85%)" |
-| "단계별 스크린샷 14장" | 19장 (`03b`, `10b`, `10c`, `15`, `15b`, `16` 추가) | "19장" |
+| "단계별 스크린샷 14장" | 20장 (`03b`, `10b`, `10c`, `15`, `15b`, `16`, `17` 추가) | "20장" |
 | "시연 ①~⑦" | `docs/DEMO.md` 도 ①~⑦(③′·⑥·⑦ 포함)으로 정렬 완료 | 그대로 |
 | 검증 결과 표 "TypeScript 96건" | 규칙 38 + VC 58 = 96 (앱 테스트 지갑 41·검증기관 37 은 별도) | "TypeScript 96건(패키지) + 앱 78건" 또는 그대로 |
 
 ## 미완료 (문서에 "향후 과제"로 두는 것)
 - 실제 `ANTHROPIC_API_KEY` 로 `/recommend`·`/chat` 품질 확인 — 키가 없어 템플릿 제공자로만 확인. 인용 검증기는 가짜 클라이언트 테스트로 통과.
 - 고령자 사용성 평가(5명) 미측정. 시연 영상은 선택(제출서류 5번 택1).
-- `17-isolation-terminal.png`(compose `make demo-isolation` 출력)은 Docker 이미지 빌드 완료 후 캡처 — `docs/DEMO_RUN.md` 참조.

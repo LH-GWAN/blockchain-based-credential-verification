@@ -63,6 +63,9 @@ def main() -> int:
     ts_vc = vitest_summary("@dbp/vc", "packages/vc/ts")
     hh = hardhat_summary()
     bench = json.loads((ROOT / "docs/bench.json").read_text()) if (ROOT / "docs/bench.json").exists() else None
+    iso_txt = ROOT / "docs/screenshots/17-isolation-terminal.txt"
+    iso = iso_txt.read_text(encoding="utf-8") if iso_txt.exists() else ""
+    iso_ok = "격리 검사 통과" in iso
     last = ROOT / "apps/e2e/test-results/.last-run.json"
     e2e = json.loads(last.read_text()) if last.exists() else None
     commit = run(["git", "rev-parse", "--short", "HEAD"])[1].strip()
@@ -84,6 +87,7 @@ def main() -> int:
         f"| 검증 성능 | p95 < 2,000ms | {('p95 ' + str(bench.get('p95Ms')) + 'ms, 평균 ' + str(bench.get('meanMs')) + 'ms (' + str(bench.get('runs')) + '회)') if bench else '미측정 (scripts/bench_verify.py 실행 필요)'} | {mark(bench and bench.get('p95Ms', 9999) < 2000)} |",
         f"| 원장 무기록 | 체인 calldata·이벤트에 PII 0건 | chain/scripts/scan-pii.ts | {bench.get('piiScan', '미실행') if bench else '미실행'} |",
         f"| 시연 재현 | ①~⑦ 전 과정(③′ 재사용·⑥ 비교 패널·⑦ 발급기관 정지 포함) + 공격 4종 자동 재현 | Playwright `apps/e2e` (마지막 실행: {e2e.get('status') if e2e else '미실행'}) | {mark(e2e and e2e.get('status') == 'passed')} |",
+        f"| 네트워크 격리 | 검증기관 컨테이너 → 발급기관 차단, 원장만 접근 | `make demo-isolation` 프로브 ({'통과' if iso_ok else '미실행 또는 실패'}, docs/screenshots/17-isolation-terminal.txt) | {mark(iso_ok)} |",
         "", "## 스위트별 결과", "",
         f"- Python (pytest): {py}", f"- @dbp/rules (vitest): {ts_rules}", f"- @dbp/vc (vitest): {ts_vc}", f"- @dbp/chain (hardhat): {hh}", "",
         "## 개인정보 최소화 상세 (조회형 vs 보유형, data/comparison.json)", "", "```json", json.dumps(pii, ensure_ascii=False, indent=2), "```", "",

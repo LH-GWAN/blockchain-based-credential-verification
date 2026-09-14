@@ -1,8 +1,11 @@
 # 대구 혜택패스 전체 스택. 신뢰 도메인별 네트워크 격리:
-#   net-citizen : wallet ↔ issuer / ai / verifier   (시민 단말이 닿는 곳)
-#   net-issuer  : issuer ↔ chain
-#   net-verifier: verifier ↔ chain
-# verifier 는 issuer 와 같은 네트워크에 속하지 않는다 → 발급기관에 직접 조회 불가 (프롬프트 §2-5).
+#   net-issuer  : issuer ↔ chain            (발급기관은 원장에만 닿는다)
+#   net-verifier: verifier ↔ chain          (검증기관은 원장에만 닿는다)
+#   net-egress  : ai → LLM API              (외부로 나가는 유일한 서비스)
+#   net-citizen : wallet / verifier-app     (정적 앱 컨테이너; 브라우저는 호스트 포트로 서비스에 접근한다)
+# 시민 브라우저는 published 포트(localhost:8001/8002/8003/8004)로 서비스에 닿으므로 컨테이너끼리 공유 네트워크가 필요 없다.
+# verifier 와 issuer 는 어떤 네트워크도 공유하지 않는다 → 발급기관 직접 조회 불가 (프롬프트 §2-5). `make demo-isolation` 이 이를 검사한다.
+# (초기 토폴로지는 wallet 용 net-citizen 을 issuer·verifier 가 함께 써서 실제로는 닿았다 — 프로브가 잡아내 수정, DECISIONS D-20)
 # 기본 체인은 Hardhat 노드. Besu QBFT 는 `docker compose --profile besu` (chain/besu 참고).
 name: daegu-benefit-pass
 
@@ -22,7 +25,7 @@ services:
     build:
       context: .
       dockerfile: docker/chain.Dockerfile
-    command: ["pnpm", "--filter", "@dbp/chain", "node", "--", "--hostname", "0.0.0.0"]
+    command: ["pnpm", "--config.verify-deps-before-run=false", "--filter", "@dbp/chain", "exec", "hardhat", "node", "--hostname", "0.0.0.0", "--port", "8545"]
     ports: ["8545:8545"]
     networks: [net-issuer, net-verifier, net-ops]
     healthcheck:
@@ -35,7 +38,7 @@ services:
     build:
       context: .
       dockerfile: docker/chain.Dockerfile
-    command: ["sh", "-c", "pnpm --filter @dbp/chain deploy:localhost && uv run python scripts/seed_ledger.py"]
+    command: ["sh", "-c", "pnpm --config.verify-deps-before-run=false --filter @dbp/chain deploy:localhost && uv run python scripts/seed_ledger.py"]
     environment:
       RPC_URL: http://chain:8545
     volumes:
@@ -58,7 +61,7 @@ services:
     ports: ["8001:8001"]
     depends_on:
       deployer: { condition: service_completed_successfully }
-    networks: [net-citizen, net-issuer]
+    networks: [net-issuer]
 
   issuer-welfare:
     <<: *python-base
@@ -74,7 +77,7 @@ services:
     ports: ["8003:8003"]
     depends_on:
       deployer: { condition: service_completed_successfully }
-    networks: [net-citizen, net-issuer]
+    networks: [net-issuer]
 
   verifier:
     <<: *python-base
@@ -86,7 +89,7 @@ services:
     ports: ["8002:8002"]
     depends_on:
       deployer: { condition: service_completed_successfully }
-    networks: [net-citizen, net-verifier]   # ← net-issuer 없음: 발급기관에 닿을 수 없다
+    networks: [net-verifier]   # ← 발급기관과 공유하는 네트워크가 없다: 원장(chain)에만 닿는다
 
   ai:
     <<: *python-base
@@ -98,7 +101,7 @@ services:
       LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
     volumes: []
     ports: ["8004:8004"]
-    networks: [net-citizen, net-egress]     # LLM API 만 외부로
+    networks: [net-egress]     # LLM API 만 외부로; 원장·발급기관에는 닿지 않는다
 
   wallet:
     build:
