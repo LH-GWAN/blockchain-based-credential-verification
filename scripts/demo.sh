@@ -39,6 +39,7 @@ echo "[demo] 지갑 앱($WALLET_PORT) · 검증기관 앱($VERIFIER_APP_PORT) �
 (pnpm --filter @dbp/wallet dev -p "$WALLET_PORT" > .demo/wallet.log 2>&1) & PIDS+=($!)
 (pnpm --filter @dbp/verifier-app dev -p "$VERIFIER_APP_PORT" > .demo/verifier-app.log 2>&1) & PIDS+=($!)
 wait_http "http://localhost:$WALLET_PORT"; wait_http "http://localhost:$VERIFIER_APP_PORT"
+echo "http://localhost:$WALLET_PORT" > .demo/wallet.url; echo "http://localhost:$VERIFIER_APP_PORT" > .demo/verifier-app.url  # make e2e 가 읽는다
 
 cat <<MSG
 

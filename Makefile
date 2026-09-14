@@ -60,7 +60,7 @@ demo-isolation: ## 검증기관 컨테이너에서 발급기관 접속이 차단
 bench: ## 검증 성능 벤치 (make demo 기동 상태에서) → docs/bench.json
 	uv run python scripts/bench_verify.py 50
 
-e2e: ## Playwright 로 시연 ①~⑤ 자동 재현 + docs/screenshots 갱신 (make demo 기동 상태에서; WALLET_URL/VERIFIER_APP_URL 로 포트 지정)
+e2e: ## Playwright 로 시연 ①~⑦(③′·⑥ 포함, ⑦은 E2E_ISSUER_DOWN_CMD) 자동 재현 — 지갑 주소는 .demo/wallet.url 또는 WALLET_URL
 	pnpm --filter @dbp/e2e test
 
 smoke: ## 체인 기동부터 발급·검증·폐기·공격·벤치·PII 스캔까지 헤드리스 통합 확인

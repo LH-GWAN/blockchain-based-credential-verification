@@ -4,11 +4,17 @@
  *  ⑤ 폐기 후 차단 + 공격 시연 4종
  */
 import { test, expect, type Browser, type Page } from '@playwright/test';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const WALLET = process.env.WALLET_URL ?? 'http://localhost:3010';
-const VERIFIER_APP = process.env.VERIFIER_APP_URL ?? 'http://localhost:3001';
+// 주소 우선순위: 환경변수 → make demo 가 남긴 .demo/*.url → 기본값
+function urlFrom(envName: string, file: string, fallback: string): string {
+  if (process.env[envName]) return process.env[envName]!;
+  const p = join(process.cwd(), '..', '..', '.demo', file);
+  return existsSync(p) ? readFileSync(p, 'utf-8').trim() : fallback;
+}
+const WALLET = urlFrom('WALLET_URL', 'wallet.url', 'http://localhost:3000');
+const VERIFIER_APP = urlFrom('VERIFIER_APP_URL', 'verifier-app.url', 'http://localhost:3001');
 const ISSUER_DAEGU = process.env.ISSUER_DAEGU_URL ?? 'http://localhost:8001';
 const ISSUER_WELFARE = process.env.ISSUER_WELFARE_URL ?? 'http://localhost:8003';
 const SHOTS = join(process.cwd(), '..', '..', 'docs', 'screenshots');
