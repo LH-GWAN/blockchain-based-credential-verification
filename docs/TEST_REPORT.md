@@ -1,7 +1,7 @@
 # 테스트 리포트
 
-- 생성 시각: 2026-09-14T23:06:31+09:00
-- 커밋: `bbe99c6`
+- 생성 시각: 2026-09-14T23:36:36+09:00
+- 커밋: `2fb65af`
 - 규칙 번들: `daegu-eligibility@2026.1` 해시 `0x2032a0249e8f763c07de77a046c98dd97a6a0af87cb7ba5a3225e061002adc15`
 
 ## 제안요약서 검증 계획 대응
@@ -16,6 +16,7 @@
 | 검증 성능 | p95 < 2,000ms | p95 13.2ms, 평균 12.4ms (50회) | ✅ |
 | 원장 무기록 | 체인 calldata·이벤트에 PII 0건 | chain/scripts/scan-pii.ts | PASS (blocks=80, txs=79, logs=76, findings=0) |
 | 시연 재현 | ①~⑦ 전 과정(③′ 재사용·⑥ 비교 패널·⑦ 발급기관 정지 포함) + 공격 4종 자동 재현 | Playwright `apps/e2e` (마지막 실행: passed) | ✅ |
+| 네트워크 격리 | 검증기관 컨테이너 → 발급기관 차단, 원장만 접근 | `make demo-isolation` 프로브 (통과, docs/screenshots/17-isolation-terminal.txt) | ✅ |
 
 ## 스위트별 결과
 
