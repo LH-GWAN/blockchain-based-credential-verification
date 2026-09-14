@@ -1,7 +1,7 @@
 /**
  * 시연 ①~⑤ 자동 재현 (docs/DEMO.md). 스크린샷은 docs/screenshots/ 에 저장한다.
- *  ① 지갑 생성·증명서 발급  ② AI 혜택 추천  ③ QR(코드) 제출  ④ 기관 검증 PASS
- *  ⑤ 폐기 후 차단 + 공격 시연 4종
+ *  ① 지갑 생성·증명서 발급  ② 창구 혜택 안내  ③ QR(코드) 제출  ③′ 햇살론뱅크 1항목·저축은행 재사용  ④ 기관 검증 PASS  ⑥ 조회형 대비 비교 패널
+ *  ⑤ 폐기 후 차단 + 공격 시연 4종  ⑦ (선택) 발급기관 정지 후 검증 PASS — E2E_ISSUER_DOWN_CMD
  */
 import { test, expect, type Browser, type Page } from '@playwright/test';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
@@ -51,7 +51,7 @@ async function presentWithCode(wallet: Page, code: string) {
   await expect(wallet.getByText('제공되지 않는 정보: 이름 · 주민등록번호 · 주소 · 소득 금액 · 계좌 정보')).toBeVisible();
 }
 
-test('①~⑤ 전체 시연 흐름', async ({ browser }) => {
+test('①~⑦ 전체 시연 흐름', async ({ browser }) => {
   const { wallet, verifier } = await newContexts(browser);
 
   // ── ① 지갑 생성 → 사전 판정 → 동의 → 발급 ───────────────────────────────
