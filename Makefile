@@ -40,6 +40,12 @@ demo: ## 체인 + 서비스 + 앱 전체 기동 (docs/DEMO.md 참고)
 compose-up: ## docker compose 로 전체 스택 기동 (네트워크 격리 포함)
 	docker compose up --build -d
 
+compose-isolation-up: ## 격리 시연용 최소 스택(체인·발급기관·검증기관)을 호스트 포트 없이 기동 — make demo 와 동시 사용 가능
+	docker compose -f docker-compose.yml -f docker-compose.isolation.yml up -d chain deployer issuer-daegu issuer-welfare verifier
+
+capture-isolation: ## make demo-isolation 출력을 docs/screenshots/17-isolation-terminal.{txt,png} 로 저장
+	./scripts/capture_isolation.sh
+
 compose-down: ## compose 스택 종료
 	docker compose down -v
 
@@ -60,4 +66,4 @@ e2e: ## Playwright 로 시연 ①~⑤ 자동 재현 + docs/screenshots 갱신 (m
 smoke: ## 체인 기동부터 발급·검증·폐기·공격·벤치·PII 스캔까지 헤드리스 통합 확인
 	./scripts/smoke_e2e.sh 50
 
-.PHONY: help setup build test chain deploy seed expected report demo compose-up compose-down demo-isolation bench e2e smoke
+.PHONY: help setup build test chain deploy seed expected report demo compose-up compose-isolation-up capture-isolation compose-down demo-isolation bench e2e smoke e2e smoke
