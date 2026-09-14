@@ -24,8 +24,9 @@ async function newContexts(browser: Browser) {
   return { wallet, verifier };
 }
 
-async function createVerifierRequest(verifier: Page, preset?: string): Promise<string> {
+async function createVerifierRequest(verifier: Page, preset?: string, verifierName?: string): Promise<string> {
   await verifier.goto(`${VERIFIER_APP}/`);
+  if (verifierName) await verifier.getByRole('radio', { name: new RegExp(verifierName) }).check();
   if (preset) await verifier.getByRole('button', { name: preset }).first().click();
   await verifier.getByRole('button', { name: '요청 QR 만들기' }).click();
   const codeEl = verifier.getByLabel(/^확인 코드/);
@@ -133,6 +134,43 @@ test('①~⑤ 전체 시연 흐름', async ({ browser }) => {
   await expect(verifier.getByText(/정책 판정 재현/).first()).toBeVisible();
   await shot(verifier, '10b-verifier-result-sunshine-bank');
 
+  // ── ⑥ 조회형 대비 비교 패널 (§12.5): 숫자는 서비스(data/comparison.json)에서 온다 ──
+  const panel = verifier.getByTestId('comparison-panel');
+  await expect(panel).toBeVisible();
+  await expect(panel.getByText('같은 상담, 두 경로 비교')).toBeVisible();
+  await expect(panel.getByText('공공 마이데이터 방식 (조회형)')).toBeVisible();
+  await expect(panel.getByText('대구 혜택패스 (보유형)')).toBeVisible();
+  await expect(panel.getByText('소득금액증명', { exact: false }).first()).toBeVisible();
+  await expect(verifier.getByTestId('comparison-summary')).toHaveText(/이번 검증에서 줄어든 항목: 10 → 1 \(90%\)/);
+  await expect(panel.getByText(/3년 보관/)).toBeVisible();
+  await expect(panel.getByText(/실제 API 호출 결과가 아니다/)).toBeVisible();
+  const panelText = await panel.innerText();
+  expect(panelText).not.toMatch(/유출(이)? ?불가|개인정보가 사라|종이 ?증명서를 ?없/);
+  await panel.scrollIntoViewIfNeeded();
+  await panel.screenshot({ path: join(SHOTS, '15-verifier-comparison.png') });
+  // 모바일 폭에서 세로 스택(조회형이 먼저)
+  const mobileVerifier = await (await verifier.context().browser()!.newContext({ viewport: { width: 390, height: 844 }, locale: 'ko-KR' })).newPage();
+  await mobileVerifier.goto(verifier.url());
+  const pullBox = await mobileVerifier.getByTestId('comparison-pull').boundingBox();
+  const holdBox = await mobileVerifier.getByTestId('comparison-hold').boundingBox();
+  expect(pullBox && holdBox && pullBox.y < holdBox.y && Math.abs(pullBox.x - holdBox.x) < 4).toBeTruthy();
+  await mobileVerifier.getByTestId('comparison-panel').screenshot({ path: join(SHOTS, '15b-verifier-comparison-mobile.png') });
+  await mobileVerifier.context().close();
+
+  // ── ③' 재사용: 같은 카드, 다른 창구 (iM저축은행 + 새희망홀씨) — 재발급 없이 통과 (§2-8) ──
+  const code4 = await createVerifierRequest(verifier, '새희망홀씨 대상 확인', 'iM저축은행');
+  await presentWithCode(wallet, code4);
+  await expect(wallet.getByText('iM저축은행', { exact: false }).first()).toBeVisible();
+  await wallet.getByRole('button', { name: '동의하고 제출' }).click();
+  await expect(wallet.getByText('자격 충족').first()).toBeVisible();
+  await verifier.waitForURL(/\/result\//, { timeout: 30_000 });
+  await expect(verifier.getByText('자격 충족').first()).toBeVisible();
+  await expect(verifier.getByText('iM저축은행', { exact: false }).first()).toBeVisible();
+  await shot(verifier, '10c-verifier-result-reuse-savings');
+  // 발급기관에 새 발급이 없었음을 확인 (재발급 없이 재사용)
+  const adminAfter = await (await fetch(`${ISSUER_WELFARE}/admin/credentials`)).json();
+  expect(adminAfter.credentials.filter((c: { claim: string }) => c.claim === 'annualIncomeUnder35M')).toHaveLength(1);
+
   // ── ⑤ 폐기 → 재제출 차단 ──────────────────────────────────────────────────
   const admin = await (await fetch(`${ISSUER_WELFARE}/admin/credentials`)).json();
   const target = admin.credentials.find((c: { claim: string }) => c.claim === 'incomeBelow50Median');
@@ -158,6 +196,23 @@ test('①~⑤ 전체 시연 흐름', async ({ browser }) => {
     await expect(verifier.getByText(code).first()).toBeVisible();
   }
   await shot(verifier, '13-verifier-attacks');
+
+  // ── ⑦ (선택) 발급기관 정지 후 검증: E2E_ISSUER_DOWN_CMD 가 주어진 경우에만 ──
+  if (process.env.E2E_ISSUER_DOWN_CMD) {
+    const { execSync } = await import('node:child_process');
+    execSync(process.env.E2E_ISSUER_DOWN_CMD, { stdio: 'inherit' });
+    await expect
+      .poll(async () => { try { const r = await fetch(`${ISSUER_WELFARE}/health`); return r.ok; } catch { return false; } }, { timeout: 30_000 })
+      .toBe(false);
+    const code5 = await createVerifierRequest(verifier, '햇살론뱅크 대상 확인');
+    await presentWithCode(wallet, code5);
+    await wallet.getByRole('button', { name: '동의하고 제출' }).click();
+    await expect(wallet.getByText('자격 충족').first()).toBeVisible();
+    await verifier.waitForURL(/\/result\//, { timeout: 30_000 });
+    await expect(verifier.getByText('자격 충족').first()).toBeVisible();
+    await shot(verifier, '16-verifier-issuer-down');
+  }
+
 
   // ── 이력: 원장 대조 ✓ ───────────────────────────────────────────────────
   await wallet.goto(`${WALLET}/history`);

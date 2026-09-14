@@ -89,6 +89,23 @@ export type VerificationResult = {
   receipt: Receipt;
   verifiedAt: number;
   policyCheck?: PolicyCheck;
+  comparison?: Comparison;
+};
+
+/** 조회형(공공 마이데이터) 대비 보유형(혜택패스) 비교 — 검증 서비스가 data/comparison.json 으로 계산해 준다. 화면은 숫자를 만들지 않는다. */
+export type ComparisonDocument = { id: string; name: string; issuer: string; fields: string[]; source: string };
+export type Comparison = {
+  presetId: string | null;
+  pullDocuments: ComparisonDocument[];
+  pullItems: string[];
+  pullCount: number;
+  holdItems: string[];
+  holdCount: number;
+  reductionPercent: number;
+  summary: string;
+  pullRecords: string;
+  holdRecords: string;
+  honestyNote: string;
 };
 
 export type PendingResult = { status: "pending"; requestId: string; exp: number };

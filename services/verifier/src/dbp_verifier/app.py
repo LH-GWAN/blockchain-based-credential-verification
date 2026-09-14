@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from dbp_rules import load_bundle
 from dbp_vc import create_vp, generate_holder_key, random_salt, receipt_hash, sha256_hex
 
+from .comparison import build_comparison, precomputed
 from .config import PRESETS, REASON_KO, VERIFIERS, Settings
 from .verify import decode_jwt_unverified, verify_presentation
 
@@ -35,6 +36,7 @@ class RequestIn(BaseModel):
     purpose: str = "서민금융 상담 대상 확인"
     requested: list[RequestedClaim] = Field(default_factory=lambda: [RequestedClaim(claim="daeguResident"), RequestedClaim(claim="incomeBelow50Median")])
     policyId: str | None = None
+    presetId: str | None = None
 
 
 class PresentIn(BaseModel):
@@ -128,6 +130,8 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
             "receipt": {"hash": h, "object": receipt_obj, "txHash": None},
             "verifiedAt": int(time.time()),
         }
+        # 조회형 대비 비교 (§12.5): 이번 요청 항목으로 계산 — 숫자를 화면에 하드코딩하지 않는다
+        result["comparison"] = build_comparison(req["requested"], labels, req.get("presetId"))
         if req.get("policyId"):
             from dbp_rules import evaluate_policies
             full = {k: False for k in bundle["claims"]["rules"]}
@@ -154,7 +158,7 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
         nonce = "n_" + secrets.token_hex(32)
         exp = int(time.time()) + settings.request_ttl_s
         rec = {"requestId": rid, "shortCode": code, "verifier": v, "purpose": body.purpose,
-               "requested": [r.model_dump() for r in body.requested], "policyId": body.policyId,
+               "requested": [r.model_dump() for r in body.requested], "policyId": body.policyId, "presetId": body.presetId,
                "nonce": nonce, "exp": exp, "used": False, "createdAt": int(time.time())}
         with lock:
             requests[rid] = rec
@@ -184,6 +188,18 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
     @app.get("/presets")
     def presets():
         return PRESETS
+
+    @app.get("/comparison")
+    def comparison_all():
+        """프리셋별 조회형 대비 보유형 비교 (data/comparison.json — scripts/pii_items.py 산출물)."""
+        return precomputed()
+
+    @app.get("/comparison/{preset_id}")
+    def comparison_one(preset_id: str):
+        p = next((x for x in PRESETS if x["id"] == preset_id), None)
+        if not p:
+            raise HTTPException(404, "PRESET_UNKNOWN")
+        return build_comparison(p["requested"], labels, preset_id)
 
     @app.post("/requests")
     def create_request(body: RequestIn):

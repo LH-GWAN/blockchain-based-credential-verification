@@ -190,6 +190,20 @@ export const RESULT = {
   no: "거짓",
 } as const;
 
+export const COMPARISON = {
+  title: "같은 상담, 두 경로 비교",
+  lead: "이번 용도로 창구가 자격을 확인하는 두 가지 방법. 왼쪽은 원문을 끌어오는 조회형, 오른쪽은 시민이 보유한 참·거짓을 제출하는 보유형.",
+  pullTitle: "공공 마이데이터 방식 (조회형)",
+  holdTitle: "대구 혜택패스 (보유형)",
+  pullDocs: "넘어오는 서류",
+  pullItems: "창구가 받게 되는 항목",
+  holdItems: "이번에 실제로 받은 것",
+  itemsBadge: (n: number) => `${n}개 항목`,
+  recordsLabel: "남는 기록",
+  reduced: "이번 검증에서 줄어든 항목",
+  sourceLabel: "서식 출처",
+} as const;
+
 export const CHECK_LABELS: Record<CheckKey, string> = {
   nonce: "1회용 확인번호",
   vpSignature: "제출 서명",

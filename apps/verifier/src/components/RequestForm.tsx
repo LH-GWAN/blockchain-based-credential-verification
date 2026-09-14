@@ -65,6 +65,7 @@ export function RequestForm() {
         purpose: form.purpose.trim() || REQUEST.purposeDefault,
         requested,
         ...(form.policyId ? { policyId: form.policyId } : {}),
+        ...(form.presetId ? { presetId: form.presetId } : {}),
       });
       setRequest(req);
     } catch (e) {

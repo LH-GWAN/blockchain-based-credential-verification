@@ -1,29 +1,21 @@
-# 작업 계획 (프롬프트 §13 기준)
+# 작업 계획 (프롬프트 §13 "남은 작업" 기준, 2026-09-14 2차 개정)
 
-기준일 2026-09-14. 제출 마감 2026-09-20 23:59.
+제품 축: **조회형(pull) → 보유형(hold)**. 보이게 할 3성질 = ① 값이 아니라 참·거짓 ② 1회 발급 → N개 창구 ③ 발급기관도 중계자도 제출 이력을 모른다.
+"은행에서 종이 증명서를 없앤다"는 주장은 폐기 — 문서·화면에서 쓰지 않는다.
 
-## P0 — 없으면 제출 불가
-- [x] 저장소 뼈대 (pnpm workspace, uv workspace, .env.example, .gitignore)
-- [x] `data/`: 기준 중위소득 2026(고시 확인 완료), 정책 13종(개정: 은행 서민금융·민간 감면 추가), 합성 시민 30명, 기댓값 390건
-- [x] `packages/rules/py`: JSON Logic 부분집합 엔진, 번들 조합·해시, 참조 구현, 테스트 14건
-- [x] `packages/rules/ts`: Python 과 동일 의미의 TS 미러 (해시 동일성 테스트)
-- [x] `packages/vc`: did:key, VC/VP JWS(EdDSA), Bitstring Status List, JCS 해시 (TS/Py 교차 검증)
-- [x] `chain/`: 컨트랙트 4종 + 테스트 + 배포·시드 + PII 스캔 + Besu compose
-- [x] `packages/ledger-client/py`: web3.py 래퍼 (작성됨, 배포 후 통합 테스트)
-- [x] `services/issuer`: 발급·폐기·관리, 동의 영수증 앵커, 규칙 해시 대조
-- [x] `services/verifier`: 요청·제출 검증·결과·공격 시연, 제출 영수증 앵커
-- [x] `services/ai`: 추천(구조화 출력+인용 검증+템플릿 폴백), 채팅, 감사 페이로드
-- [x] `apps/wallet`: 시작/발급/추천/제출/이력
-- [x] `apps/verifier`: 요청 생성/결과/공격 시연
-- [x] `docker-compose.yml`, `Makefile`, `docs/DEMO.md`, `README.md`
+## 13.1 완료 (재구현 금지)
+- [x] 규칙 엔진 TS/Py(390건 100%), VC 패키지, 컨트랙트 4종, 발급·검증·AI 서비스, 지갑·검증기관 앱, E2E, Besu QBFT, 격리, 벤치, PII 스캔
 
-## P1
-- [x] Besu QBFT 전환, 네트워크 격리 시연
-- [x] 채팅 스트리밍 + 환각 프로브 + 프롬프트 캐싱
-- [x] 성능 벤치, PII 항목 계산, `make report` → `docs/TEST_REPORT.md`
-- [x] Playwright E2E
-- [x] 지갑 제출 이력 영수증 대조, "AI가 받은 정보 보기"
-- [x] `docs/ARCHITECTURE.md`
-
-## P2
-- [x] 카메라 QR (구현, 미검증)  ·  [ ] PWA 오프라인  ·  [ ] 다크모드  ·  [x] 정책 9개
+## 13.2 남은 작업
+- [x] **1. 조회형 대비 비교 패널 (§12.5, 최우선)**
+  - [x] `data/legacy-documents.json` — 프리셋별 행정서류와 항목(서식 기준, 출처 표기)
+  - [x] `scripts/pii_items.py` → `data/comparison.json` 생성 (프리셋별 조회형 항목 vs 보유형 항목, 감소율, 남는 기록) + VP 실측 대조
+  - [x] 검증 서비스: 요청에 `presetId`, 결과에 `comparison`, `GET /comparison`
+  - [x] 검증기관 앱 `/result/[id]` 하단 "같은 상담, 두 경로 비교" 패널 (2열, 모바일 세로 스택, 정직성 표기, §2-9 금지 문구 없음)
+  - [x] 스크린샷 `15-verifier-comparison.png`, E2E 패널·감소율 검증, `docs/DEMO.md` 단계 ⑥
+- [x] **2. 발급기관 정지 후 검증 (§3 ⑦)** — 발급기관 2개 정지 → 검증 PASS → `16-verifier-issuer-down.png`, `17-isolation-terminal.png`, DEMO ⑦
+- [x] **3. 재사용 시나리오 ③′** — iM저축은행 + 새희망홀씨 프리셋으로 같은 VC 재제출 → 스크린샷, DEMO ③′, E2E 강제(§2-8)
+- [ ] **4. 실제 LLM 키 품질 확인** — `ANTHROPIC_API_KEY` 필요 (키 없으면 미완료로 기록)
+- [x] **5. 시연 영상(선택)** — 스토리보드에 ③′·⑥·⑦ 반영
+- [x] 문서: README 문제 정의를 조회형/보유형 프레임으로 교체, DEMO Q&A 1·2번(공공 마이데이터 / 서민금융 잇다), DECISIONS, PROGRESS, PROPOSAL_DELTA, DEMO_RUN, TEST_REPORT 재생성
+- [x] 6. 미완료로 남기는 것: 고령자 사용성 평가, PWA 오프라인, 다크모드

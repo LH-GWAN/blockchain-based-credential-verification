@@ -79,6 +79,7 @@ export type CreateRequestBody = {
   purpose: string;
   requested: { claim: string; expected: boolean }[];
   policyId?: string;
+  presetId?: string;
 };
 
 export const api = {

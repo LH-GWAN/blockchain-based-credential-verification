@@ -9,6 +9,7 @@ import type { VerificationResult } from "@/lib/types";
 import {
   ChecksList,
   ClaimsTable,
+  ComparisonPanel,
   CredentialDetails,
   DataNote,
   PolicyCheckCard,
@@ -127,6 +128,7 @@ export function ResultView({ requestId }: { requestId: string }) {
       <VerdictBanner result={result} />
       <DataNote result={result} />
       <PolicyCheckCard result={result} />
+      <ComparisonPanel result={result} />
       <div className="grid gap-6 lg:grid-cols-2">
         <ClaimsTable result={result} />
         <TimingPanel result={result} />

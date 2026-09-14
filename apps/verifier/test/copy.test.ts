@@ -79,3 +79,15 @@ describe("문구", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+
+
+describe("§2-9 과장 금지 · §1.1 폐기 주장 금지", () => {
+  it("src/ 어디에도 '유출 불가', '개인정보가 사라진다', '종이 증명서를 없앤다' 류 문구가 없다", () => {
+    const banned = [/유출(이)? ?불가/, /개인정보가 사라/, /종이 ?증명서를 ?없/, /행정기관 사이에서만/];
+    for (const p of walk(join(process.cwd(), "src"))) {
+      const text = readFileSync(p, "utf-8");
+      for (const re of banned) expect(text, `${p} contains ${re}`).not.toMatch(re);
+    }
+  });
+});

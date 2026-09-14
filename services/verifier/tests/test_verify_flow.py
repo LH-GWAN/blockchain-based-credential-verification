@@ -1,4 +1,5 @@
 """검증 절차 테스트: 정상 PASS, 폐기·재사용·만료·위조·타인 증명서·비활성 발급기관·미등록 발급기관 차단."""
+import json
 import time
 
 import pytest
@@ -147,3 +148,24 @@ def test_aud_mismatch(env):
                    nonce=req["nonce"], vc_jwts=vcs)
     res = client.post("/present", json={"requestId": req["requestId"], "vpJwt": vp}).json()
     assert "AUD_MISMATCH" in res["reasonCodes"]
+
+
+def test_comparison_block_from_single_source(env):
+    """결과의 비교 블록은 data/legacy-documents.json 계산값이며 하드코딩이 아니다. 햇살론뱅크: 소득금액증명 10항목 → 참 1개."""
+    client, ledger, holder, vcs = env
+    inc = _vc(holder.did, "annualIncomeUnder35M", 21)
+    req = client.post("/requests", json={"presetId": "sunshine-bank", "purpose": "햇살론뱅크 대상 확인",
+                                         "requested": [{"claim": "annualIncomeUnder35M", "expected": True}]}).json()
+    vp = create_vp(holder_did=holder.did, holder_private_key=holder.private_key, verifier_did=req["verifier"],
+                   nonce=req["nonce"], vc_jwts=[inc])
+    res = client.post("/present", json={"requestId": req["requestId"], "vpJwt": vp}).json()
+    assert res["verdict"] == "PASS"
+    c = res["comparison"]
+    assert c["presetId"] == "sunshine-bank" and [d["name"] for d in c["pullDocuments"]] == ["소득금액증명"]
+    assert c["pullCount"] == 10 and c["holdCount"] == 1 and c["reductionPercent"] == 90
+    assert c["holdItems"] == ["연소득 3,500만 원 이하 여부 = 참"] and "3년" in c["pullRecords"]
+    assert "실제 API 호출 결과가 아니다" in c["honestyNote"]
+    pre = client.get("/comparison").json()["presets"]["sunshine-bank"]
+    assert pre["pullCount"] == c["pullCount"] and pre["holdCount"] == c["holdCount"]
+    for banned in ["유출이 불가", "유출 불가", "개인정보가 사라"]:
+        assert banned not in json.dumps(c, ensure_ascii=False)

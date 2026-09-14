@@ -1,0 +1,41 @@
+{
+  "notice": "조회형(공공 마이데이터) 경로에서 창구가 받게 되는 행정서류와 그 항목. 각 서류의 공식 서식·공공 마이데이터 제공 항목 문서에 기재된 항목으로 구성한 비교 자료이며, 실제 API 호출 결과가 아니다.",
+  "documents": {
+    "income-certificate": {
+      "name": "소득금액증명",
+      "issuer": "국세청",
+      "fields": ["성명", "주민등록번호", "주소", "귀속연도", "소득 종류(근로·사업·기타)", "사업장 상호·사업자등록번호", "총수입금액", "소득금액", "발급번호·발급일", "사용 목적(제출처)"],
+      "source": "국세청 소득금액증명 서식(국세징수법 시행규칙 별지) · 공공 마이데이터 국세증명 10종 제공(2021.12 개시)"
+    },
+    "resident-register": {
+      "name": "주민등록표 등본",
+      "issuer": "행정안전부 / 지자체",
+      "fields": ["성명", "주민등록번호", "주소", "세대주 및 관계", "세대 구성원(가구원 수)", "전입일·변동 사유", "발급번호·발급일"],
+      "source": "주민등록법 시행규칙 별지 서식(주민등록표 등본)"
+    },
+    "recipient-certificate": {
+      "name": "수급자증명서",
+      "issuer": "보건복지부 / 지자체",
+      "fields": ["성명", "주민등록번호", "주소", "급여 종류(생계·의료·주거·교육)", "보장 결정일·보장 기간", "세대주 성명·관계", "가구원 수", "발급번호·발급일", "사용 목적"],
+      "source": "국민기초생활 보장법 시행규칙 별지 서식(수급자증명서)"
+    }
+  },
+  "claimDocuments": {
+    "daeguResident": ["resident-register"],
+    "ageOver65": ["resident-register"],
+    "daeguMetroFreeAge": ["resident-register"],
+    "singlePersonHousehold": ["resident-register"],
+    "hasStudentChild": ["resident-register"],
+    "isBenefitRecipient": ["recipient-certificate"],
+    "incomeBelow32Median": ["income-certificate", "resident-register"],
+    "incomeBelow48Median": ["income-certificate", "resident-register"],
+    "incomeBelow50Median": ["income-certificate", "resident-register"],
+    "incomeBelowBasicPensionLine": ["income-certificate", "resident-register"],
+    "annualIncomeUnder35M": ["income-certificate"],
+    "annualIncomeUnder45M": ["income-certificate"]
+  },
+  "records": {
+    "pull": "제공 내역 + 이용 내역 (이용 내역은 제공일로부터 3년 보관 — 「본인에 관한 행정정보의 제공 등에 관한 고시」 제27조 제2항)",
+    "hold": "없음 — 검증기관은 발급기관에 접속하지 않는다"
+  }
+}

@@ -1,4 +1,4 @@
-import { CHECK_LABELS, claimLabel, CRED_CHECK_LABELS, policyLabel, reasonText, RESULT, TIMING_LABELS } from "@/lib/copy";
+import { COMPARISON, CHECK_LABELS, claimLabel, CRED_CHECK_LABELS, policyLabel, reasonText, RESULT, TIMING_LABELS } from "@/lib/copy";
 import { formatDateTime, formatMs, formatSeconds, issuerNames, receivedFactCount, statusLabel } from "@/lib/format";
 import { CHECK_KEYS, TIMING_PARTS, type VerificationResult } from "@/lib/types";
 import { Checkmark } from "./Checkmark";
@@ -307,6 +307,74 @@ export function PolicyCheckCard({ result }: { result: VerificationResult }) {
         <span className="text-sm"> ({RESULT.policyRuleNote})</span>
       </p>
       <p className="mono mt-1 text-xs opacity-80">{pc.policyId}</p>
+    </section>
+  );
+}
+
+
+/**
+ * §12.5 조회형 대비 비교 패널. 숫자·항목은 모두 result.comparison(검증 서비스가 data/comparison.json 으로 계산)에서 온다.
+ * 좌 = 조회형(원문 항목 전체 + 3년 보관 기록), 우 = 보유형(참 N개 + 기록 없음). 모바일에서는 좌가 먼저 세로로 쌓인다.
+ */
+export function ComparisonPanel({ result }: { result: VerificationResult }) {
+  const c = result.comparison;
+  if (!c) return null;
+  return (
+    <section className="rounded-2xl border border-line bg-surface p-5" aria-label={COMPARISON.title} data-testid="comparison-panel">
+      <h2 className="text-2xl font-bold">{COMPARISON.title}</h2>
+      <p className="mt-1 text-sm text-muted">{COMPARISON.lead}</p>
+
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <div className="rounded-xl border border-warn/40 bg-warn-soft/40 p-4" data-testid="comparison-pull">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-lg font-semibold">{COMPARISON.pullTitle}</h3>
+            <span className="rounded-full bg-warn px-3 py-1 text-sm font-bold text-white">{COMPARISON.itemsBadge(c.pullCount)}</span>
+          </div>
+          <p className="mt-3 text-sm font-semibold text-muted">{COMPARISON.pullDocs}</p>
+          <ul className="mt-1 space-y-1">
+            {c.pullDocuments.map((d) => (
+              <li key={d.id} className="text-base">
+                <span className="font-semibold">{d.name}</span> <span className="text-sm text-muted">({d.issuer})</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-sm font-semibold text-muted">{COMPARISON.pullItems}</p>
+          <ul className="mt-1 flex flex-wrap gap-1.5">
+            {c.pullItems.map((it) => (
+              <li key={it} className="rounded-md border border-line bg-white px-2 py-0.5 text-sm">{it}</li>
+            ))}
+          </ul>
+          <p className="mt-4 text-sm">
+            <span className="font-semibold">{COMPARISON.recordsLabel}: </span>
+            {c.pullRecords}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-pass/40 bg-pass-soft p-4" data-testid="comparison-hold">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-lg font-semibold">{COMPARISON.holdTitle}</h3>
+            <span className="rounded-full bg-pass px-3 py-1 text-sm font-bold text-white">{COMPARISON.itemsBadge(c.holdCount)}</span>
+          </div>
+          <p className="mt-3 text-sm font-semibold text-muted">{COMPARISON.holdItems}</p>
+          <ul className="mt-1 space-y-1">
+            {c.holdItems.map((it) => (
+              <li key={it} className="text-lg font-bold text-pass">✓ {it}</li>
+            ))}
+          </ul>
+          <p className="mt-4 text-sm">
+            <span className="font-semibold">{COMPARISON.recordsLabel}: </span>
+            {c.holdRecords}
+          </p>
+        </div>
+      </div>
+
+      <p className="mt-4 text-xl font-extrabold text-accent" data-testid="comparison-summary">{c.summary}</p>
+      {c.pullDocuments.length > 0 && (
+        <p className="mt-2 text-xs text-muted">
+          {COMPARISON.sourceLabel}: {c.pullDocuments.map((d) => `${d.name} — ${d.source}`).join(" / ")}
+        </p>
+      )}
+      <p className="mt-1 text-xs text-muted">{c.honestyNote}</p>
     </section>
   );
 }
