@@ -15,7 +15,7 @@
   - [x] 스크린샷 `15-verifier-comparison.png`, E2E 패널·감소율 검증, `docs/DEMO.md` 단계 ⑥
 - [x] **2. 발급기관 정지 후 검증 (§3 ⑦)** — 발급기관 2개 정지 → 검증 PASS → `16-verifier-issuer-down.png`, `17-isolation-terminal.png`, DEMO ⑦
 - [x] **3. 재사용 시나리오 ③′** — iM저축은행 + 새희망홀씨 프리셋으로 같은 VC 재제출 → 스크린샷, DEMO ③′, E2E 강제(§2-8)
-- [ ] **4. 실제 LLM 키 품질 확인** — `ANTHROPIC_API_KEY` 필요 (키 없으면 미완료로 기록)
+- [x] **4. LLM 키** — 선택 항목으로 유지하기로 결정(2026-09-15). 키 없이 템플릿 제공자로 제출·시연하며, 키를 넣으면 같은 화면이 Claude 설명으로 바뀐다. 실제 키 품질 확인은 본선 전 선택 과제
 - [x] **5. 시연 영상(선택)** — 스토리보드에 ③′·⑥·⑦ 반영
 - [x] 문서: README 문제 정의를 조회형/보유형 프레임으로 교체, DEMO Q&A 1·2번(공공 마이데이터 / 서민금융 잇다), DECISIONS, PROGRESS, PROPOSAL_DELTA, DEMO_RUN, TEST_REPORT 재생성
 - [x] 6. 미완료로 남기는 것: 고령자 사용성 평가, PWA 오프라인, 다크모드

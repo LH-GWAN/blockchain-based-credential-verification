@@ -28,3 +28,6 @@
 - E2E 확장: ⑥ 패널·감소율 검증, ③′ iM저축은행+새희망홀씨 재사용(재발급 0건 확인), ⑦ 발급기관 정지 후 PASS(`E2E_ISSUER_DOWN_CMD`). 스크린샷 10c·15·15b·16 추가
 - 미완료: 실제 LLM 키 품질 확인(키 없음), 시연 영상(선택), 사용성 평가
 - compose 격리 프로브(`make demo-isolation`) 실행 → 초기 토폴로지 격리 실패 검출 → 수정 후 통과, `17-isolation-terminal.png` 확보 (D-20). Dockerfile: 빌드 시 solc 컴파일, UV_NO_SYNC, data 복사
+
+## 2026-09-15
+- LLM 키는 선택 항목으로 유지하기로 결정(키 미투입). 기본 시연 모드 = 템플릿 제공자

@@ -48,7 +48,7 @@ make compose-isolation-up && make demo-isolation   # (Docker) 검증기관 컨�
 ```
 
 `make demo` 후: 시민 지갑 http://localhost:3000 · 검증기관(은행 창구) http://localhost:3001 · 발급기관 API http://localhost:8001/docs (대구시) / 8003 (복지기관) · 검증 API 8002 · AI 8004.
-AI 설명은 `ANTHROPIC_API_KEY` 가 있으면 Claude(`LLM_MODEL`, 기본 `claude-opus-5`), 없으면 템플릿 설명으로 자동 대체되어 **오프라인에서도 시연이 멈추지 않습니다**.
+LLM 키는 **선택 항목**입니다. `ANTHROPIC_API_KEY` 가 있으면 Claude(`LLM_MODEL`, 기본 `claude-opus-5`)가 설명을 쓰고, 없으면 같은 화면이 템플릿 설명(`규칙 설명(템플릿)` 배지)으로 자동 대체되어 **오프라인에서도 시연이 멈추지 않습니다**. 자격 판정·검증은 어느 모드에서도 LLM 과 무관합니다.
 
 시연 순서(①~⑤)와 발표 멘트는 [docs/DEMO.md](docs/DEMO.md), 설계 결정은 [docs/DECISIONS.md](docs/DECISIONS.md), 구조 설명은 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), 테스트 결과는 [docs/TEST_REPORT.md](docs/TEST_REPORT.md) 를 보세요.
 
