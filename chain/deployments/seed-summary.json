@@ -1,39 +1,39 @@
 {
-  "rpc": "http://127.0.0.1:8546",
-  "chainId": 1337,
-  "bundleHash": "0x0d3e9975565229a6cd3cb494b595dd7ec66650fb17b2f7b2f2694ce982159466",
+  "rpc": "http://chain:8545",
+  "chainId": 31337,
+  "bundleHash": "0x2032a0249e8f763c07de77a046c98dd97a6a0af87cb7ba5a3225e061002adc15",
   "issuers": {
     "did:dbp:daegu": {
       "name": "대구광역시",
       "controller": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
       "ed25519PublicKeyHex": "9c0598a768768af2ccb82b22ffe4eb02bd30a206c664a11598cb0e6959759d9c"
     },
-    "did:dbp:imbank": {
-      "name": "iM뱅크",
+    "did:dbp:welfare": {
+      "name": "사회보장정보원(복지기관)",
       "controller": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
-      "ed25519PublicKeyHex": "9c5b26946ab39180cd737a93f25f166264e065d26d0840c1de22361e0d9204d7"
+      "ed25519PublicKeyHex": "5d5f2f1519b6d5c013e2d5f53821ea9770ba2915ddf2916eeab85c8455130a93"
     }
   },
   "txs": [
     {
       "registerIssuer": "did:dbp:daegu",
-      "tx": "0xde0f95032c9b87b2497265b5f65f2ca2aa34b94a88f961b9ee4eacd5f6d8564a"
+      "tx": "0x7ac0b37a5c3cd7496718d1f7f654582d9aaf0993e696f1e820e4a52e2cd241ab"
     },
     {
-      "registerIssuer": "did:dbp:imbank",
-      "tx": "0x925c55ff1da372cb1816b3a2757bdb1e1a5f7145e913ed19611cac05090703ec"
+      "registerIssuer": "did:dbp:welfare",
+      "tx": "0x0ab735e49a5444f9e322d5e5cf91dfa810d6783fd96755e8c287b9e0690d932a"
     },
     {
       "registerBundle": "daegu-eligibility@2026.1",
-      "tx": "0xd6d862908ed589fe149861ad5ef1934fff6a15f8352733a64db300f36485a6e6"
+      "tx": "0xb52d62b2e3181e768087ccc8eff3f60ff8de3c6ea4a2a88404220fbb0276501f"
     },
     {
       "publishStatusList": "dbp:status:daegu:list-1",
-      "tx": "0x9987a4778d0586241da6f5c7c5e6c04a129c870f81ba79ae8bf93747d9afb3c4"
+      "tx": "0xbc56c027402e5413eeee3cee69bd23a117902fa6ac4b9a82a3a5e4795e18c005"
     },
     {
-      "publishStatusList": "dbp:status:imbank:list-1",
-      "tx": "0xef7c035570e53bb5240b6b556aca771cee1e158f8e3ba44584997f37db1d0ebf"
+      "publishStatusList": "dbp:status:welfare:list-1",
+      "tx": "0xad5c0af2d20feb735d45616cf09e60d54ee26f4b2a07a03cfb51bd8e04e50efb"
     }
   ]
 }
