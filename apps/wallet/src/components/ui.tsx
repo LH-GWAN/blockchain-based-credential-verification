@@ -149,6 +149,68 @@ export function JsonView({ value, label }: { value: unknown; label?: string }) {
   );
 }
 
+/** 머리글이 있는 표 (사전 판정 등). 모바일 폭에서도 두 칸이 나란히 보이도록 셀은 줄바꿈을 허용한다. */
+export function DataTable({
+  columns,
+  rows,
+  caption,
+  className = '',
+}: {
+  columns: readonly string[];
+  rows: Array<{ key: string; cells: ReactNode[] }>;
+  caption?: string;
+  className?: string;
+}) {
+  return (
+    <div className={['overflow-hidden rounded-xl border border-line', className].join(' ')}>
+      <table className="w-full border-collapse text-[0.95rem]">
+        {caption && <caption className="sr-only">{caption}</caption>}
+        <thead className="bg-canvas text-[0.85rem] text-muted">
+          <tr>
+            {columns.map((c) => (
+              <th key={c} scope="col" className="px-3 py-2 text-left font-semibold">
+                {c}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.key} className="border-t border-line">
+              {r.cells.map((cell, i) => (
+                <td key={i} className="px-3 py-2 align-top">
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** 항목–값 표 (증명서 내용·영수증 내용). 첫 칸은 행 머리글이라 화면 낭독기가 "항목: 값"으로 읽는다. */
+export function DetailTable({ rows, caption, className = '' }: { rows: Array<[string, ReactNode]>; caption?: string; className?: string }) {
+  return (
+    <div className={['overflow-hidden rounded-xl border border-line', className].join(' ')}>
+      <table className="w-full border-collapse text-[0.95rem]">
+        {caption && <caption className="sr-only">{caption}</caption>}
+        <tbody>
+          {rows.map(([k, v]) => (
+            <tr key={k} className="border-t border-line first:border-t-0">
+              <th scope="row" className="w-[36%] bg-canvas px-3 py-2 text-left align-top font-semibold text-muted">
+                {k}
+              </th>
+              <td className="px-3 py-2 align-top break-all">{v}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function KeyValue({ items }: { items: Array<[string, ReactNode]> }) {
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[0.95rem]">

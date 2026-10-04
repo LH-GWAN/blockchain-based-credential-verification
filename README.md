@@ -1,34 +1,11 @@
 # 대구 혜택패스 (Daegu Benefit Pass)
 
-> **"공공이 판정한 자격을 시민이 보유하고, 은행 창구에 참·거짓만 제출한다."**
+> **"공공이 판정한 자격을 시민이 보유하고, 은행 창구에 충족 여부만 제출한다."**
 > 2026 AI Blockchain Challenge in Daegu — 공모주제 ❺ 블록체인 기반 신뢰 인프라 · 팀 원비트
 
-**이미 해결된 것은 다시 만들지 않습니다.** "무엇을 받을 수 있는지"는 복지멤버십(163종)이, "서류를 떼서 내야 한다"는 공공 마이데이터
-(「전자정부법」 제43조의2, 이용기관 154곳·서비스 178종, 국세청 소득금액증명은 2021년 12월부터 금융회사에 직접 제공)가 상당 부분 해결했습니다.
-
-**남은 문제는 전달 방식입니다.** 지금의 방식은 기관이 필요할 때 원문을 끌어오는 **조회형(pull)** 입니다. ① 증명서 원문의 값이 그대로
-넘어가고(은행은 "기준 이하인가"만 알면 되는데 소득 금액·귀속연도·소득 종류까지), ② 창구·상품마다 동의와 조회가 반복되고,
-③ 제공·이용 내역이 전자적으로 남아 이용 내역은 제공일로부터 3년 보관되며, ④ 대면 창구는 여전히 비어 있습니다.
-
-대구 혜택패스는 **보유형(hold)** 입니다. 대구시·복지기관(공공)이 판정 **결과**를 "연소득 3,500만 원 이하 = 참"처럼 사실 하나만 담은
-검증가능 자격증명(VC)으로 서명해 시민 지갑에 넣고, 시민은 창구가 요청한 항목만 골라 서명 제출하며, 은행은 공동원장만 읽어 2초 안에
-검증합니다. 그래서 세 성질이 동시에 성립합니다 — 국내 어떤 서비스도 셋을 함께 갖고 있지 않습니다.
-
-1. **값이 아니라 참·거짓**만 전달된다 (햇살론뱅크 용도: 소득금액증명 10개 항목 → 참 1개, 90% 감소)
-2. **1회 발급 → N개 창구 반복 제출** (같은 카드로 iM뱅크와 iM저축은행 창구를 재발급 없이 통과)
-3. **발급기관도 중계자도 제출 이력을 모른다** (검증기관은 발급기관에 접속하지 않으며, docker 네트워크 격리로 강제)
-
-공공 마이데이터는 경쟁자가 아니라 **입력**입니다. 2단계에서 발급기관의 `IssuerDataSource` 어댑터를 공공 마이데이터 API 로 교체하면
-원문은 발급기관에서 멈추고 창구에는 참·거짓만 갑니다. AI 는 복지멤버십이 다루지 않는 은행 서민금융·민간 감면제도를 근거 조항과
-함께 안내하고 창구에 어떤 증명서를 내면 되는지 알려줍니다.
-
-| 역할 | 담당 | 하지 않는 것 |
-|---|---|---|
-| **공공 발급기관** (대구광역시 · 사회보장정보원 모사) | 자기 소관 사실만 규칙 엔진으로 판정해 원자적 VC 발급 | 원본 심사자료 외부 전송 |
-| **은행·저축은행** (검증기관) | QR 요청 → 서명·원장 검증 → 참/거짓 항목만 수령. 신용평점은 자체 조회 | 발급기관 직접 조회, 원문 수집 |
-| **AI** | 은행·민간 창구 혜택 탐색·설명·창구 제출 안내 (근거 조항 인용 필수) | 자격 판정 |
-| **규칙 엔진** | 결정론적 적격 판정 (JSON Logic, TS/Python 동일 구현) | 개인정보 전송 |
-| **전자서명 + 공동원장** | 발급기관 공개키·규칙 버전·폐기 상태·영수증 해시 | 개인정보 저장 |
+대구시·복지기관이 판정한 결과를 "연소득 3,500만 원 이하 = 참"처럼 사실 하나만 담은 검증가능 자격증명(VC)으로 발급하고,
+시민이 창구가 요청한 항목만 골라 서명 제출하면 은행은 공동원장만 읽어 2초 안에 검증합니다.
+**배경·문제 정의·차별성은 제안요약서를 보세요.** 이 문서는 실행 방법만 다룹니다.
 
 ![시스템 구조도](docs/assets/architecture.png)
 
@@ -41,31 +18,42 @@ make setup      # pnpm install + uv sync --all-packages
 make build      # TS 패키지 빌드 + 컨트랙트 컴파일
 make test       # Python + TS + 컨트랙트 테스트
 make demo       # 체인 → 배포·시드 → 발급기관 2 → 검증기관 → AI → 지갑·검증기관 앱
-make e2e        # (make demo 상태에서) Playwright 로 시연 ①~⑤ 자동 재현 + docs/screenshots 갱신
+make e2e        # (make demo 상태에서) Playwright 로 시연 ①~⑥ 자동 재현 + docs/screenshots 갱신
 make smoke      # 헤드리스 통합: 체인 기동부터 발급·검증·폐기·공격·벤치·PII 스캔까지
 make report     # docs/TEST_REPORT.md 재생성
 make compose-isolation-up && make demo-isolation   # (Docker) 검증기관 컨테이너가 발급기관에 닿지 않음을 검사
 ```
 
-`make demo` 후: 시민 지갑 http://localhost:3000 · 검증기관(은행 창구) http://localhost:3001 · 발급기관 API http://localhost:8001/docs (대구시) / 8003 (복지기관) · 검증 API 8002 · AI 8004.
-LLM 키는 **선택 항목**입니다. `ANTHROPIC_API_KEY` 가 있으면 Claude(`LLM_MODEL`, 기본 `claude-opus-5`)가 설명을 쓰고, 없으면 같은 화면이 템플릿 설명(`규칙 설명(템플릿)` 배지)으로 자동 대체되어 **오프라인에서도 시연이 멈추지 않습니다**. 자격 판정·검증은 어느 모드에서도 LLM 과 무관합니다.
+`make demo` 후: 시민 지갑 http://localhost:3000 · 검증기관(은행 창구) http://localhost:3001 ·
+발급기관 API http://localhost:8001/docs (대구시) / 8003 (복지기관) · 검증 API 8002 · AI 8004.
 
-시연 순서(①~⑤)와 발표 멘트는 [docs/DEMO.md](docs/DEMO.md), 설계 결정은 [docs/DECISIONS.md](docs/DECISIONS.md), 구조 설명은 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), 테스트 결과는 [docs/TEST_REPORT.md](docs/TEST_REPORT.md) 를 보세요.
+LLM 키는 **선택 항목**입니다. `ANTHROPIC_API_KEY` 가 있으면 Claude(`LLM_MODEL`, 기본 `claude-opus-5`)가 설명을 쓰고,
+없으면 같은 화면이 템플릿 설명(`규칙 설명(템플릿)` 배지)으로 자동 대체되어 **오프라인에서도 시연이 멈추지 않습니다**.
+자격 판정·검증은 어느 모드에서도 LLM 과 무관합니다.
+
+## 문서
+
+| 문서 | 내용 |
+|---|---|
+| [docs/DEMO.md](docs/DEMO.md) | 시연 순서 ①~⑦ 클릭 단위 스크립트와 발표 멘트 |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 구조도 ①~⑦ 흐름과 코드 경로 매핑, 신뢰 경계, 원장 기록/비기록, 표준 대응 |
+| [docs/TEST_REPORT.md](docs/TEST_REPORT.md) | 검증 기준별 측정 결과 (`make report` 로 자동 생성) |
+| [docs/DECISIONS.md](docs/DECISIONS.md) | 설계 결정과 근거 |
 
 ## 저장소 구조
 
 ```
 apps/wallet            시민 혜택지갑 PWA (Next.js) — 발급·AI 추천·제출·이력
-apps/verifier          검증기관 화면 (Next.js) — 요청 QR·결과·공격 시연
+apps/verifier          검증기관 화면 (Next.js) — 요청 QR·결과·비교 패널·공격 시연
 services/issuer        발급기관 서버 (FastAPI) — ISSUER_ID=daegu|welfare (대구광역시 / 사회보장정보원 모사) 2개 인스턴스
 services/verifier      검증 서비스 (FastAPI) — 은행·저축은행 창구, 용도 프리셋(햇살론뱅크·새희망홀씨…), 원장만 조회
 services/ai            AI 추천·설명 (FastAPI + Anthropic SDK) — 범주값만 수신, 인용 검증, 템플릿 폴백
-packages/rules         규칙 엔진 (ts/ + py/) + 규칙 번들 + 참조 구현 + 기댓값 270건
+packages/rules         규칙 엔진 (ts/ + py/) + 규칙 번들 + 참조 구현 + 기댓값
 packages/vc            did:key · VC/VP(JWS EdDSA) · Bitstring Status List · JCS 해시 (ts/ + py/, 교차 검증)
 packages/ledger-client 공동원장 클라이언트 (web3.py)
 chain/                 Solidity 컨트랙트 4종 · Hardhat · 배포/시드 · PII 스캔 · Besu QBFT compose
-data/                  기준 중위소득 2026(고시 확인) · 정책 13종(공공 복지 7 + 은행 서민금융 3 + 민간 감면 3) · 합성 시민 30명 · 기댓값
-scripts/               시드 · 시연 · 벤치 · PII 지표 · 리포트
+data/                  기준 중위소득 2026(고시 확인) · 정책 13종 · 합성 시민 30명 · 기댓값 · comparison.json
+scripts/               시드 · 시연 · 벤치 · PII 지표 · 격리 프로브 · 리포트
 ```
 
 ## 화면
@@ -74,31 +62,7 @@ scripts/               시드 · 시연 · 벤치 · PII 지표 · 리포트
 |---|---|---|
 | ![](docs/screenshots/04-wallet-credentials.png) | ![](docs/screenshots/10b-verifier-result-sunshine-bank.png) | ![](docs/screenshots/15-verifier-comparison.png) |
 
-전체 20장: [docs/screenshots/](docs/screenshots/) (Playwright E2E 와 `make capture-isolation` 이 자동 생성)
-
-## 원장에 올라가는 것 / 올라가지 않는 것
-
-| 기록 | 비기록 |
-|---|---|
-| 발급기관 공개키 (DID 문서) | 이름 · 주민등록번호 · 주소 |
-| 규칙 번들·스키마 버전 해시 | 소득금액 · 장애정보 · 계좌내역 |
-| 폐기·정지 상태 목록 (Bitstring Status List) | AI 상담 내용 |
-| 동의·제출 영수증의 솔트 포함 해시 | 발급된 증명서 원문 |
-
-`chain/scripts/scan-pii.ts` 가 체인의 모든 트랜잭션·이벤트를 훑어 위 항목이 없음을 확인합니다.
-
-## 검증 기준 (제안요약서 검증 계획 대응)
-
-| 항목 | 기준 | 구현 |
-|---|---|---|
-| 판정 정확성 | 합성 시민 30명 × 정책 13개 = 390건 100% 일치 | 참조 구현 기댓값 vs TS/Python 엔진 |
-| 엔진 동등성 | TS/Python 번들 해시 동일 | `0x2032a0…dc15` 양쪽 일치 |
-| 검증 성능 | p95 < 2초 | `scripts/bench_verify.py` |
-| 개인정보 최소화 (조회형 대비) | 기관 전달 항목 70% 이상 감소 | 햇살론뱅크 10→1 (90%), 서민금융 상담 13→2 (85%) — `data/comparison.json` |
-| 보안 | 위조·만료·폐기·재사용·타인 증명서·비활성 발급기관 차단 | `services/verifier/tests` + `/demo/attack` |
-| AI 신뢰성 | 인용 없는 추천 비노출, 존재하지 않는 제도 차단, 페이로드 allowlist | `services/ai` 테스트 |
-| 네트워크 격리 | 검증기관 → 발급기관 접속 불가(프로브 통과), 발급기관 정지 후에도 검증 PASS | `make compose-isolation-up && make demo-isolation`, E2E `E2E_ISSUER_DOWN_CMD` |
-| 재사용 | 같은 VC 로 다른 창구·다른 용도 통과 (재발급 0건) | E2E ③′ |
+전체 21장: [docs/screenshots/](docs/screenshots/) (Playwright E2E 와 `make capture-isolation` 이 자동 생성)
 
 ## 고지
 

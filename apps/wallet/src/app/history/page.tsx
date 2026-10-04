@@ -1,16 +1,16 @@
 'use client';
 
 import { receiptHash } from '@dbp/vc';
-import { useEffect, useMemo, useState } from 'react';
-import { Card, JsonView, Collapsible, LinkButton, Notice, SectionTitle, Spinner } from '@/components/ui';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Card, Collapsible, DetailTable, JsonView, LinkButton, Notice, SectionTitle, Spinner } from '@/components/ui';
 import { useWallet } from '@/hooks/useWallet';
 import { issuerApi } from '@/lib/api';
 import { COPY } from '@/lib/copy';
 import { ENV } from '@/lib/env';
-import { formatDateTime, shortHash } from '@/lib/format';
+import { formatDateTime, prettyJson, shortDid, shortHash } from '@/lib/format';
 import { readAnchoredAt } from '@/lib/ledger';
-import { getConsentReceipts, getPresentations } from '@/lib/store';
-import type { ConsentReceiptRecord, LedgerDeployment, PresentationRecord, ReceiptData } from '@/lib/types';
+import { getCachedBundle, getConsentReceipts, getPresentations } from '@/lib/store';
+import type { Bundle, ConsentReceiptRecord, LedgerDeployment, PresentationRecord, ReceiptData } from '@/lib/types';
 
 type AnchorState = { status: 'checking' } | { status: 'anchored'; at: number } | { status: 'none' } | { status: 'error'; message: string };
 
@@ -23,7 +23,56 @@ function localMatch(r: ReceiptData): boolean {
   }
 }
 
-function ReceiptLines({ receipt, anchor }: { receipt: ReceiptData; anchor: AnchorState | undefined }) {
+/** 영수증 원문(JSON)을 항목–값 행으로. 해시 대조는 원문 그대로 하고, 화면에는 이름·시각·짧은 지문으로 보여 준다. */
+function receiptRows(obj: Record<string, unknown>, names: Record<string, string>, labels: Record<string, string>): Array<[string, ReactNode]> {
+  const F = COPY.history.fields;
+  const order = ['kind', 'verifierDid', 'issuerDid', 'holderDid', 'claims', 'nonce', 'vpHash', 'ts', 'salt'];
+  const keys = [...order.filter((k) => k in obj), ...Object.keys(obj).filter((k) => !order.includes(k))];
+  return keys.map((k) => {
+    const v = obj[k];
+    let node: ReactNode;
+    switch (k) {
+      case 'kind':
+        node = COPY.history.kinds[String(v)] ?? String(v);
+        break;
+      case 'verifierDid':
+      case 'issuerDid':
+        node = names[String(v)] ?? String(v);
+        break;
+      case 'holderDid':
+        node = <span className="font-mono text-[0.85rem]">{shortDid(String(v), 24)}</span>;
+        break;
+      case 'claims':
+        node = Array.isArray(v) ? v.map((c) => labels[String(c)] ?? String(c)).join(', ') : String(v);
+        break;
+      case 'ts':
+        node = typeof v === 'number' ? formatDateTime(v) : String(v);
+        break;
+      case 'nonce':
+      case 'vpHash':
+      case 'salt':
+        node = <span className="font-mono text-[0.85rem]">{shortHash(String(v), 10, 6)}</span>;
+        break;
+      default:
+        node = typeof v === 'string' ? v : prettyJson(v);
+    }
+    return [F[k] ?? k, node];
+  });
+}
+
+function ReceiptLines({
+  receipt,
+  anchor,
+  names,
+  labels,
+}: {
+  receipt: ReceiptData;
+  anchor: AnchorState | undefined;
+  /** DID → 기관 이름 (이 영수증의 상대 기관). */
+  names: Record<string, string>;
+  /** claim id → 한글 라벨 (동의 항목 표시용). */
+  labels: Record<string, string>;
+}) {
   const ok = localMatch(receipt);
   return (
     <div className="mt-2 space-y-1 text-[0.9rem]">
@@ -40,8 +89,11 @@ function ReceiptLines({ receipt, anchor }: { receipt: ReceiptData; anchor: Ancho
       {anchor && anchor.status === 'anchored' && <p className="text-ok">{COPY.history.anchored(formatDateTime(anchor.at))}</p>}
       {anchor && anchor.status === 'none' && <p className="text-muted">{COPY.history.notAnchored}</p>}
       {anchor && anchor.status === 'error' && <p className="text-muted">{COPY.history.ledgerUnavailable}</p>}
-      <Collapsible summary="영수증 원문 (내 휴대폰에만 보관)">
-        <JsonView value={receipt.object} />
+      <Collapsible summary={COPY.history.receiptTitle}>
+        <DetailTable caption={COPY.history.receiptTitle} rows={receiptRows(receipt.object, names, labels)} />
+        <Collapsible summary={COPY.history.rawToggle}>
+          <JsonView value={receipt.object} label={COPY.history.rawToggle} />
+        </Collapsible>
       </Collapsible>
     </div>
   );
@@ -54,6 +106,13 @@ export default function HistoryPage() {
   const [ready, setReady] = useState(false);
   const [anchors, setAnchors] = useState<Record<string, AnchorState>>({});
   const [ledgerNote, setLedgerNote] = useState<string | null>(null);
+  const [labels, setLabels] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    getCachedBundle()
+      .then((b: Bundle | undefined) => b && setLabels(b.claims.labels))
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (loading) return;
@@ -144,7 +203,11 @@ export default function HistoryPage() {
             ))}
           </ul>
           {p.verdict === 'FAIL' && p.reasons.length > 0 && <p className="mt-1 text-[0.9rem] text-danger">{p.reasons.join(' / ')}</p>}
-          {p.receipt ? <ReceiptLines receipt={p.receipt} anchor={anchors[p.receipt.hash]} /> : <p className="mt-2 text-[0.9rem] text-muted">영수증 없음</p>}
+          {p.receipt ? (
+            <ReceiptLines receipt={p.receipt} anchor={anchors[p.receipt.hash]} names={{ [p.verifierDid]: p.verifierName }} labels={labels} />
+          ) : (
+            <p className="mt-2 text-[0.9rem] text-muted">영수증 없음</p>
+          )}
         </Card>
       ))}
 
@@ -155,7 +218,7 @@ export default function HistoryPage() {
           <p className="font-bold">{c.issuerName}</p>
           <p className="text-[0.85rem] text-muted">{formatDateTime(c.at)}</p>
           <p className="mt-1 text-[0.9rem]">동의 항목 {c.claims.length}개</p>
-          <ReceiptLines receipt={c} anchor={anchors[c.hash]} />
+          <ReceiptLines receipt={c} anchor={anchors[c.hash]} names={{ [c.issuerDid]: c.issuerName }} labels={labels} />
         </Card>
       ))}
     </div>

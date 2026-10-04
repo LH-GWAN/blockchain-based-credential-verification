@@ -62,10 +62,11 @@ test('①~⑦ 전체 시연 흐름', async ({ browser }) => {
   await wallet.getByRole('button', { name: '내 지갑 만들기' }).click();
 
   await wallet.waitForURL(/\/credentials/);
-  await expect(wallet.getByText('규칙 버전 2026.1 · 해시 일치 ✓')).toBeVisible();
+  await expect(wallet.getByText('해시 일치 ✓')).toBeVisible();
   await expect(wallet.getByText('이 판정은 내 휴대폰 안에서만 계산되었습니다 (개인정보 전송 없음)')).toBeVisible();
   await expect(wallet.getByText('발급 가능').first()).toBeVisible();
-  await expect(wallet.getByText(/규칙 기준 미충족 — 기준 중위소득 32% 이하 여부/).first()).toBeVisible();
+  // 사전 판정 표: 조건에 맞지 않는 항목은 "해당하지 않음" (추가 서류 없음)
+  await expect(wallet.getByRole('row', { name: /기준 중위소득 32% 이하 여부.*해당하지 않음/ }).first()).toBeVisible();
   // 신용평점은 창구가 자체 조회 — 증명서로 발급되지 않는다
   await expect(wallet.getByText(/신용평점 하위 20% 여부/).first()).toBeVisible();
   await shot(wallet, '02-wallet-precheck');
@@ -87,6 +88,10 @@ test('①~⑦ 전체 시연 흐름', async ({ browser }) => {
   expect(cardsText).not.toContain('1000000');
   expect(cardsText).not.toContain('1958-03-12');
   expect(cardsText).not.toContain('김복례');
+  // "자세히"는 표로 — 발급기관·증명 내용·발급일·유효기간·증명서 번호
+  await wallet.getByRole('button', { name: '자세히' }).first().click();
+  await expect(wallet.getByRole('row', { name: /증명 내용.*: 참/ }).first()).toBeVisible();
+  await expect(wallet.getByRole('row', { name: /증명서 번호/ }).first()).toBeVisible();
   await shot(wallet, '04-wallet-credentials');
 
   // ── ② 창구 혜택 안내 (은행·민간 먼저, 공공 복지는 복지멤버십 안내 대상으로 짧게) ──
@@ -164,6 +169,10 @@ test('①~⑦ 전체 시연 흐름', async ({ browser }) => {
   await mobileVerifier.context().close();
 
   // ── ③' 재사용: 같은 카드, 다른 창구 (iM저축은행 + 새희망홀씨) — 재발급 없이 통과 (§2-8) ──
+  // 스택을 오래 켜 두면 이전 실행의 발급분이 발급기관 DB 에 누적되므로, 절대 건수 대신 ③' 전후 건수를 비교한다.
+  const countIssued = async (claim: string) =>
+    ((await (await fetch(`${ISSUER_WELFARE}/admin/credentials`)).json()).credentials as { claim: string }[]).filter((c) => c.claim === claim).length;
+  const issuedBefore = await countIssued('annualIncomeUnder35M');
   const code4 = await createVerifierRequest(verifier, '새희망홀씨 대상 확인', 'iM저축은행');
   await presentWithCode(wallet, code4);
   await expect(wallet.getByText('iM저축은행', { exact: false }).first()).toBeVisible();
@@ -174,12 +183,14 @@ test('①~⑦ 전체 시연 흐름', async ({ browser }) => {
   await expect(verifier.getByText('iM저축은행', { exact: false }).first()).toBeVisible();
   await shot(verifier, '10c-verifier-result-reuse-savings');
   // 발급기관에 새 발급이 없었음을 확인 (재발급 없이 재사용)
-  const adminAfter = await (await fetch(`${ISSUER_WELFARE}/admin/credentials`)).json();
-  expect(adminAfter.credentials.filter((c: { claim: string }) => c.claim === 'annualIncomeUnder35M')).toHaveLength(1);
+  expect(await countIssued('annualIncomeUnder35M')).toBe(issuedBefore);
 
   // ── ⑤ 폐기 → 재제출 차단 ──────────────────────────────────────────────────
   const admin = await (await fetch(`${ISSUER_WELFARE}/admin/credentials`)).json();
-  const target = admin.credentials.find((c: { claim: string }) => c.claim === 'incomeBelow50Median');
+  // 이전 실행분이 남아 있을 수 있으므로 이번 실행에서 발급된(가장 최근) 증명서를 폐기 대상으로 고른다.
+  const target = (admin.credentials as { claim: string; issued_at: number; jti: string }[])
+    .filter((c) => c.claim === 'incomeBelow50Median')
+    .sort((a, b) => b.issued_at - a.issued_at)[0];
   expect(target).toBeTruthy();
   const rv = await (await fetch(`${ISSUER_WELFARE}/admin/credentials/${target.jti}/revoke`, { method: 'POST' })).json();
   expect(rv.revoked).toBe(true);
@@ -223,5 +234,9 @@ test('①~⑦ 전체 시연 흐름', async ({ browser }) => {
   // ── 이력: 원장 대조 ✓ ───────────────────────────────────────────────────
   await wallet.goto(`${WALLET}/history`);
   await expect(wallet.getByText('원장 대조 ✓').first()).toBeVisible();
+  // 영수증 내용은 표로 — 종류·검증기관·1회용 확인번호·시각
+  await wallet.getByRole('button', { name: /영수증 내용/ }).first().click();
+  await expect(wallet.getByRole('row', { name: /종류.*제출 영수증/ }).first()).toBeVisible();
+  await expect(wallet.getByRole('row', { name: /1회용 확인번호/ }).first()).toBeVisible();
   await shot(wallet, '14-wallet-history');
 });

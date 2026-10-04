@@ -3,7 +3,7 @@
 import { decodeVc, signJws } from '@dbp/vc';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CredentialCard, DeniedRow } from '@/components/CredentialCard';
-import { Button, Card, LinkButton, Notice, SectionTitle, Spinner } from '@/components/ui';
+import { Button, Card, DataTable, LinkButton, Notice, SectionTitle, Spinner } from '@/components/ui';
 import { useWallet } from '@/hooks/useWallet';
 import { issuerApi } from '@/lib/api';
 import { COPY } from '@/lib/copy';
@@ -217,28 +217,28 @@ export default function CredentialsPage() {
         {data.plans.map((plan) => (
           <Card key={plan.did}>
             <h2 className="text-lg font-bold">{plan.name}</h2>
-            <p className="mt-2 font-semibold text-ok">{COPY.credentials.issuable}</p>
-            {plan.issuable.length === 0 ? (
-              <p className="text-[0.9rem] text-muted">없음</p>
+            {plan.issuable.length + plan.denied.length === 0 ? (
+              <p className="mt-2 text-[0.9rem] text-muted">없음</p>
             ) : (
-              <ul className="space-y-0.5">
-                {plan.issuable.map((d) => (
-                  <li key={d.claim}>✔ {d.label}</li>
-                ))}
-              </ul>
-            )}
-            <p className="mt-2 font-semibold text-danger">{COPY.credentials.denied}</p>
-            {plan.denied.length === 0 ? (
-              <p className="text-[0.9rem] text-muted">없음</p>
-            ) : (
-              <ul className="space-y-0.5 text-muted">
-                {plan.denied.map((d) => (
-                  <li key={d.claim}>✗ {COPY.credentials.deniedReason(d.label)}</li>
-                ))}
-              </ul>
+              <DataTable
+                className="mt-2"
+                caption={`${plan.name} 사전 판정`}
+                columns={COPY.credentials.precheckColumns}
+                rows={[
+                  ...plan.issuable.map((d) => ({
+                    key: d.claim,
+                    cells: [d.label, <span key="v" className="font-semibold whitespace-nowrap text-ok">✔ {COPY.credentials.issuable}</span>],
+                  })),
+                  ...plan.denied.map((d) => ({
+                    key: d.claim,
+                    cells: [<span key="l" className="text-muted">{d.label}</span>, <span key="v" className="whitespace-nowrap text-muted">✗ {COPY.credentials.notApplicable}</span>],
+                  })),
+                ]}
+              />
             )}
           </Card>
         ))}
+        {data.plans.some((p) => p.denied.length > 0) && <p className="text-[0.85rem] text-muted">{COPY.credentials.deniedHelp}</p>}
         {data.selfChecked.length > 0 && (
           <Card muted>
             <h2 className="text-[1rem] font-bold text-ink">{COPY.credentials.selfChecked}</h2>

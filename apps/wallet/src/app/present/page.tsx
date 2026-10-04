@@ -342,7 +342,6 @@ export default function PresentPage() {
           value={pasted}
           onChange={(e) => setPasted(e.target.value)}
           rows={3}
-          placeholder={COPY.present.pastePlaceholder}
           className="w-full rounded-xl border border-line px-3 py-2 font-mono text-[0.85rem]"
         />
         <Button variant="secondary" full className="mt-2" onClick={submitPaste} disabled={pasted.trim().length === 0 || view === 'loading'}>
