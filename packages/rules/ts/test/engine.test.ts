@@ -103,6 +103,12 @@ describe('engine matches data/expected.json', () => {
     expect(pol['nbl-housing']).toBe(false);
   });
 
+  it('empty `only` evaluates nothing; undefined evaluates every claim (F63)', () => {
+    const c = CITIZENS['C-001']!;
+    expect(evaluateClaims(BUNDLE, c, '2026-09-14', [])).toEqual({});
+    expect(Object.keys(evaluateClaims(BUNDLE, c, '2026-09-14')).sort()).toEqual(Object.keys(BUNDLE.claims.rules).sort());
+  });
+
   it('age is a calendar (y,m,d) comparison; string and Date as-of agree', () => {
     const c13 = CITIZENS['C-013']!; // 1961-09-14 → 65 on the eval date
     const c14 = CITIZENS['C-014']!; // 1961-09-15 → 64
@@ -120,7 +126,7 @@ describe('engine matches data/expected.json', () => {
     const claims = evaluateClaims(BUNDLE, c);
     expect(Object.keys(claims)).toEqual(Object.keys(BUNDLE.claims.rules));
     expect(Object.keys(evaluateClaims(BUNDLE, c, undefined, ['ageOver65']))).toEqual(['ageOver65']);
-    expect(Object.keys(evaluateClaims(BUNDLE, c, undefined, []))).toEqual(Object.keys(BUNDLE.claims.rules));
+    expect(Object.keys(evaluateClaims(BUNDLE, c, undefined, []))).toEqual([]); // 빈 목록은 전체가 아니다 (F63)
     expect(() => evaluateClaims(BUNDLE, c, undefined, ['nope'])).toThrow(/unknown claim/);
     expect(JSON.stringify(c)).toBe(before);
   });

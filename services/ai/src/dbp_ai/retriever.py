@@ -18,7 +18,8 @@ from typing import Protocol
 from dbp_rules import load_policies
 
 # 제도명으로 볼 만한 어절의 접미사. 검증기가 "정책 DB 에 없는 제도명" 을 찾을 때 쓴다.
-PROGRAM_SUFFIXES = ("수당", "급여", "바우처", "연금", "대출", "지원금", "보조금", "장려금", "감면", "교통카드", "확인서")
+PROGRAM_SUFFIXES = ("수당", "급여", "바우처", "연금", "대출", "지원금", "보조금", "장려금", "감면", "교통카드", "확인서",
+                    "계좌", "적금")  # "청년도약계좌"·"청년희망적금" 같은 미등록 금융 상품명도 잡는다 (F23)
 _PROGRAM_TERM_RE = re.compile(
     r"(?P<stem>[가-힣A-Za-z0-9·]*?)(?P<suffix>" + "|".join(PROGRAM_SUFFIXES) + r")"
 )
@@ -130,15 +131,8 @@ class PolicyStore:
         return terms
 
     def is_known_term(self, term: str) -> bool:
-        t = _norm(term)
-        if t in self.known_terms:
-            return True
-        for k in self.known_terms:
-            if t in k:  # "연금" ⊂ "기초연금"
-                return True
-            if len(k) >= 3 and k in t:  # "대구기초연금" ⊃ "기초연금"
-                return True
-        return False
+        """정확히 일치할 때만 인정한다 (공백 무시). 부분문자열로 인정하면 "청년기초연금" 이 "기초연금" 으로 통과한다 (F23)."""
+        return _norm(term) in self.known_terms
 
     def unknown_program_terms(self, text: str) -> list[str]:
         """정책 DB 어디에도 근거가 없는 제도명 어절. 하나라도 있으면 해당 추천 항목은 노출하지 않는다."""

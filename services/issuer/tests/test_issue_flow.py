@@ -1,6 +1,5 @@
 """발급 → 폐기 흐름 (FakeLedger). 원본 수치가 응답·VC·DB 어디에도 없어야 한다."""
 import json
-import time
 
 import pytest
 from fastapi.testclient import TestClient
@@ -50,12 +49,15 @@ def test_issue_then_revoke(env):
     text = json.dumps(body, ensure_ascii=False)
     for forbidden in ["1000000", "1958", "monthlyIncomeKRW", "birthDate", "김복례"]:
         assert forbidden not in text, forbidden
-    # 동의 영수증이 원장에 앵커됨
+    # 동의 영수증이 원장에 앵커됨 (응답 뒤 BackgroundTasks — TestClient 는 응답 반환 전에 끝까지 실행한다)
     assert body["consentReceipt"]["hash"] in ledger.receipts
+    assert body["consentReceipt"]["txHash"] is None and body["consentReceipt"]["anchor"] == "pending"
+    rc = client.get(f"/consent-receipts/{body['consentReceipt']['hash']}").json()
+    assert rc["anchor"] == "anchored" and rc["txHash"].startswith("0x")
     # 폐기 → 상태목록 버전 증가, 원장 갱신
     jti = body["credentials"][0]["jti"]
     rv = client.post(f"/admin/credentials/{jti}/revoke").json()
-    assert rv["revoked"] and rv["statusListVersion"] == 2
+    assert rv["revoked"] and rv["statusListVersion"] == 2 and rv["txHash"]
     assert ledger.status_lists[settings.status_list_id]["version"] == 2
     assert client.app.state.svc.is_revoked_locally(rv["statusListIndex"]) is True
 

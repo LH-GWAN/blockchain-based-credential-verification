@@ -1,9 +1,11 @@
 """인용 검증기 + 가짜 Anthropic 클라이언트: 환각 항목은 걸러지고 템플릿으로 채워진다."""
+import json
+
 from ai_testing import FakeAnthropic
 from dbp_ai import llm
 from dbp_ai.retriever import get_store
 from dbp_ai.schemas import LLMRecommendation, RecommendationResponse
-from dbp_ai.validator import validate_llm_recommendations
+from dbp_ai.validator import number_tokens, validate_llm_recommendations
 
 VALID_ITEM = LLMRecommendation(
     policyId="nbl-housing", headline="주거급여를 신청하실 수 있습니다",
@@ -124,11 +126,57 @@ def test_validator_drops_unregistered_program_name_in_text():
     assert "행복수당" in dropped[0]["terms"]
 
 
-def test_validator_allows_mentions_of_other_registered_policies():
+def test_validator_allows_mentions_of_other_eligible_policies():
     item = VALID_ITEM.model_copy(update={
         "explanation": "주거급여 수급자가 되면 에너지바우처도 신청할 수 있습니다. 생계·의료·주거·교육급여 수급자에게 적용됩니다."})
-    survivors, dropped = _run([item])
+    survivors, dropped = _run([item], eligible=("nbl-housing", "energy-voucher", "nbl-education"))
     assert len(survivors) == 1 and survivors[0].source == "llm" and dropped == []
+
+
+def test_validator_drops_mention_of_ineligible_policy():
+    """F23: 적격 카드 본문에 부적격 제도를 끼워 넣으면 ("기초연금도 받으실 수 있습니다") 그 항목을 버린다."""
+    item = VALID_ITEM.model_copy(update={"explanation": "규칙 엔진 판정 결과 주거급여 기준을 충족합니다. 에너지바우처도 받으실 수 있습니다."})
+    survivors, dropped = _run([item])  # energy-voucher 는 적격 후보가 아니다
+    assert survivors == [] and dropped[0]["reason"] == "mentions-ineligible-policy"
+    assert dropped[0]["policyIds"] == ["energy-voucher"]
+
+
+def test_validator_drops_number_not_in_policy_document():
+    """F23: 정책 문서에 없는 금액·숫자(환각)는 노출하지 않는다."""
+    item = VALID_ITEM.model_copy(update={"explanation": "규칙 엔진 판정 결과 주거급여 기준을 충족합니다. 매달 57만원이 지급됩니다."})
+    survivors, dropped = _run([item])
+    assert survivors == [] and dropped[0]["reason"] == "unknown-number" and "57" in dropped[0]["numbers"]
+
+
+def test_validator_allows_numbers_from_policy_document():
+    doc_numbers = sorted(number_tokens(json.dumps(get_store().by_id["nbl-housing"], ensure_ascii=False)) - {""})
+    assert doc_numbers  # 정책 문서에 숫자가 하나는 있어야 이 테스트가 의미 있다
+    n = doc_numbers[0]
+    item = VALID_ITEM.model_copy(update={"explanation": f"규칙 엔진 판정 결과 주거급여 기준을 충족합니다. 기준값은 {n}입니다."})
+    survivors, dropped = _run([item])
+    assert len(survivors) == 1 and dropped == []
+
+
+def test_validator_ignores_digits_inside_clause_ids():
+    item = VALID_ITEM.model_copy(update={"explanation": "규칙 엔진 판정 결과 주거급여 기준을 충족합니다(근거 nbl-housing-c2)."})
+    survivors, _ = _run([item])
+    assert len(survivors) == 1
+
+
+def test_known_term_matching_is_exact():
+    """F23: 부분문자열 매칭이면 '청년기초연금' 이 '기초연금' 으로 통과한다."""
+    store = get_store()
+    assert store.is_known_term("기초연금") and store.is_known_term("기초 연금")
+    assert not store.is_known_term("청년기초연금")
+    assert not store.is_known_term("연금")
+    assert "청년기초연금" in store.unknown_program_terms("청년기초연금도 신청하세요")
+    assert "청년도약계좌" in store.unknown_program_terms("청년도약계좌도 만들어 보세요")
+
+
+def test_validator_drops_partial_match_program_name():
+    item = VALID_ITEM.model_copy(update={"explanation": "규칙 엔진 판정 결과 주거급여 기준을 충족합니다. 청년기초연금도 알아보세요."})
+    survivors, dropped = _run([item])
+    assert survivors == [] and dropped[0]["reason"] == "unknown-program-name"
 
 
 def test_validator_dedupes_same_policy():

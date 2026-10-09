@@ -67,6 +67,9 @@ class RecommendationResponse(StrictModel):
 
 Provider = Literal["anthropic", "template"]
 
+# 채팅 답변은 인용 검증기를 거치지 않는 설명이다. 판정 근거로 오해되지 않도록 응답마다 붙인다 (F22).
+CHAT_NOTICE = "채팅 답변은 자격 판정이 아닙니다 — 판정은 규칙 엔진 결과만 따릅니다"
+
 
 class Recommendation(StrictModel):
     policyId: str
@@ -81,14 +84,19 @@ class RecommendResponse(StrictModel):
     recommendations: list[Recommendation]
     disclaimer: str
     provider: Provider
-    judgedBy: Literal["rule-engine"] = "rule-engine"
+    judgedBy: Literal["rule-engine"] = "rule-engine"  # 추천 후보는 규칙 엔진 적격 + 인용 검증기 통과 항목뿐이다
+    eligibilitySource: Literal["rule-engine"] = "rule-engine"
+    auditId: str  # GET /audit/{auditId} — 이 응답을 만들 때 AI(또는 템플릿)가 받은 입력
 
 
 class ChatCompleteResponse(StrictModel):
     sessionId: str
     text: str
     provider: Provider
-    judgedBy: Literal["rule-engine"] = "rule-engine"
+    eligibilitySource: Literal["rule-engine"] = "rule-engine"  # 적격 여부의 출처. 채팅 답변 자체는 판정이 아니다
+    notice: str = CHAT_NOTICE
+    masked: bool = False  # 질문에서 주민번호·전화번호·계좌·금액을 [가림] 으로 바꿨으면 true (F21)
+    auditId: str
 
 
 class HealthResponse(StrictModel):

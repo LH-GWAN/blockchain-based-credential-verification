@@ -1,6 +1,6 @@
 /** 순수 포맷 함수. 화면 로직과 분리해 vitest 로 검증한다. */
 import { claimLabel, REQUEST, RESULT } from "./copy";
-import type { PolicyCheck, Preset, VerificationResult } from "./types";
+import type { CredentialInfo, PolicyCheck, Preset, VerificationResult } from "./types";
 
 /** 830 → "0.83초", 1234.5 → "1.23초" */
 export function formatSeconds(ms: number, digits = 2): string {
@@ -48,6 +48,8 @@ export function formatDateTime(unixSec: number): string {
 export function statusLabel(r: Pick<VerificationResult, "verdict" | "reasonCodes">): string {
   if (r.verdict === "PASS") return "유효";
   const codes = new Set(r.reasonCodes);
+  // 원장에 닿지 못하면 나머지 판단은 근거가 없다 — 원인을 먼저 보인다.
+  if (codes.has("LEDGER_UNAVAILABLE")) return "원장 연결 실패";
   if (codes.has("REVOKED")) return "폐기됨";
   if (codes.has("EXPIRED")) return "유효기간 만료";
   if (codes.has("NOT_YET_VALID")) return "아직 유효하지 않음";
@@ -55,8 +57,12 @@ export function statusLabel(r: Pick<VerificationResult, "verdict" | "reasonCodes
   if (codes.has("HOLDER_MISMATCH")) return "소유자 불일치";
   if (codes.has("NONCE_REUSED")) return "재사용 차단";
   if (codes.has("NONCE_EXPIRED")) return "요청 만료";
-  if (codes.has("ISSUER_UNKNOWN") || codes.has("ISSUER_INACTIVE")) return "발급기관 미등록";
-  if (codes.has("RULE_HASH_MISMATCH")) return "규칙 버전 불일치";
+  if (codes.has("ISSUER_UNKNOWN")) return "발급기관 미등록";
+  if (codes.has("ISSUER_INACTIVE")) return "발급기관 정지";
+  if (codes.has("ISSUER_NOT_AUTHORITATIVE")) return "발급 권한 없음";
+  if (codes.has("STATUS_LIST_OWNER_MISMATCH")) return "상태 목록 불일치";
+  if (codes.has("RULE_HASH_MISMATCH") || codes.has("RULE_VERSION_NOT_ACCEPTED")) return "규칙 버전 불일치";
+  if (codes.has("UNREQUESTED_CREDENTIAL")) return "요청 외 증명서 포함";
   if (codes.has("CLAIM_MISSING") || codes.has("CLAIM_FALSE")) return "요청 항목 미충족";
   return "무효";
 }
@@ -116,4 +122,24 @@ export function presetCounterCheckedNote(
     factLabel(claimLabel(c.claim, labels.find((l) => l.claim === c.claim)?.label || undefined), c.expected),
   );
   return items.length ? REQUEST.presetCounterChecked(items.join(" · ")) : null;
+}
+
+/**
+ * 증명서별 상세의 값 표시 (F38). 해석하지 못한 증명서(value=null)는 '거짓'이 아니라 확인 안 함(중립색)이다.
+ */
+export function credentialValueLabel(value: CredentialInfo["value"]): { text: string; tone: "pass" | "fail" | "muted" } {
+  if (value === true) return { text: RESULT.yes, tone: "pass" };
+  if (value === false) return { text: RESULT.no, tone: "fail" };
+  return { text: RESULT.valueUnchecked, tone: "muted" };
+}
+
+export type AttackOutcome = "blocked" | "other-reason" | "not-blocked";
+
+/**
+ * 공격 결과 판정 (F28·F29). '차단됨'은 FAIL 이면서 그 공격의 예상 사유 코드가 있을 때만이다.
+ * FAIL 이지만 예상 코드가 없으면 다른 단계에서 막힌 것이라 그 공격을 막았다는 근거가 되지 못한다.
+ */
+export function attackOutcome(r: Pick<VerificationResult, "verdict" | "reasonCodes">, expected: string): AttackOutcome {
+  if (r.verdict !== "FAIL") return "not-blocked";
+  return r.reasonCodes.includes(expected) ? "blocked" : "other-reason";
 }

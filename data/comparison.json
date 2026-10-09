@@ -1,5 +1,5 @@
 {
-  "source": "scripts/pii_items.py (data/legacy-documents.json 기반 계산 + 예시 VP 실측)",
+  "source": "scripts/pii_items.py (data/legacy-documents.json 기반 계산 + 예시 VP 구성 확인)",
   "honestyNote": "※ 조회형 열은 공공 마이데이터 서비스 문서에 기재된 전달 항목으로 구성한 비교이며, 실제 API 호출 결과가 아니다.",
   "target": ">=70%",
   "documents": {
@@ -101,7 +101,7 @@
   },
   "records": {
     "pull": "제공 내역 + 이용 내역 (이용 내역은 제공일로부터 3년 보관 — 「본인에 관한 행정정보의 제공 등에 관한 고시」 제27조 제2항)",
-    "hold": "없음 — 검증기관은 발급기관에 접속하지 않는다"
+    "hold": "원장에 제출 영수증의 솔트 해시 1건(검증기관 주소·시각) — 제출 내용·시민 식별 정보는 원장에 없고, 발급기관 조회 기록은 생기지 않는다"
   },
   "presets": {
     "consult": {
@@ -165,10 +165,10 @@
       "reductionPercent": 85,
       "summary": "이번 검증에서 줄어든 항목: 13 → 2 (85%)",
       "pullRecords": "제공 내역 + 이용 내역 (이용 내역은 제공일로부터 3년 보관 — 「본인에 관한 행정정보의 제공 등에 관한 고시」 제27조 제2항)",
-      "holdRecords": "없음 — 검증기관은 발급기관에 접속하지 않는다",
+      "holdRecords": "원장에 제출 영수증의 솔트 해시 1건(검증기관 주소·시각) — 제출 내용·시민 식별 정보는 원장에 없고, 발급기관 조회 기록은 생기지 않는다",
       "honestyNote": "※ 조회형 열은 공공 마이데이터 서비스 문서에 기재된 전달 항목으로 구성한 비교이며, 실제 API 호출 결과가 아니다.",
       "label": "서민금융 상담 대상 확인",
-      "measuredHoldCount": 2
+      "exampleVpHoldCount": 2
     },
     "sunshine-general": {
       "presetId": "sunshine-general",
@@ -212,10 +212,10 @@
       "reductionPercent": 90,
       "summary": "이번 검증에서 줄어든 항목: 10 → 1 (90%)",
       "pullRecords": "제공 내역 + 이용 내역 (이용 내역은 제공일로부터 3년 보관 — 「본인에 관한 행정정보의 제공 등에 관한 고시」 제27조 제2항)",
-      "holdRecords": "없음 — 검증기관은 발급기관에 접속하지 않는다",
+      "holdRecords": "원장에 제출 영수증의 솔트 해시 1건(검증기관 주소·시각) — 제출 내용·시민 식별 정보는 원장에 없고, 발급기관 조회 기록은 생기지 않는다",
       "honestyNote": "※ 조회형 열은 공공 마이데이터 서비스 문서에 기재된 전달 항목으로 구성한 비교이며, 실제 API 호출 결과가 아니다.",
       "label": "햇살론 일반보증 대상 확인",
-      "measuredHoldCount": 1
+      "exampleVpHoldCount": 1
     },
     "sunshine-general-low-credit": {
       "presetId": "sunshine-general-low-credit",
@@ -259,10 +259,10 @@
       "reductionPercent": 90,
       "summary": "이번 검증에서 줄어든 항목: 10 → 1 (90%)",
       "pullRecords": "제공 내역 + 이용 내역 (이용 내역은 제공일로부터 3년 보관 — 「본인에 관한 행정정보의 제공 등에 관한 고시」 제27조 제2항)",
-      "holdRecords": "없음 — 검증기관은 발급기관에 접속하지 않는다",
+      "holdRecords": "원장에 제출 영수증의 솔트 해시 1건(검증기관 주소·시각) — 제출 내용·시민 식별 정보는 원장에 없고, 발급기관 조회 기록은 생기지 않는다",
       "honestyNote": "※ 조회형 열은 공공 마이데이터 서비스 문서에 기재된 전달 항목으로 구성한 비교이며, 실제 API 호출 결과가 아니다.",
       "label": "햇살론 일반보증 · 신용 하위 20% 고객",
-      "measuredHoldCount": 1
+      "exampleVpHoldCount": 1
     },
     "new-hope": {
       "presetId": "new-hope",
@@ -306,10 +306,10 @@
       "reductionPercent": 90,
       "summary": "이번 검증에서 줄어든 항목: 10 → 1 (90%)",
       "pullRecords": "제공 내역 + 이용 내역 (이용 내역은 제공일로부터 3년 보관 — 「본인에 관한 행정정보의 제공 등에 관한 고시」 제27조 제2항)",
-      "holdRecords": "없음 — 검증기관은 발급기관에 접속하지 않는다",
+      "holdRecords": "원장에 제출 영수증의 솔트 해시 1건(검증기관 주소·시각) — 제출 내용·시민 식별 정보는 원장에 없고, 발급기관 조회 기록은 생기지 않는다",
       "honestyNote": "※ 조회형 열은 공공 마이데이터 서비스 문서에 기재된 전달 항목으로 구성한 비교이며, 실제 API 호출 결과가 아니다.",
       "label": "새희망홀씨 대상 확인",
-      "measuredHoldCount": 1
+      "exampleVpHoldCount": 1
     },
     "new-hope-low-credit": {
       "presetId": "new-hope-low-credit",
@@ -353,10 +353,10 @@
       "reductionPercent": 90,
       "summary": "이번 검증에서 줄어든 항목: 10 → 1 (90%)",
       "pullRecords": "제공 내역 + 이용 내역 (이용 내역은 제공일로부터 3년 보관 — 「본인에 관한 행정정보의 제공 등에 관한 고시」 제27조 제2항)",
-      "holdRecords": "없음 — 검증기관은 발급기관에 접속하지 않는다",
+      "holdRecords": "원장에 제출 영수증의 솔트 해시 1건(검증기관 주소·시각) — 제출 내용·시민 식별 정보는 원장에 없고, 발급기관 조회 기록은 생기지 않는다",
       "honestyNote": "※ 조회형 열은 공공 마이데이터 서비스 문서에 기재된 전달 항목으로 구성한 비교이며, 실제 API 호출 결과가 아니다.",
       "label": "새희망홀씨 · 신용 하위 20% 고객",
-      "measuredHoldCount": 1
+      "exampleVpHoldCount": 1
     },
     "discount": {
       "presetId": "discount",
@@ -418,10 +418,10 @@
       "reductionPercent": 92,
       "summary": "이번 검증에서 줄어든 항목: 13 → 1 (92%)",
       "pullRecords": "제공 내역 + 이용 내역 (이용 내역은 제공일로부터 3년 보관 — 「본인에 관한 행정정보의 제공 등에 관한 고시」 제27조 제2항)",
-      "holdRecords": "없음 — 검증기관은 발급기관에 접속하지 않는다",
+      "holdRecords": "원장에 제출 영수증의 솔트 해시 1건(검증기관 주소·시각) — 제출 내용·시민 식별 정보는 원장에 없고, 발급기관 조회 기록은 생기지 않는다",
       "honestyNote": "※ 조회형 열은 공공 마이데이터 서비스 문서에 기재된 전달 항목으로 구성한 비교이며, 실제 API 호출 결과가 아니다.",
       "label": "공공요금 감면 대상 확인",
-      "measuredHoldCount": 1
+      "exampleVpHoldCount": 1
     }
   },
   "pass": true

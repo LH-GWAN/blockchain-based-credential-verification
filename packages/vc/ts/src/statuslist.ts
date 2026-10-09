@@ -1,6 +1,7 @@
 import { base64urlnopad } from '@scure/base';
 import { gzip, ungzip } from 'pako';
 import { VcError } from './errors.js';
+import { b64urlDecode } from './jws.js';
 
 /** W3C Bitstring Status List v1.0 최소 크기 (131,072비트 = 16KiB). */
 export const DEFAULT_STATUS_LIST_SIZE = 131072;
@@ -46,7 +47,7 @@ export function encodeStatusList(list: Uint8Array): string {
 export function decodeStatusList(encoded: string): Uint8Array {
   const raw = encoded.startsWith('uH4sI') ? encoded.slice(1) : encoded;
   try {
-    return ungzip(base64urlnopad.decode(raw));
+    return ungzip(b64urlDecode(raw));
   } catch {
     throw new VcError('MALFORMED', 'encoded status list is not base64url(gzip)');
   }

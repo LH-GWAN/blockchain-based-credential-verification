@@ -6,6 +6,18 @@ from dataclasses import dataclass
 
 DEFAULT_MODEL = "claude-opus-5"
 DEFAULT_PORT = 8004
+# 지갑이 /recommend 를 포기하기 전에 템플릿 폴백이 먼저 일어나도록 짧게 둔다 (F18). SDK 재시도는 하지 않는다.
+DEFAULT_TIMEOUT_S = 25.0
+DEFAULT_ALLOWED_ORIGINS = (
+    "http://localhost:3000,http://localhost:3001,http://localhost:3010,http://localhost:3011,"
+    "http://127.0.0.1:3000,http://127.0.0.1:3001,http://127.0.0.1:3010,http://127.0.0.1:3011"
+)
+
+
+def allowed_origins() -> list[str]:
+    """CORS 허용 출처 (ALLOWED_ORIGINS, 쉼표 구분). 기본은 지갑·검증기관 앱의 로컬 주소뿐이다."""
+    raw = os.environ.get("ALLOWED_ORIGINS") or DEFAULT_ALLOWED_ORIGINS
+    return [o.strip() for o in raw.split(",") if o.strip()]
 
 
 @dataclass(frozen=True)
@@ -27,7 +39,8 @@ class Settings:
             provider=provider,
             model=(os.environ.get("LLM_MODEL") or DEFAULT_MODEL).strip(),
             api_key=api_key,
-            host=os.environ.get("AI_HOST") or "0.0.0.0",
+            # 기본은 루프백만. 컨테이너에서는 compose 가 HOST=0.0.0.0 을 준다 (AI_HOST 는 옛 이름).
+            host=os.environ.get("HOST") or os.environ.get("AI_HOST") or "127.0.0.1",
             port=int(os.environ.get("AI_PORT") or DEFAULT_PORT),
-            timeout_s=float(os.environ.get("LLM_TIMEOUT_S") or 60.0),
+            timeout_s=float(os.environ.get("LLM_TIMEOUT_S") or DEFAULT_TIMEOUT_S),
         )

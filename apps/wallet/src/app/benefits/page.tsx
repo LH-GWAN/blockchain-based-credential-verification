@@ -21,15 +21,17 @@ import {
   submitDocuments,
   templateRecommendation,
 } from '@/lib/eligibility';
-import { ENV } from '@/lib/env';
-import { toKoreanError } from '@/lib/errors';
-import { getCachedBundle, getCachedPolicies, setCachedBundle, setCachedPolicies } from '@/lib/store';
+import { ENV, EVAL_DATE, ISSUERS, validEvalDate } from '@/lib/env';
+import { ApiError, toKoreanError } from '@/lib/errors';
+import { getCachedBundle, getCachedEvalDate, getCachedPolicies, setCachedBundle, setCachedEvalDate, setCachedPolicies } from '@/lib/store';
 import type { AiProvider, AuditPayload, Bundle, PolicyMeta, RecommendPayload, Recommendation } from '@/lib/types';
 
 interface Loaded {
   bundle: Bundle;
   policies: PolicyMeta[];
   payload: RecommendPayload;
+  /** 사전 판정 기준일 — 발급기관이 알린 bundle.evalDate (F65). */
+  evalDate: string;
 }
 
 interface AiState {
@@ -80,12 +82,18 @@ export default function BenefitsPage() {
   const [ai, setAi] = useState<AiState | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [audit, setAudit] = useState<{ value: AuditPayload | null; error: string | null } | null>(null);
+  /** 이 휴대폰이 마지막으로 받은 AI 감사 기록 번호 (/recommend 또는 채팅). 다른 사람의 기록은 볼 수 없다 (F12). */
+  const [auditId, setAuditId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!profile) return;
     setLoadError(null);
     setAi(null);
-    const [bRes, pRes] = await Promise.allSettled([issuerApi.bundle(ENV.ISSUER_DAEGU_URL), issuerApi.policies(ENV.ISSUER_DAEGU_URL)]);
+    const [bRes, pRes, wkRes] = await Promise.allSettled([
+      issuerApi.bundle(ENV.ISSUER_DAEGU_URL),
+      issuerApi.policies(ENV.ISSUER_DAEGU_URL),
+      issuerApi.wellKnown(ISSUERS[0]!.url),
+    ]);
     let bundle: Bundle | undefined;
     let policies: PolicyMeta[] | undefined;
     if (bRes.status === 'fulfilled') {
@@ -100,14 +108,18 @@ export default function BenefitsPage() {
       setLoadError(toKoreanError(bRes.status === 'rejected' ? bRes.reason : pRes.status === 'rejected' ? pRes.reason : new Error('데이터 없음')));
       return;
     }
+    // 판정 기준일: 발급기관이 알린 날짜 → 지난번에 받아 둔 날짜 → 기본값 (증명서 화면·발급기관과 같은 날짜)
+    const announced = wkRes.status === 'fulfilled' ? validEvalDate(wkRes.value.bundle.evalDate) : null;
+    if (announced) setCachedEvalDate(announced).catch(() => undefined);
+    const evalDate = announced ?? validEvalDate(await getCachedEvalDate().catch(() => undefined)) ?? EVAL_DATE;
     let payload: RecommendPayload;
     try {
-      payload = buildRecommendPayload(bundle, profile);
+      payload = buildRecommendPayload(bundle, profile, evalDate);
     } catch (e) {
       setLoadError(`규칙 판정 중 오류: ${toKoreanError(e)}`);
       return;
     }
-    setData({ bundle, policies, payload });
+    setData({ bundle, policies, payload, evalDate });
 
     // /recommend 본문은 그대로 (범주값 + 모든 정책의 ruleResults). AI 는 설명만 하고 판정하지 않는다.
     const index = policyIndex(policies);
@@ -116,6 +128,7 @@ export default function BenefitsPage() {
       const res = await aiApi.recommend(payload);
       // 불변 조건 7: 규칙 엔진 적격 + 실재 조항 인용만 노출. 없는 정책은 카드가 템플릿으로 채워진다.
       setAi({ recommendations: filterRecommendations(res.recommendations, index, eligible), provider: res.provider, disclaimer: res.disclaimer, error: null });
+      if (res.auditId) setAuditId(res.auditId);
     } catch (e) {
       setAi({ recommendations: [], provider: null, disclaimer: null, error: toKoreanError(e) });
     }
@@ -128,7 +141,7 @@ export default function BenefitsPage() {
 
   const derived = useMemo(() => {
     if (!data || !profile) return null;
-    const claims = computeClaims(data.bundle, profile);
+    const claims = computeClaims(data.bundle, profile, data.evalDate);
     const index = policyIndex(data.policies);
     const eligible = new Set(data.payload.ruleResults.filter((r) => r.eligible).map((r) => r.policyId));
     const groups = groupEligibleByChannel(index, eligible);
@@ -141,10 +154,14 @@ export default function BenefitsPage() {
   async function openSheet() {
     setSheetOpen(true);
     setAudit(null);
+    if (!auditId) {
+      setAudit({ value: null, error: null });
+      return;
+    }
     try {
-      setAudit({ value: await aiApi.auditLastPayload(), error: null });
+      setAudit({ value: await aiApi.audit(auditId), error: null });
     } catch (e) {
-      setAudit({ value: null, error: toKoreanError(e) });
+      setAudit({ value: null, error: e instanceof ApiError && e.status === 404 ? COPY.benefits.aiAuditExpired : toKoreanError(e) });
     }
   }
 
@@ -252,7 +269,7 @@ export default function BenefitsPage() {
         )}
       </Card>
 
-      <ChatBox payload={data.payload} />
+      <ChatBox payload={data.payload} onAuditId={setAuditId} />
 
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={COPY.benefits.aiPayloadTitle}>
         <Notice kind="info" className="mb-3">
@@ -274,7 +291,7 @@ export default function BenefitsPage() {
             <JsonView value={audit.value.payload} label={COPY.benefits.aiPayloadServer} />
           </>
         ) : (
-          <Notice kind="info">아직 기록된 AI 호출이 없습니다.</Notice>
+          <Notice kind="info">{COPY.benefits.aiAuditNone}</Notice>
         )}
       </BottomSheet>
     </div>

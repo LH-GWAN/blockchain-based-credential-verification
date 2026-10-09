@@ -18,7 +18,21 @@ export interface DecodedJws<P = Record<string, unknown>> {
   signingInput: string;
 }
 
-const decoder = new TextDecoder();
+// Python `.decode("utf-8")` 과 같게: 깨진 UTF-8 은 대체문자로 바꾸지 않고 거부, BOM 은 벗기지 않는다
+// (그러면 JSON.parse 가 거부한다 — Python json.loads 도 BOM 을 거부한다).
+const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+const B64URL_RE = /^[A-Za-z0-9_-]*$/;
+
+/**
+ * 엄격한 base64url(패딩 없음) 디코딩 (F68). 알파벳 밖 문자, 마지막 글자의 남는 비트가 0이 아닌 변형은
+ * 다시 인코딩한 값이 입력과 달라지므로 거부한다. Python `b64url_decode` 와 같은 입력만 받는다.
+ */
+export function b64urlDecode(text: string): Uint8Array {
+  if (typeof text !== 'string' || !B64URL_RE.test(text)) throw new Error('not base64url');
+  const bytes = base64urlnopad.decode(text);
+  if (base64urlnopad.encode(bytes) !== text) throw new Error('non-canonical base64url');
+  return bytes;
+}
 
 function encodeJson(obj: unknown): string {
   return base64urlnopad.encode(utf8ToBytes(JSON.stringify(obj)));
@@ -26,7 +40,7 @@ function encodeJson(obj: unknown): string {
 
 function decodeJson(segment: string): unknown {
   try {
-    return JSON.parse(decoder.decode(base64urlnopad.decode(segment)));
+    return JSON.parse(decoder.decode(b64urlDecode(segment)));
   } catch {
     throw new VcError('MALFORMED', 'JWS segment is not base64url JSON');
   }
@@ -52,7 +66,7 @@ export function decodeJws<P = Record<string, unknown>>(jws: string): DecodedJws<
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new VcError('MALFORMED', 'JWS payload must be an object');
   let signature: Uint8Array;
   try {
-    signature = base64urlnopad.decode(s);
+    signature = b64urlDecode(s);
   } catch {
     throw new VcError('MALFORMED', 'JWS signature is not base64url');
   }

@@ -7,11 +7,23 @@ import { Button, Card, DataTable, LinkButton, Notice, SectionTitle, Spinner } fr
 import { useWallet } from '@/hooks/useWallet';
 import { issuerApi } from '@/lib/api';
 import { COPY } from '@/lib/copy';
-import { checkBundleHash, computeClaims, planByIssuer, selfCheckedClaims, type ClaimDecision, type HashCheck, type IssuerPlan } from '@/lib/eligibility';
-import { ENV, ISSUERS } from '@/lib/env';
+import {
+  checkBundleHash,
+  computeClaims,
+  credentialStatusOf,
+  planByIssuer,
+  selfCheckedClaims,
+  statusRefOf,
+  type ClaimDecision,
+  type HashCheck,
+  type IssuerPlan,
+} from '@/lib/eligibility';
+import { ENV, EVAL_DATE, ISSUERS, validEvalDate } from '@/lib/env';
 import { toKoreanError } from '@/lib/errors';
 import { hexToBytes } from '@/lib/hex';
-import { addConsentReceipt, addCredentials, getCachedBundle, setCachedBundle } from '@/lib/store';
+import { readBundleOnLedger, readStatusList, revokedIn, type LedgerAddresses, type LedgerBundle } from '@/lib/ledger';
+import { resolveLedgerAddresses } from '@/lib/ledgerAddresses';
+import { addConsentReceipt, addCredentials, getCachedBundle, getCachedEvalDate, setCachedBundle, setCachedEvalDate } from '@/lib/store';
 import type { Bundle, ClaimMap, IssuerWellKnown, StoredCredential, WalletRecord } from '@/lib/types';
 
 type Phase = 'loading' | 'error' | 'precheck' | 'consent' | 'issuing' | 'cards';
@@ -27,7 +39,20 @@ interface Loaded {
   plans: IssuerPlan[];
   /** 창구가 직접 확인하는 항목 (증명서 불필요) — 사전 판정 화면에만 표시. */
   selfChecked: ClaimDecision[];
+  /** 사전 판정 기준일 — 발급기관이 알린 bundle.evalDate (F65). */
+  evalDate: string;
+  /** 공동원장 컨트랙트 주소 (없으면 원장 확인 불가). */
+  addresses: LedgerAddresses | null;
 }
+
+/** 규칙 해시 대조 결과 → 한 줄 표시 (F19·F31). */
+const HASH_LINE: Record<HashCheck['status'], { text: string; cls: string }> = {
+  ledger: { text: COPY.credentials.hashLedger, cls: 'text-ok' },
+  declared: { text: COPY.credentials.hashDeclared, cls: 'text-ok' },
+  mismatch: { text: COPY.credentials.hashBad, cls: 'text-danger' },
+  unregistered: { text: COPY.credentials.hashUnregistered, cls: 'text-danger' },
+  unverified: { text: COPY.credentials.hashUnverified, cls: 'text-muted' },
+};
 
 export default function CredentialsPage() {
   const { loading, wallet, profile, credentials, reload } = useWallet();
@@ -37,13 +62,16 @@ export default function CredentialsPage() {
   const [issuerIdx, setIssuerIdx] = useState(0);
   const [issueError, setIssueError] = useState<string | null>(null);
   const [issuedNow, setIssuedNow] = useState<string[]>([]);
+  /** jti → 원장 상태 목록의 폐기 비트 (null = 원장 확인 불가, 없음 = 확인 중). */
+  const [revoked, setRevoked] = useState<Record<string, boolean | null>>({});
 
   const load = useCallback(async () => {
     if (!profile) return;
     setPhase('loading');
     setLoadError(null);
-    const [bundleRes, ...wkRes] = await Promise.allSettled([
+    const [bundleRes, addrRes, ...wkRes] = await Promise.allSettled([
       issuerApi.bundle(ENV.ISSUER_DAEGU_URL),
+      resolveLedgerAddresses({ fetchFromIssuer: true }),
       ...ISSUERS.map((i) => issuerApi.wellKnown(i.url)),
     ]);
     let bundle: Bundle | undefined;
@@ -71,14 +99,27 @@ export default function CredentialsPage() {
       if (r && r.status === 'fulfilled') wellKnown[iss.did] = r.value;
       else if (r) wellKnownErrors[iss.did] = toKoreanError(r.reason);
     });
-    // 발급기관이 알린 해시 (대구광역시 우선, 없으면 사회보장정보원) 와 로컬 계산 해시 대조
+    // 로컬 계산 해시를 공동원장 RuleRegistry 등록값(지갑이 직접 읽음)과, 발급기관이 알린 해시(대구광역시 우선)와 대조
+    const addresses = addrRes.status === 'fulfilled' ? addrRes.value : null;
+    let onLedger: LedgerBundle | undefined;
+    if (addresses?.RuleRegistry) {
+      try {
+        onLedger = await readBundleOnLedger(addresses, ENV.RPC_URL, bundle.bundle, bundle.version);
+      } catch {
+        onLedger = undefined; // 원장 연결 실패 — 발급기관 선언값으로만 대조
+      }
+    }
     const declared = ISSUERS.map((i) => wellKnown[i.did]?.bundle.bundleHash).find((h): h is string => typeof h === 'string') ?? null;
-    const hash = checkBundleHash(bundle, declared);
+    const hash = checkBundleHash(bundle, declared, onLedger);
+    // 판정 기준일: 발급기관이 알린 날짜 → 지난번에 받아 둔 날짜 → 기본값 (발급기관 판정과 같은 날짜로 계산)
+    const announced = ISSUERS.map((i) => validEvalDate(wellKnown[i.did]?.bundle.evalDate)).find((d): d is string => d !== null) ?? null;
+    if (announced) setCachedEvalDate(announced).catch(() => undefined);
+    const evalDate = announced ?? validEvalDate(await getCachedEvalDate().catch(() => undefined)) ?? EVAL_DATE;
     try {
-      const claims = computeClaims(bundle, profile);
+      const claims = computeClaims(bundle, profile, evalDate);
       const plans = planByIssuer(bundle, claims);
       const selfChecked = selfCheckedClaims(bundle, claims);
-      setData({ bundle, fromCache, wellKnown, wellKnownErrors, hash, claims, plans, selfChecked });
+      setData({ bundle, fromCache, wellKnown, wellKnownErrors, hash, claims, plans, selfChecked, evalDate, addresses });
       setPhase(credentials.length > 0 ? 'cards' : 'precheck');
     } catch (e) {
       setLoadError(`규칙 판정 중 오류: ${toKoreanError(e)}`);
@@ -92,6 +133,38 @@ export default function CredentialsPage() {
   }, [loading, profile, load]);
 
   const credByClaim = useMemo(() => new Map(credentials.map((c) => [`${c.issuerDid}:${c.claim}`, c])), [credentials]);
+
+  // 증명서 상태 (F30): 원장 상태 목록을 목록째 내려받아 내 증명서의 폐기 비트를 이 휴대폰 안에서 확인한다.
+  const loaded = data !== null;
+  const addresses = data?.addresses ?? null;
+  useEffect(() => {
+    if (!loaded || credentials.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const refs = credentials.map((c) => [c.jti, statusRefOf(c.vcJwt)] as const);
+      const lists = new Map<string, Uint8Array | null>();
+      for (const listId of new Set(refs.map(([, r]) => r?.listId).filter((id): id is string => !!id))) {
+        let bits: Uint8Array | null = null;
+        if (addresses?.StatusListRegistry) {
+          try {
+            bits = await readStatusList(addresses, ENV.RPC_URL, listId);
+          } catch {
+            bits = null;
+          }
+        }
+        lists.set(listId, bits);
+      }
+      const next: Record<string, boolean | null> = {};
+      for (const [jti, ref] of refs) {
+        const bits = ref ? lists.get(ref.listId) : null;
+        next[jti] = ref && bits ? revokedIn(bits, ref.index) : null;
+      }
+      if (!cancelled) setRevoked(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [credentials, addresses, loaded]);
 
   function startIssue() {
     setIssueError(null);
@@ -153,12 +226,22 @@ export default function CredentialsPage() {
     );
   }
 
+  const hashView = HASH_LINE[data.hash.status];
   const hashLine = (
-    <p className={['text-[0.9rem] font-semibold', data.hash.ok ? 'text-ok' : 'text-danger'].join(' ')}>
-      {data.hash.ok ? COPY.credentials.hashOk : COPY.credentials.hashBad}
+    <p className={['text-[0.9rem] font-semibold', hashView.cls].join(' ')}>
+      {hashView.text}
       {data.fromCache && <span className="ml-2 font-normal text-muted">(저장된 규칙 사용)</span>}
     </p>
   );
+  const hashNotice =
+    data.hash.status === 'mismatch' ? (
+      <Notice kind="error">{COPY.credentials.hashBadDetail}</Notice>
+    ) : data.hash.status === 'unregistered' ? (
+      <Notice kind="error">{COPY.credentials.hashUnregisteredDetail}</Notice>
+    ) : data.hash.status === 'unverified' ? (
+      <Notice kind="info">{COPY.credentials.hashUnverifiedDetail}</Notice>
+    ) : null;
+  const now = new Date();
 
   // ---------- 동의 화면 ----------
   if (phase === 'consent' || phase === 'issuing') {
@@ -206,9 +289,9 @@ export default function CredentialsPage() {
     const anyIssuable = data.plans.some((p) => p.issuable.length > 0);
     return (
       <div className="space-y-4">
-        <SectionTitle sub={`규칙 기준: ${data.bundle.tables.medianIncomeSource}`}>{COPY.credentials.title}</SectionTitle>
+        <SectionTitle sub={`규칙 기준: ${data.bundle.tables.medianIncomeSource} · ${COPY.credentials.evalDate(data.evalDate)}`}>{COPY.credentials.title}</SectionTitle>
         {hashLine}
-        {!data.hash.ok && <Notice kind="error">{COPY.credentials.hashBadDetail}</Notice>}
+        {hashNotice}
         {Object.entries(data.wellKnownErrors).map(([did, msg]) => (
           <Notice key={did} kind="warn">
             {ISSUERS.find((i) => i.did === did)?.name}: {msg}
@@ -276,7 +359,7 @@ export default function CredentialsPage() {
           <div key={plan.did} className="space-y-2">
             <h2 className="text-[1rem] font-bold text-muted">{plan.name}</h2>
             {mine.map((c) => (
-              <CredentialCard key={c.jti} credential={c} />
+              <CredentialCard key={c.jti} credential={c} status={credentialStatusOf(c, now, revoked[c.jti])} />
             ))}
             {plan.issuable
               .filter((d) => !credByClaim.has(`${plan.did}:${d.claim}`))

@@ -1,7 +1,7 @@
 [project]
 name = "dbp-verifier"
 version = "0.1.0"
-description = "대구 혜택패스 검증기관 서비스 (은행 창구·복지기관) — 원장만 조회, 발급기관에 묻지 않는다"
+description = "대구 혜택패스 검증기관 서비스 (은행·저축은행 창구) — 원장에서 확인하고 제출 영수증 해시만 원장에 남긴다, 발급기관에 묻지 않는다"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115",

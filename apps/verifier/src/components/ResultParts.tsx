@@ -1,5 +1,14 @@
 import { COMPARISON, CHECK_LABELS, claimLabel, CRED_CHECK_LABELS, policyLabel, reasonText, RESULT, TIMING_LABELS } from "@/lib/copy";
-import { formatDateTime, formatMs, formatSeconds, issuerNames, policyCheckNotes, receivedFactCount, statusLabel } from "@/lib/format";
+import {
+  credentialValueLabel,
+  formatDateTime,
+  formatMs,
+  formatSeconds,
+  issuerNames,
+  policyCheckNotes,
+  receivedFactCount,
+  statusLabel,
+} from "@/lib/format";
 import { CHECK_KEYS, TIMING_PARTS, type VerificationResult } from "@/lib/types";
 import { Checkmark } from "./Checkmark";
 import { CopyButton } from "./CopyButton";
@@ -196,7 +205,9 @@ export function ReceiptPanel({ result, txTimedOut }: { result: VerificationResul
           <dd className="flex flex-wrap items-center gap-2">
             {r.txHash ? (
               <>
-                <code className="mono text-base text-pass">{r.txHash}</code>
+                <code className="mono text-base text-pass" data-testid="receipt-tx">
+                  {r.txHash}
+                </code>
                 <CopyButton text={r.txHash} />
               </>
             ) : txTimedOut || r.error ? (
@@ -216,11 +227,13 @@ export function ReceiptPanel({ result, txTimedOut }: { result: VerificationResul
         <p className="mt-1 text-sm text-muted">{RESULT.receiptNote}</p>
       </details>
       <p className="mt-3 text-sm text-muted">
-        {RESULT.verifiedAt}: {formatDateTime(result.verifiedAt)} · {RESULT.holder}: <code className="mono">{result.holderDidShort}</code>
+        {RESULT.verifiedAt}: {formatDateTime(result.verifiedAt)} · {RESULT.holder}: <code className="mono">{result.holderDidShort ?? "—"}</code>
       </p>
     </section>
   );
 }
+
+const VALUE_TONE = { pass: "text-pass", fail: "text-fail", muted: "text-muted" } as const;
 
 export function CredentialDetails({ result }: { result: VerificationResult }) {
   const labelOf = (claim: string | null | undefined) => {
@@ -234,47 +247,88 @@ export function CredentialDetails({ result }: { result: VerificationResult }) {
         {RESULT.credentials} <span className="text-base font-normal text-muted">({result.credentials.length})</span>
       </summary>
       <ul className="mt-4 grid gap-4">
-        {result.credentials.map((c, i) => (
-          <li key={c.jti ?? i} className="rounded-xl border border-line bg-surface-2 p-4">
-            {c.error ? (
-              <p className="font-medium text-fail">{reasonText(c.error)}</p>
-            ) : (
-              <>
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="text-lg font-semibold">{labelOf(c.claim)}</p>
-                  <span className={`badge ${c.value ? "text-pass" : "text-fail"}`}>
-                    {RESULT.credValue}: {c.value ? RESULT.yes : RESULT.no}
-                  </span>
-                </div>
-                <dl className="mt-2 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[auto_1fr]">
-                  <dt className="text-muted">{RESULT.credIssuer}</dt>
-                  <dd>
-                    {c.issuerName ?? "—"} <code className="mono text-xs text-muted">{c.issuerDid}</code>
-                  </dd>
-                  <dt className="text-muted">{RESULT.credIndex}</dt>
-                  <dd className="mono">
-                    {c.statusListIndex ?? "—"}
-                    {c.statusListVersion !== undefined && ` · ${RESULT.credListVersion} ${c.statusListVersion}`}
-                  </dd>
-                  <dt className="text-muted">{RESULT.credRule}</dt>
-                  <dd className="mono">{c.ruleVersion ?? "—"}</dd>
-                  <dt className="text-muted">{RESULT.credId}</dt>
-                  <dd className="mono text-xs">{c.jti ?? "—"}</dd>
-                </dl>
-                <ul className="mt-3 flex flex-wrap gap-2">
-                  {Object.entries(c.checks ?? {}).map(([k, v]) => (
-                    <li key={k} className="badge">
-                      <Checkmark ok={v} />
-                      {CRED_CHECK_LABELS[k] ?? k}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </li>
-        ))}
+        {result.credentials.map((c, i) => {
+          const value = credentialValueLabel(c.value);
+          return (
+            <li key={c.jti ?? i} className="rounded-xl border border-line bg-surface-2 p-4">
+              {c.error ? (
+                <p className="font-medium text-fail">{reasonText(c.error)}</p>
+              ) : (
+                <>
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <p className="text-lg font-semibold">{labelOf(c.claim)}</p>
+                    <span className={`badge ${VALUE_TONE[value.tone]}`}>
+                      {RESULT.credValue}: {value.text}
+                    </span>
+                  </div>
+                  <dl className="mt-2 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[auto_1fr]">
+                    <dt className="text-muted">{RESULT.credIssuer}</dt>
+                    <dd>
+                      {c.issuerName ?? "—"} <code className="mono text-xs text-muted">{c.issuerDid}</code>
+                    </dd>
+                    <dt className="text-muted">{RESULT.credIndex}</dt>
+                    <dd className="mono">
+                      {c.statusListIndex ?? "—"}
+                      {c.statusListVersion !== undefined && ` · ${RESULT.credListVersion} ${c.statusListVersion}`}
+                    </dd>
+                    <dt className="text-muted">{RESULT.credRule}</dt>
+                    <dd className="mono">{c.ruleVersion ?? "—"}</dd>
+                    <dt className="text-muted">{RESULT.credId}</dt>
+                    <dd className="mono text-xs">{c.jti ?? "—"}</dd>
+                  </dl>
+                  <ul className="mt-3 flex flex-wrap gap-2">
+                    {Object.entries(c.checks ?? {}).map(([k, v]) => (
+                      <li key={k} className="badge">
+                        <Checkmark ok={v} />
+                        {CRED_CHECK_LABELS[k] ?? k}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </details>
+  );
+}
+
+/**
+ * 제출 확인 카드 (F39·F08). 확인 숫자는 sha256(제출물)에서 만든 4자리로, 시민 지갑 화면에도 같은 숫자가 뜬다 —
+ * 창구 앞 시민의 단말에서 제출됐는지 직원이 눈으로 대조한다. 같은 요청에 따로 기록된 제출 시도가 있으면 경고한다.
+ */
+export function SubmissionCheck({ result }: { result: VerificationResult }) {
+  const others = result.otherAttempts ?? 0;
+  if (!result.confirmCode && others === 0) return null;
+  return (
+    <section className="card flex flex-col gap-3" aria-label={RESULT.confirmCode}>
+      {result.confirmCode && (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          <div>
+            <p className="text-sm font-semibold text-muted">{RESULT.confirmCode}</p>
+            <p
+              className="mono text-5xl font-extrabold tracking-[0.2em] text-accent"
+              data-testid="confirm-code"
+              aria-label={`${RESULT.confirmCode} ${result.confirmCode.split("").join(" ")}`}
+            >
+              {result.confirmCode}
+            </p>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-base">{RESULT.confirmCodeHint}</p>
+            <p className="mt-1 text-sm text-muted">
+              {RESULT.holder}: <code className="mono">{result.holderDidShort ?? "—"}</code>
+            </p>
+          </div>
+        </div>
+      )}
+      {others > 0 && (
+        <p className="rounded-xl bg-warn-soft px-4 py-2 font-medium text-warn" role="alert" data-testid="other-attempts">
+          ⚠ {RESULT.otherAttempts(others)}
+        </p>
+      )}
+    </section>
   );
 }
 

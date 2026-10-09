@@ -4,8 +4,10 @@
  */
 import { bundleHash, categoricalProfile, claimSetsOf, evaluateClaims, evaluatePolicies } from '@dbp/rules';
 import type { Json, JsonObject } from '@dbp/rules';
+import { decodeVc } from '@dbp/vc';
 import citizensJson from '@/generated/citizens.json';
 import { EVAL_DATE, SELF_ISSUER, issuerByDid, issuerName } from './env';
+import type { LedgerBundle } from './ledger';
 import type {
   Bundle,
   CategoricalProfile,
@@ -60,8 +62,9 @@ export function citizenSummary(c: CitizenProfile): CitizenSummary {
 
 // ---------- claim 판정 (로컬) ----------
 
-export function computeClaims(bundle: Bundle, profile: CitizenProfile): ClaimMap {
-  return evaluateClaims(bundle, profile as unknown as JsonObject, EVAL_DATE);
+/** evalDate: 발급기관이 알린 기준일(bundle.evalDate). 없으면 기본 기준일 — 발급기관 판정과 같은 날짜로 계산해야 결과가 같다 (F65). */
+export function computeClaims(bundle: Bundle, profile: CitizenProfile, evalDate: string = EVAL_DATE): ClaimMap {
+  return evaluateClaims(bundle, profile as unknown as JsonObject, evalDate);
 }
 
 export function claimLabel(bundle: Bundle, claim: string): string {
@@ -138,17 +141,40 @@ export function selfCheckedClaims(bundle: Bundle, claims: ClaimMap): ClaimDecisi
     .map(([claim]) => ({ claim, label: claimLabel(bundle, claim), value: claims[claim] === true, issuerDid: SELF_ISSUER }));
 }
 
+/**
+ * 규칙 해시 대조 결과.
+ *  - ledger: 공동원장(RuleRegistry) 등록값과 일치 — 가장 강한 확인
+ *  - declared: 원장을 읽지 못해 발급기관이 알린 값과만 일치
+ *  - mismatch: 원장 또는 발급기관 값과 다름 (변조 의심 — 발급 중단)
+ *  - unregistered: 원장은 응답했지만 이 규칙 버전이 등록되어 있지 않음
+ *  - unverified: 원장도 발급기관도 확인하지 못함 (변조가 아니라 '확인 불가' — 중립 표시, F31)
+ */
+export type HashStatus = 'ledger' | 'declared' | 'mismatch' | 'unregistered' | 'unverified';
+
 export interface HashCheck {
   local: string;
   declared: string | null;
+  ledger: string | null;
+  status: HashStatus;
   ok: boolean;
 }
 
-/** 지갑이 받은 번들을 직접 해시해 발급기관이 알린 해시와 대조한다 (불변 조건 4). */
-export function checkBundleHash(bundle: Bundle, declared: string | null | undefined): HashCheck {
+/**
+ * 지갑이 받은 번들을 직접 해시해 공동원장 등록값(onLedger)과 발급기관이 알린 해시(declared)와 대조한다 (불변 조건 4, F19).
+ * onLedger 가 undefined 면 원장을 읽지 못한 것이다.
+ */
+export function checkBundleHash(bundle: Bundle, declared: string | null | undefined, onLedger?: LedgerBundle): HashCheck {
   const local = bundleHash(bundle);
   const d = declared ?? null;
-  return { local, declared: d, ok: d !== null && d.toLowerCase() === local.toLowerCase() };
+  const ledger = onLedger && onLedger.registered ? onLedger.bundleHash : null;
+  const same = (h: string) => h.toLowerCase() === local.toLowerCase();
+  let status: HashStatus;
+  if ((ledger !== null && !same(ledger)) || (d !== null && !same(d))) status = 'mismatch';
+  else if (onLedger && !onLedger.registered) status = 'unregistered';
+  else if (ledger !== null) status = 'ledger';
+  else if (d !== null) status = 'declared';
+  else status = 'unverified';
+  return { local, declared: d, ledger, status, ok: status === 'ledger' || status === 'declared' };
 }
 
 // ---------- 정책 판정 → ruleResults ----------
@@ -202,8 +228,8 @@ export function buildCategoricalProfile(claims: ClaimMap, householdSize: number)
 }
 
 /** /recommend · /chat 공통 본문. 원본 프로필 필드는 어디에도 실리지 않는다. */
-export function buildRecommendPayload(bundle: Bundle, profile: CitizenProfile): RecommendPayload {
-  const claims = computeClaims(bundle, profile);
+export function buildRecommendPayload(bundle: Bundle, profile: CitizenProfile, evalDate: string = EVAL_DATE): RecommendPayload {
+  const claims = computeClaims(bundle, profile, evalDate);
   return {
     categoricalProfile: buildCategoricalProfile(claims, profile.householdSize),
     ruleResults: buildRuleResults(bundle, claims),
@@ -230,6 +256,50 @@ export function selectVcsForRequest(credentials: readonly StoredCredential[], re
     else missing.push({ ...req, expected });
   }
   return { vcJwts: matched.map((m) => m.credential.vcJwt), matched, missing };
+}
+
+/**
+ * 제출 동의 화면의 항목 이름 (F41). 검증기관이 보낸 label 이 아니라 지갑이 아는 이름(규칙 번들 라벨 → 저장된 증명서 라벨 → claim id)을 쓴다.
+ * 검증기관 label 이 지갑 이름과 다르면 mismatch 에 그 label 을 담아 경고한다 — 동의하는 사실은 claim 기준이기 때문.
+ */
+export function consentLabel(
+  req: RequestedClaim,
+  bundleLabels: Readonly<Record<string, string>>,
+  credential?: Pick<StoredCredential, 'label'>,
+): { label: string; mismatch: string | null } {
+  const known = bundleLabels[req.claim] ?? credential?.label;
+  const label = known ?? req.claim;
+  const sent = typeof req.label === 'string' ? req.label.trim() : '';
+  return { label, mismatch: sent && known !== undefined && sent !== known ? sent : null };
+}
+
+// ---------- 증명서 상태 (만료·폐기) ----------
+
+/** VC 의 상태 목록 위치 (credentialStatus). 해석하지 못하면 null. */
+export function statusRefOf(vcJwt: string): { listId: string; index: number } | null {
+  try {
+    const st = decodeVc(vcJwt).vc.credentialStatus as { statusListCredential?: unknown; statusListIndex?: unknown } | undefined;
+    const listId = st?.statusListCredential;
+    const index = Number(st?.statusListIndex);
+    if (typeof listId !== 'string' || !listId || !Number.isSafeInteger(index) || index < 0) return null;
+    return { listId, index };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 증명서 카드 상태 (F30). revoked: 원장 상태 목록에서 읽은 폐기 비트 — undefined 는 아직 확인 중, null 은 원장 확인 불가.
+ * 폐기가 확인되면 폐기, 그다음 유효기간 만료, 원장에서 폐기되지 않았음이 확인되어야 '유효'.
+ */
+export type CredentialStatus = 'checking' | 'valid' | 'revoked' | 'expired' | 'unknown';
+
+export function credentialStatusOf(credential: Pick<StoredCredential, 'validUntil'>, now: Date, revoked: boolean | null | undefined): CredentialStatus {
+  if (revoked === true) return 'revoked';
+  const until = Date.parse(credential.validUntil);
+  if (!Number.isNaN(until) && until < now.getTime()) return 'expired';
+  if (revoked === false) return 'valid';
+  return revoked === undefined ? 'checking' : 'unknown';
 }
 
 // ---------- 정책 카드 보조 ----------

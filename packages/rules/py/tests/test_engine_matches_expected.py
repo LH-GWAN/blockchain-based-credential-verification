@@ -61,3 +61,10 @@ def test_partial_profile_only_evaluates_requested_claims():
     assert out == {"creditBottom20": True, "annualIncomeUnder35M": True}
     with pytest.raises(TypeError):
         evaluate_claims(BUNDLE, bank_record, date(2026, 9, 14), only=["incomeBelow50Median"])
+
+
+def test_empty_only_evaluates_nothing():
+    """F63: only=[] 은 '평가할 항목 없음' — 전체 claim 평가로 바뀌지 않는다 (None 일 때만 전체)."""
+    c = CITIZENS["C-001"]
+    assert evaluate_claims(BUNDLE, c, date(2026, 9, 14), only=[]) == {}
+    assert set(evaluate_claims(BUNDLE, c, date(2026, 9, 14))) == set(BUNDLE["claims"]["rules"])

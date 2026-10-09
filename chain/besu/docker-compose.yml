@@ -1,9 +1,12 @@
 # Hyperledger Besu QBFT 4-validator 로컬 네트워크 (chainId 1337, 가스가격 0)
-# *** UNTESTED: 작성 환경에 docker 데몬이 없어 실행 검증을 하지 못했다. README.md 참고. ***
+# 실기동 검증 기록: README.md 머리말(2026-09-14, 4 validator·배포·시드·발급·검증·폐기·PII 스캔).
 #
 # 사전 준비:  cd chain && pnpm besu:keys   (keys/, genesis.json, static-nodes.json 생성)
 # 시작/중지:  docker compose up -d  /  docker compose down
 # RPC:        http://127.0.0.1:8545 (validator1)  →  RPC_URL 로 지정하면 서비스가 그대로 전환된다.
+#             호스트의 루프백(127.0.0.1)에만 publish 한다. 거버넌스 키가 공개 테스트 키(Hardhat #0)라
+#             같은 LAN 에서 RPC 에 닿으면 누구나 rotateKey 로 발급키를 바꿀 수 있기 때문이다.
+#             Host 헤더는 localhost·127.0.0.1 만, CORS 는 로컬 앱 출처(3000·3001·3010·3011)만 허용한다.
 #
 # 검증자 간 피어링은 discovery 대신 고정 IP 의 static-nodes.json 으로 맺는다(부트노드 불필요).
 
@@ -35,15 +38,15 @@ services:
       --rpc-http-host=0.0.0.0
       --rpc-http-port=8545
       --rpc-http-api=ETH,NET,WEB3,QBFT,TXPOOL
-      --rpc-http-cors-origins=all
-      --host-allowlist=*
+      --rpc-http-cors-origins=http://localhost:3000,http://localhost:3001,http://localhost:3010,http://localhost:3011,http://127.0.0.1:3000,http://127.0.0.1:3001,http://127.0.0.1:3010,http://127.0.0.1:3011
+      --host-allowlist=localhost,127.0.0.1
     volumes:
       - ./genesis.json:/config/genesis.json:ro
       - ./keys:/config/keys:ro
       - ./static-nodes.json:/config/static-nodes.json:ro
       - ./data/validator1:/data
     ports:
-      - "${BESU_RPC_PORT:-8545}:8545"
+      - "127.0.0.1:${BESU_RPC_PORT:-8545}:8545"
     networks:
       besu:
         ipv4_address: 172.16.239.11
@@ -60,7 +63,7 @@ services:
       --p2p-host=172.16.239.12
       --p2p-port=30303
       --min-gas-price=0
-      --host-allowlist=*
+      --host-allowlist=localhost,127.0.0.1
     volumes:
       - ./genesis.json:/config/genesis.json:ro
       - ./keys:/config/keys:ro
@@ -82,7 +85,7 @@ services:
       --p2p-host=172.16.239.13
       --p2p-port=30303
       --min-gas-price=0
-      --host-allowlist=*
+      --host-allowlist=localhost,127.0.0.1
     volumes:
       - ./genesis.json:/config/genesis.json:ro
       - ./keys:/config/keys:ro
@@ -104,7 +107,7 @@ services:
       --p2p-host=172.16.239.14
       --p2p-port=30303
       --min-gas-price=0
-      --host-allowlist=*
+      --host-allowlist=localhost,127.0.0.1
     volumes:
       - ./genesis.json:/config/genesis.json:ro
       - ./keys:/config/keys:ro

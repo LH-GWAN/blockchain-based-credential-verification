@@ -1,6 +1,7 @@
 # 네트워크 격리 시연 전용 오버라이드: 호스트 포트를 노출하지 않아 로컬 시연 스택(make demo)과 동시에 띄울 수 있다.
 #   docker compose -f docker-compose.yml -f docker-compose.isolation.yml up -d chain deployer issuer-daegu issuer-welfare verifier
-#   make demo-isolation
+#   make demo-isolation   (대조군: 발급기관 컨테이너끼리는 응답 → 본 검사: 검증기관 컨테이너에서 발급기관 차단·원장 허용)
+# 배포 주소는 named volume 에만 쓰므로 호스트 chain/deployments/latest.json(make demo 용)은 바뀌지 않는다.
 services:
   chain:
     ports: !reset []

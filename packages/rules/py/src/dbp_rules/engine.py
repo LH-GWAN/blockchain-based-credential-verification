@@ -63,7 +63,7 @@ def evaluate_claims(bundle: dict, profile: dict, as_of: date | None = None,
                     only: list[str] | None = None) -> dict[str, bool]:
     data = preprocess(bundle, profile, as_of)
     rules = bundle["claims"]["rules"]
-    names = only or list(rules.keys())
+    names = list(rules.keys()) if only is None else only  # 빈 목록은 "없음" — 전체로 바꾸지 않는다 (F63)
     out: dict[str, bool] = {}
     for name in names:
         v = evaluate(rules[name], data)

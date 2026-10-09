@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { useEffect, useRef, useState } from "react";
 import { api, isApiError, isUnreachable } from "@/lib/api";
 import { claimLabel, ERRORS, REQUEST } from "@/lib/copy";
+import { loadCounterToken } from "@/lib/counter-token";
 import { formatCountdown, groupShortCode, remainingSeconds } from "@/lib/format";
 import type { PresentationRequest } from "@/lib/types";
 
@@ -23,7 +24,7 @@ export function RequestQr({ request, onRenew, onReset, renewing }: Props) {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [now, setNow] = useState(() => Date.now());
-  const [pollState, setPollState] = useState<"ok" | "down" | "unknown">("ok");
+  const [pollState, setPollState] = useState<"ok" | "down" | "unknown" | "forbidden">("ok");
 
   // QR 렌더링 (canvas)
   useEffect(() => {
@@ -51,7 +52,7 @@ export function RequestQr({ request, onRenew, onReset, renewing }: Props) {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const tick = async () => {
       try {
-        const r = await api.getResult(request.requestId);
+        const r = await api.getResult(request.requestId, loadCounterToken(request.requestId) ?? request.counterToken ?? null);
         if (!alive) return;
         setPollState("ok");
         if (r.status === "done") {
@@ -63,6 +64,10 @@ export function RequestQr({ request, onRenew, onReset, renewing }: Props) {
         if (isApiError(e, 404)) {
           setPollState("unknown");
           return; // 서비스가 재시작됨 — 더 이상 폴링하지 않는다
+        }
+        if (isApiError(e, 401) || isApiError(e, 403)) {
+          setPollState("forbidden");
+          return; // 창구 토큰이 없거나 다름(저장소 차단 등) — 더 이상 폴링하지 않는다
         }
         if (isUnreachable(e)) setPollState("down");
       }
@@ -153,10 +158,12 @@ export function RequestQr({ request, onRenew, onReset, renewing }: Props) {
                 {REQUEST.changeSettings}
               </button>
             </>
-          ) : pollState === "unknown" ? (
+          ) : pollState === "unknown" || pollState === "forbidden" ? (
             <>
               <p className="w-full font-medium text-fail">
-                {ERRORS.requestUnknown} — {ERRORS.requestUnknownHint}
+                {pollState === "unknown"
+                  ? `${ERRORS.requestUnknown} — ${ERRORS.requestUnknownHint}`
+                  : `${ERRORS.resultForbidden} — ${ERRORS.resultForbiddenHint}`}
               </p>
               <button type="button" className="btn btn-primary" onClick={onRenew} disabled={renewing}>
                 {REQUEST.newRequest}

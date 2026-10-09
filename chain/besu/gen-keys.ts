@@ -11,7 +11,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { keccak256, stringToHex, toRlp } from "viem";
 import type { Address, Hex } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
+import { mnemonicToAccount, privateKeyToAccount } from "viem/accounts";
 
 const OUT_DIR = fileURLToPath(new URL("./", import.meta.url));
 const VALIDATORS = 4;
@@ -20,14 +20,13 @@ const P2P_PORT = 30303;
 const SUBNET_PREFIX = "172.16.239."; // docker-compose.yml 의 고정 IP(.11 ~ .14)와 일치해야 한다
 
 // Hardhat 기본 계정 #0 ~ #5 — 각 10,000 ETH 프리펀딩 (gasPrice 0 이지만 잔액 검사 안전망)
-const PREFUNDED: Address[] = [
-  "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-  "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
-  "0x3C44CdDdB6a900fa2b585dd299e03d14fa4293BC",
-  "0x90F79bf6EB2c4f870365E8062F9C0f3d7E7B77a5",
-  "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
-  "0x9965507D1a55bcC2695C58ba16FB37d819B0C4a2",
-];
+// 주소를 손으로 적지 않고 Hardhat 공개 테스트 니모닉에서 계산한다(이전에 #2·#3·#5 주소 오기가 있었다).
+// #0 거버넌스, #1 대구시 컨트롤러, #2 복지기관 컨트롤러, #3 검증기관(iM뱅크) — 모두 공개된 테스트 키.
+const HARDHAT_TEST_MNEMONIC = "test test test test test test test test test test test junk";
+const PREFUNDED: Address[] = Array.from(
+  { length: 6 },
+  (_, i) => mnemonicToAccount(HARDHAT_TEST_MNEMONIC, { addressIndex: i }).address,
+);
 const PREFUND_BALANCE = "0x21e19e0c9bab2400000"; // 10,000 ETH
 
 const validators = Array.from({ length: VALIDATORS }, (_, i) => {

@@ -96,7 +96,7 @@ export function evaluateClaims(
 ): ClaimMap {
   const data = preprocess(bundle, profile, asOf);
   const rules = bundle.claims.rules;
-  const names = only && only.length > 0 ? only : Object.keys(rules); // Python `only or list(rules)`
+  const names = only === undefined ? Object.keys(rules) : only; // Python `list(rules) if only is None else only` — 빈 목록은 빈 결과 (F63)
   const out: ClaimMap = {};
   for (const name of names) {
     if (!Object.hasOwn(rules, name)) throw new Error(`unknown claim ${name}`);

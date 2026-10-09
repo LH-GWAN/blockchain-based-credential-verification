@@ -33,6 +33,9 @@ export const ERRORS = {
   retry: "다시 시도",
   requestUnknown: "요청을 찾을 수 없습니다",
   requestUnknownHint: "검증 서비스가 재시작되었을 수 있습니다. 새 요청을 만들어 주세요.",
+  /** 401 RESULT_AUTH_REQUIRED · 403 RESULT_FORBIDDEN — 창구 토큰이 없거나 다름 (F03). */
+  resultForbidden: "이 결과를 볼 권한이 없습니다",
+  resultForbiddenHint: "결과는 요청을 만든 창구 화면(같은 브라우저 탭)에서만 볼 수 있습니다. 새 요청을 만들어 주세요.",
   generic: (code: string) => `오류가 발생했습니다 (${code})`,
 } as const;
 
@@ -132,7 +135,7 @@ export const PRESETS_FALLBACK: readonly Preset[] = [
     requested: [{ claim: "incomeBelow50Median", expected: true }],
     policyId: null,
     verifierKinds: ["bank", "savings"],
-    hint: "전기·도시가스·통신 요금 감면 창구가 수급자증명서 원본 대신 '기준 중위소득 50% 이하 = 참' 1개 항목만 받습니다.",
+    hint: "전기·도시가스·통신 요금 감면 창구가 소득금액증명·주민등록표 등본 원본 대신 '기준 중위소득 50% 이하 = 참' 1개 항목만 받습니다.",
   },
 ];
 
@@ -177,13 +180,20 @@ export const RESULT = {
   purpose: "용도",
   issuer: "발급기관",
   status: "상태",
-  holder: "제출자",
+  holder: "제출 지갑",
   verifiedAt: "검증 시각",
   claimsTable: "요청 항목 확인",
   colClaim: "항목",
   colResult: "결과",
   colIssuer: "발급기관",
   notPresented: "미제출",
+  /** 증명서를 해석하지 못해(발급기관 미등록·서명 오류 등) 값을 확인하지 않음 — '거짓'으로 표시하지 않는다 (F38). */
+  valueUnchecked: "—(확인 안 함)",
+  /** F39: 제출물 해시에서 만든 4자리 확인 숫자. 시민 지갑 화면에도 같은 숫자가 뜬다. */
+  confirmCode: "확인 숫자",
+  confirmCodeHint: "시민 지갑 화면의 확인 숫자와 같은지 시민과 함께 확인하세요. 다르면 창구 앞 단말이 아닌 다른 곳에서 제출된 것입니다.",
+  /** F08: 같은 요청에 따로 기록된(재사용·거부된) 제출 시도 수. */
+  otherAttempts: (n: number) => `이 요청에 다른 제출 시도가 ${n}건 더 있었습니다 — 이 결과와는 따로 기록되었습니다`,
   checklist: "검증 단계",
   checklistHint: "모든 확인은 전자서명과 공동원장 조회만으로 이뤄집니다. 발급기관 서버에는 묻지 않습니다.",
   timing: "소요 시간",
@@ -253,13 +263,18 @@ export const CHECK_LABELS: Record<CheckKey, string> = {
   ruleVersion: "규칙 버전 일치",
   holderBinding: "소유자 일치",
   requestedClaims: "요청 항목 충족",
+  issuerActive: "발급기관 활성(정지 아님)",
+  issuerAuthoritative: "항목별 발급 권한",
+  notExpired: "증명서 유효기간",
 };
 
 /** 증명서별 checks 키 → 문구 */
 export const CRED_CHECK_LABELS: Record<string, string> = {
   issuerRegistered: "발급기관 원장 등록",
   issuerActive: "발급기관 활성",
+  issuerAuthoritative: "항목별 발급 권한",
   signature: "증명서 서명",
+  notExpired: "증명서 유효기간",
   holderBinding: "소유자 일치",
   notRevoked: "폐기 여부",
   ruleVersion: "규칙 버전 일치",
@@ -282,6 +297,9 @@ export const ATTACK = {
   running: "제출 중…",
   blocked: "차단됨",
   notBlocked: "차단되지 않음 — 예상과 다릅니다",
+  /** FAIL 이지만 예상 사유 코드가 없다 — 다른 단계에서 막힌 것이라 이 공격의 차단 근거로 보지 않는다 (F29). */
+  otherReason: (expected: string) => `거부됐지만 예상 사유(${expected})가 아닙니다 — 다른 단계에서 막혔습니다`,
+  confirmed: (expected: string) => `· ${expected} 확인`,
   expectedCode: "예상 사유 코드",
   run: "실행",
   rerun: "다시 실행",
@@ -301,7 +319,7 @@ export const ATTACK = {
     forged: {
       label: "위조된 증명서",
       what: "증명서 서명을 변조해 제출",
-      explain: "증명서 서명 바이트를 바꿔 제출 → 원장의 발급기관 공개키로 서명 검증 실패 → VC_SIG_INVALID",
+      explain: "남의 증명서 소유자를 자기 것으로 고쳐 제출 → 원장의 발급기관 공개키로 서명 검증 실패 → VC_SIG_INVALID",
       expected: "VC_SIG_INVALID",
     },
     "wrong-holder": {
@@ -333,8 +351,19 @@ export const REASON_KO: Record<string, string> = {
   CLAIM_MISSING: "요청한 항목의 증명서가 없습니다",
   CLAIM_FALSE: "요청한 항목이 충족되지 않았습니다",
   VP_MALFORMED: "제출 형식이 올바르지 않습니다",
+  /** 증명서별 상세(credentials[].error) 전용 — 결과 사유 코드로는 VC_SIG_INVALID 가 붙는다. */
+  VC_MALFORMED: "증명서 형식이 올바르지 않습니다",
   PRESET_NOT_OFFERED: "이 창구에서 취급하지 않는 상품입니다",
   POLICY_UNKNOWN: "규칙 묶음에 없는 정책입니다",
+  ISSUER_NOT_AUTHORITATIVE: "이 항목을 발급할 권한이 없는 기관의 증명서입니다",
+  UNREQUESTED_CREDENTIAL: "요청하지 않은 증명서가 함께 제출되었습니다",
+  LEDGER_UNAVAILABLE: "공동원장에 연결할 수 없습니다 — 잠시 후 다시 시도하세요",
+  RULE_VERSION_NOT_ACCEPTED: "이 창구가 받지 않는 규칙 버전입니다",
+  STATUS_LIST_OWNER_MISMATCH: "상태 목록 게시자가 발급기관과 다릅니다",
+  REQUESTED_INVALID: "요청 항목이 올바르지 않습니다",
+  TOO_MANY_LOOKUPS: "확인번호 조회가 너무 많습니다 — 잠시 후 다시 시도하세요",
+  RESULT_AUTH_REQUIRED: "이 결과를 볼 권한이 없습니다",
+  RESULT_FORBIDDEN: "이 결과를 볼 권한이 없습니다",
 };
 
 export function reasonText(code: string, fromServer?: string): string {

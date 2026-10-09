@@ -36,7 +36,7 @@ PRESETS = [
      "hint": "은행 조회로 신용평점 하위 20%인 고객: 소득금액증명 원본 대신 '연소득 5,000만 원 이하 = 참' 1개 항목만 받습니다. 재직 등 대출 심사는 은행이 자체 확인합니다."},
     {"id": "discount", "label": "공공요금 감면 대상 확인", "purpose": "공공요금 감면 대상 확인",
      "requested": [{"claim": "incomeBelow50Median", "expected": True}], "policyId": None, "verifierKinds": ["bank", "savings"],
-     "hint": "전기·도시가스·통신 요금 감면 창구가 수급자증명서 원본 대신 '기준 중위소득 50% 이하 = 참' 1개 항목만 받습니다."},
+     "hint": "전기·도시가스·통신 요금 감면 창구가 소득금액증명·주민등록표 등본 원본 대신 '기준 중위소득 50% 이하 = 참' 1개 항목만 받습니다."},
 ]
 REASON_KO = {
     "AUD_MISMATCH": "다른 기관에 제출된 증명입니다",
@@ -59,7 +59,31 @@ REASON_KO = {
     "VP_MALFORMED": "제출 형식이 올바르지 않습니다",
     "PRESET_NOT_OFFERED": "이 창구에서 취급하지 않는 상품입니다",
     "POLICY_UNKNOWN": "규칙 묶음에 없는 정책입니다",
+    "ISSUER_NOT_AUTHORITATIVE": "이 항목을 발급할 권한이 없는 기관의 증명서입니다",
+    "UNREQUESTED_CREDENTIAL": "요청하지 않은 증명서가 함께 제출되었습니다",
+    "LEDGER_UNAVAILABLE": "공동원장에 연결할 수 없습니다 — 잠시 후 다시 시도하세요",
+    "RULE_VERSION_NOT_ACCEPTED": "이 창구가 받지 않는 규칙 버전입니다",
+    "STATUS_LIST_OWNER_MISMATCH": "상태 목록 게시자가 발급기관과 다릅니다",
+    "REQUESTED_INVALID": "요청 항목이 올바르지 않습니다",
+    "TOO_MANY_LOOKUPS": "확인번호 조회가 너무 많습니다 — 잠시 후 다시 시도하세요",
+    "RESULT_AUTH_REQUIRED": "이 결과를 볼 권한이 없습니다",
+    "RESULT_FORBIDDEN": "이 결과를 볼 권한이 없습니다",
 }
+
+# 창구가 받는 규칙 번들 버전 (F43): 고시가 바뀌면 창구가 이전 버전으로 판정된 증명서를 거절할 수 있다.
+# 환경변수 ACCEPTED_BUNDLES="daegu-eligibility@2026.2,daegu-eligibility@2026.3" 로 바꾼다.
+DEFAULT_ACCEPTED_BUNDLES = {"daegu-eligibility": ["2026.2"]}
+DEFAULT_ALLOWED_ORIGINS = ",".join(f"http://{h}:{p}" for h in ("localhost", "127.0.0.1") for p in (3000, 3001, 3010, 3011))
+
+
+def parse_accepted_bundles(text: str | None) -> dict[str, list[str]]:
+    """"bundle@version,bundle@version" → {bundle: [version, ...]}. 비어 있으면 기본값."""
+    out: dict[str, list[str]] = {}
+    for item in (text or "").split(","):
+        name, sep, version = item.strip().partition("@")
+        if name and sep and version:
+            out.setdefault(name, []).append(version)
+    return out or {k: list(v) for k, v in DEFAULT_ACCEPTED_BUNDLES.items()}
 
 
 @dataclass
@@ -70,4 +94,13 @@ class Settings:
         "VERIFIER_EVM_PRIVATE_KEY", "0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6"))  # hardhat #3
     rpc_url: str = field(default_factory=lambda: os.environ.get("RPC_URL", "http://127.0.0.1:8545"))
     request_ttl_s: int = 120
+    # 검증 1건에서 원장 조회 전체에 쓰는 시간 상한(초). 지갑 제출 타임아웃(apps/wallet/src/lib/api.ts PRESENT_TIMEOUT_MS, 15초)보다 짧게 둔다 (F34).
+    ledger_deadline_s: float = field(default_factory=lambda: float(os.environ.get("VERIFIER_LEDGER_DEADLINE_S", "6")))
+    accepted_bundles: dict[str, list[str]] = field(
+        default_factory=lambda: parse_accepted_bundles(os.environ.get("ACCEPTED_BUNDLES")))
+    allowed_origins: list[str] = field(default_factory=lambda: [
+        o.strip() for o in (os.environ.get("ALLOWED_ORIGINS") or DEFAULT_ALLOWED_ORIGINS).split(",") if o.strip()])
+    # 6자리 코드 조회: IP별로 60초 안에 404가 이만큼 쌓이면 429 (F03 열거 방지)
+    lookup_fail_limit: int = 20
+    lookup_window_s: int = 60
     public_response_uri: str = field(default_factory=lambda: os.environ.get("VERIFIER_PUBLIC_URL", "http://localhost:8002") + "/present")

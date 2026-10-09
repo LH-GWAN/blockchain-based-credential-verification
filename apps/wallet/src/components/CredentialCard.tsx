@@ -4,12 +4,25 @@ import { decodeVc } from '@dbp/vc';
 import { useMemo, useState } from 'react';
 import { Button, Card, Collapsible, DetailTable, JsonView } from '@/components/ui';
 import { COPY } from '@/lib/copy';
+import type { CredentialStatus } from '@/lib/eligibility';
 import { formatDate } from '@/lib/format';
 import type { StoredCredential } from '@/lib/types';
 
-/** 발급 완료 카드: 발급기관 · claim 문장 · 유효기간 · 상태. "자세히"는 표로 보여 주고, 원문 JSON 은 접힌 기술 정보 안에만 둔다. 원본 수치·이름은 어디에도 없다. */
-export function CredentialCard({ credential }: { credential: StoredCredential }) {
+const STATUS_VIEW: Record<CredentialStatus, { text: string; cls: string; note?: string }> = {
+  checking: { text: COPY.credentials.statusChecking, cls: 'bg-canvas text-muted border border-line' },
+  valid: { text: COPY.credentials.statusValid, cls: 'bg-ok-soft text-ok' },
+  revoked: { text: COPY.credentials.statusRevoked, cls: 'bg-danger-soft text-danger', note: COPY.credentials.statusRevokedNote },
+  expired: { text: COPY.credentials.statusExpired, cls: 'bg-danger-soft text-danger', note: COPY.credentials.statusExpiredNote },
+  unknown: { text: COPY.credentials.statusUnknown, cls: 'bg-canvas text-muted border border-line', note: COPY.credentials.statusUnknownNote },
+};
+
+/**
+ * 발급 완료 카드: 발급기관 · claim 문장 · 유효기간 · 상태. "자세히"는 표로 보여 주고, 원문 JSON 은 접힌 기술 정보 안에만 둔다. 원본 수치·이름은 어디에도 없다.
+ * 상태는 유효기간과 공동원장 상태 목록의 폐기 비트로 정한다 (F30) — 원장을 읽지 못하면 '유효' 라고 하지 않는다.
+ */
+export function CredentialCard({ credential, status }: { credential: StoredCredential; status: CredentialStatus }) {
   const C = COPY.credentials;
+  const st = STATUS_VIEW[status];
   const [open, setOpen] = useState(false);
   const decoded = useMemo(() => {
     if (!open) return null;
@@ -27,8 +40,9 @@ export function CredentialCard({ credential }: { credential: StoredCredential })
           <p className="text-[0.85rem] font-semibold text-primary-dark">{credential.issuerName}</p>
           <p className="text-lg font-bold leading-snug">{credential.label}: 예</p>
         </div>
-        <span className="shrink-0 rounded-full bg-ok-soft px-2 py-0.5 text-[0.8rem] font-semibold text-ok">{C.statusValid}</span>
+        <span className={['shrink-0 rounded-full px-2 py-0.5 text-[0.8rem] font-semibold', st.cls].join(' ')}>{st.text}</span>
       </div>
+      {st.note && <p className={['mt-1 text-[0.85rem]', status === 'unknown' ? 'text-muted' : 'text-danger'].join(' ')}>{st.note}</p>}
       <p className="mt-2 text-[0.9rem] text-muted">
         {C.validUntil} {formatDate(credential.validUntil)}
       </p>

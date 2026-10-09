@@ -5,6 +5,13 @@ export const ENV = {
   VERIFIER_URL: process.env.NEXT_PUBLIC_VERIFIER_URL ?? 'http://localhost:8002',
   AI_URL: process.env.NEXT_PUBLIC_AI_URL ?? 'http://localhost:8004',
   RPC_URL: process.env.NEXT_PUBLIC_RPC_URL ?? 'http://localhost:8545',
+  /**
+   * 공동원장 컨트랙트 주소 (선택). 빌드 설정에 있으면 발급기관에 배포 정보를 묻지 않는다 (F40).
+   * 없으면 발급기관 `/ledger/deployment` 에서 한 번 받아 단말에 저장해 둔다.
+   */
+  RULE_REGISTRY_ADDRESS: process.env.NEXT_PUBLIC_RULE_REGISTRY_ADDRESS ?? '',
+  STATUS_LIST_REGISTRY_ADDRESS: process.env.NEXT_PUBLIC_STATUS_LIST_REGISTRY_ADDRESS ?? '',
+  RECEIPT_ANCHOR_ADDRESS: process.env.NEXT_PUBLIC_RECEIPT_ANCHOR_ADDRESS ?? '',
 } as const;
 
 export interface IssuerEndpoint {
@@ -41,7 +48,17 @@ export function issuerName(did: string): string {
 
 export const BUNDLE = { bundle: 'daegu-eligibility', version: '2026.2' } as const;
 
-/** 규칙 평가 기준일 (프롬프트 §15-5: 테스트 결정론). */
+/**
+ * 규칙 평가 기준일의 기본값 (프롬프트 §15-5: 테스트 결정론).
+ * 발급기관이 `/.well-known/issuer` 의 bundle.evalDate 로 알려 주면 그 날짜를 쓴다 (F65 — 발급기관 RULE_EVAL_DATE 와 일치).
+ */
 export const EVAL_DATE = '2026-09-14';
+
+/** 'YYYY-MM-DD' 형식이고 실제 날짜이면 그 값, 아니면 null. */
+export function validEvalDate(v: unknown): string | null {
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
+  const d = new Date(`${v}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v ? v : null;
+}
 
 export const DEFAULT_CITIZEN_ID = 'C-001';

@@ -60,6 +60,8 @@ export interface PresentationRecord {
   receipt: ReceiptData | null;
   totalMs: number | null;
   at: string;
+  /** 제출물(vpJwt)에서 지갑이 직접 계산한 4자리 확인 숫자 — 창구 화면의 숫자와 대조 (F39). */
+  confirmCode?: string;
 }
 
 // ---------- 발급기관 API ----------
@@ -70,7 +72,8 @@ export interface IssuerWellKnown {
   kid: string;
   ed25519PublicKeyHex: string;
   claims: Array<{ claim: string; label: string }>;
-  bundle: { bundle: string; version: string; bundleHash: string; schemaHash: string };
+  /** evalDate: 발급기관이 판정에 쓰는 기준일(RULE_EVAL_DATE). 지갑 사전 판정도 같은 날짜를 쓴다. */
+  bundle: { bundle: string; version: string; bundleHash: string; schemaHash: string; evalDate?: string };
   statusListId: string;
   ledgerConnected: boolean;
 }
@@ -150,6 +153,16 @@ export interface PresentResult {
   receipt: ReceiptData & { error?: string };
   verifiedAt: number;
   status?: 'done' | 'pending';
+  /** 검증기관이 vpJwt 로 계산한 4자리 확인 숫자 (지갑 계산값과 같아야 한다). */
+  confirmCode?: string;
+  /** 같은 요청에 대해 따로 기록된 다른 제출 수 (재사용·거부된 시도). */
+  otherAttempts?: number;
+}
+
+/** GET /results/{id} 를 X-Vp-Hash 로 조회했을 때, 아직 결과가 없으면. */
+export interface PendingResult {
+  requestId: string;
+  status: 'pending';
 }
 
 // ---------- AI API (범주값만) ----------
@@ -181,7 +194,10 @@ export interface RecommendResponse {
   recommendations: Recommendation[];
   disclaimer: string;
   provider: AiProvider;
-  judgedBy?: string;
+  /** 적격 판정의 출처 — 항상 규칙 엔진. */
+  eligibilitySource?: string;
+  /** 이 호출의 감사 기록 번호 (GET /audit/{auditId}). */
+  auditId?: string;
 }
 
 export interface ChatPayload {
@@ -195,6 +211,11 @@ export interface ChatCompleteResponse {
   sessionId: string;
   text: string;
   provider: AiProvider;
+  auditId?: string;
+  /** 주민등록번호·전화번호·계좌·금액을 가린 뒤 전달했으면 true. */
+  masked?: boolean;
+  eligibilitySource?: string;
+  notice?: string;
 }
 
 export interface AuditPayload {

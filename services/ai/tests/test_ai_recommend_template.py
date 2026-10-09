@@ -8,7 +8,8 @@ def test_persona_template_recommend(client, recommend_body, persona):
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["provider"] == "template"
-    assert body["judgedBy"] == "rule-engine"
+    assert body["judgedBy"] == "rule-engine" and body["eligibilitySource"] == "rule-engine"
+    assert body["auditId"]
     assert body["disclaimer"]
     items = body["recommendations"]
     assert len(items) == 3

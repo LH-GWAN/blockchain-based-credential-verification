@@ -18,6 +18,10 @@ chain/artifacts/
 chain/cache/
 chain/typechain-types/
 chain/deployments/localhost.json
+# make demo·smoke 가 배포할 때마다 다시 쓰는 로컬 산출물 (compose 는 named volume 에 쓴다).
+# 이미 추적 중이므로 효과를 보려면 한 번 `git rm --cached chain/deployments/latest.json chain/deployments/seed-summary.json`
+chain/deployments/latest.json
+chain/deployments/seed-summary.json
 chain/besu/data/
 apps/e2e/test-results/
 apps/e2e/playwright-report/
@@ -27,5 +31,3 @@ apps/e2e/playwright-report/
 .smoke/
 .demo/
 .besu-test/
-apps/e2e/test-results/
-apps/e2e/playwright-report/

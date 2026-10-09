@@ -1,20 +1,20 @@
 'use client';
 
 import { receiptHash } from '@dbp/vc';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Card, Collapsible, DetailTable, JsonView, LinkButton, Notice, SectionTitle, Spinner } from '@/components/ui';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Button, Card, Collapsible, DetailTable, JsonView, LinkButton, Notice, SectionTitle, Spinner } from '@/components/ui';
 import { useWallet } from '@/hooks/useWallet';
-import { issuerApi } from '@/lib/api';
 import { COPY } from '@/lib/copy';
 import { ENV } from '@/lib/env';
 import { formatDateTime, prettyJson, shortDid, shortHash } from '@/lib/format';
 import { readAnchoredAt } from '@/lib/ledger';
+import { resolveLedgerAddresses } from '@/lib/ledgerAddresses';
 import { getCachedBundle, getConsentReceipts, getPresentations } from '@/lib/store';
-import type { Bundle, ConsentReceiptRecord, LedgerDeployment, PresentationRecord, ReceiptData } from '@/lib/types';
+import type { Bundle, ConsentReceiptRecord, PresentationRecord, ReceiptData } from '@/lib/types';
 
 type AnchorState = { status: 'checking' } | { status: 'anchored'; at: number } | { status: 'none' } | { status: 'error'; message: string };
 
-/** 로컬 원문을 다시 해시해 저장된 해시와 대조 (§6.8). */
+/** 로컬 원문을 다시 해시해 저장된 해시와 대조 (§6.8). 원장 조회가 아니다 — 원장 기록은 '원장에서 확인' 으로 따로 본다 (F25). */
 function localMatch(r: ReceiptData): boolean {
   try {
     return receiptHash(r.object).toLowerCase() === r.hash.toLowerCase();
@@ -63,11 +63,14 @@ function receiptRows(obj: Record<string, unknown>, names: Record<string, string>
 function ReceiptLines({
   receipt,
   anchor,
+  onCheck,
   names,
   labels,
 }: {
   receipt: ReceiptData;
   anchor: AnchorState | undefined;
+  /** 이 영수증 하나만 원장에서 조회 (F40 — 동의·제출 영수증을 한 번에 조회하지 않는다). */
+  onCheck: () => void;
   /** DID → 기관 이름 (이 영수증의 상대 기관). */
   names: Record<string, string>;
   /** claim id → 한글 라벨 (동의 항목 표시용). */
@@ -85,10 +88,15 @@ function ReceiptLines({
         <span className="text-muted">{COPY.history.tx} </span>
         {receipt.txHash ? shortHash(receipt.txHash, 14, 8) : COPY.history.noTx}
       </p>
-      {anchor && anchor.status === 'checking' && <p className="text-muted">공동원장 확인 중…</p>}
-      {anchor && anchor.status === 'anchored' && <p className="text-ok">{COPY.history.anchored(formatDateTime(anchor.at))}</p>}
+      {anchor && anchor.status === 'checking' && <p className="text-muted">{COPY.history.checking}</p>}
+      {anchor && anchor.status === 'anchored' && <p className="font-semibold text-ok">{COPY.history.anchored(formatDateTime(anchor.at))}</p>}
       {anchor && anchor.status === 'none' && <p className="text-muted">{COPY.history.notAnchored}</p>}
       {anchor && anchor.status === 'error' && <p className="text-muted">{COPY.history.ledgerUnavailable}</p>}
+      {(!anchor || anchor.status === 'none' || anchor.status === 'error') && (
+        <Button variant="ghost" onClick={onCheck}>
+          {COPY.history.checkLedger}
+        </Button>
+      )}
       <Collapsible summary={COPY.history.receiptTitle}>
         <DetailTable caption={COPY.history.receiptTitle} rows={receiptRows(receipt.object, names, labels)} />
         <Collapsible summary={COPY.history.rawToggle}>
@@ -105,7 +113,6 @@ export default function HistoryPage() {
   const [presentations, setPresentations] = useState<PresentationRecord[]>([]);
   const [ready, setReady] = useState(false);
   const [anchors, setAnchors] = useState<Record<string, AnchorState>>({});
-  const [ledgerNote, setLedgerNote] = useState<string | null>(null);
   const [labels, setLabels] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -127,41 +134,23 @@ export default function HistoryPage() {
     })();
   }, [loading]);
 
-  const hashes = useMemo(
-    () => [...consents.map((c) => c.hash), ...presentations.map((p) => p.receipt?.hash).filter((h): h is string => !!h)],
-    [consents, presentations],
-  );
-
-  // P1: 원장 ReceiptAnchor.anchoredAt(hash) — 실패해도 화면은 유지
-  useEffect(() => {
-    if (!ready || hashes.length === 0) return;
-    let cancelled = false;
-    (async () => {
-      let deployment: LedgerDeployment;
-      try {
-        deployment = await issuerApi.ledgerDeployment(ENV.ISSUER_DAEGU_URL);
-      } catch {
-        if (!cancelled) setLedgerNote(COPY.history.ledgerUnavailable);
-        return;
-      }
-      setAnchors(Object.fromEntries(hashes.map((h) => [h, { status: 'checking' as const }])));
-      await Promise.all(
-        hashes.map(async (h) => {
-          let st: AnchorState;
-          try {
-            const r = await readAnchoredAt(deployment, ENV.RPC_URL, h);
-            st = r.anchoredAt > 0 ? { status: 'anchored', at: r.anchoredAt } : { status: 'none' };
-          } catch (e) {
-            st = { status: 'error', message: e instanceof Error ? e.message : String(e) };
-          }
-          if (!cancelled) setAnchors((a) => ({ ...a, [h]: st }));
-        }),
-      );
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [ready, hashes]);
+  /**
+   * 원장 ReceiptAnchor.anchoredAt(hash) — 누른 영수증 하나만 조회한다. 주소는 빌드 설정·단말 저장값을 먼저 쓰고,
+   * 둘 다 없을 때만 발급기관에 배포 정보를 묻는다. 실패해도 화면은 유지.
+   */
+  async function checkAnchor(hash: string) {
+    setAnchors((a) => ({ ...a, [hash]: { status: 'checking' } }));
+    let st: AnchorState;
+    try {
+      const addresses = (await resolveLedgerAddresses({ fetchFromIssuer: false })) ?? (await resolveLedgerAddresses({ fetchFromIssuer: true }));
+      if (!addresses?.ReceiptAnchor) throw new Error(COPY.history.ledgerUnavailable);
+      const r = await readAnchoredAt(addresses, ENV.RPC_URL, hash);
+      st = r.anchoredAt > 0 ? { status: 'anchored', at: r.anchoredAt } : { status: 'none' };
+    } catch (e) {
+      st = { status: 'error', message: e instanceof Error ? e.message : String(e) };
+    }
+    setAnchors((a) => ({ ...a, [hash]: st }));
+  }
 
   if (loading || !ready) return <Spinner label={COPY.common.loading} />;
   if (!wallet) {
@@ -177,8 +166,8 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-4">
-      <SectionTitle sub="원장에는 솔트 포함 해시만 있고, 원문은 이 휴대폰에만 있습니다.">{COPY.history.title}</SectionTitle>
-      {ledgerNote && <Notice kind="warn">{ledgerNote}</Notice>}
+      <SectionTitle sub={COPY.history.subtitle}>{COPY.history.title}</SectionTitle>
+      <p className="text-[0.85rem] text-muted">{COPY.history.lookupNote}</p>
 
       <h2 className="text-[1rem] font-bold text-muted">{COPY.history.presentations}</h2>
       {presentations.length === 0 && <p className="text-[0.9rem] text-muted">{COPY.history.empty}</p>}
@@ -199,12 +188,23 @@ export default function HistoryPage() {
           </p>
           <ul className="mt-1 text-[0.9rem]">
             {p.requested.map((r) => (
-              <li key={r.claim}>· {r.label ?? r.claim}</li>
+              <li key={r.claim}>· {labels[r.claim] ?? r.label ?? r.claim}</li>
             ))}
           </ul>
+          {p.confirmCode && (
+            <p className="mt-1 text-[0.85rem] text-muted">
+              {COPY.present.confirmLabel} {p.confirmCode}
+            </p>
+          )}
           {p.verdict === 'FAIL' && p.reasons.length > 0 && <p className="mt-1 text-[0.9rem] text-danger">{p.reasons.join(' / ')}</p>}
           {p.receipt ? (
-            <ReceiptLines receipt={p.receipt} anchor={anchors[p.receipt.hash]} names={{ [p.verifierDid]: p.verifierName }} labels={labels} />
+            <ReceiptLines
+              receipt={p.receipt}
+              anchor={anchors[p.receipt.hash]}
+              onCheck={() => void checkAnchor(p.receipt!.hash)}
+              names={{ [p.verifierDid]: p.verifierName }}
+              labels={labels}
+            />
           ) : (
             <p className="mt-2 text-[0.9rem] text-muted">영수증 없음</p>
           )}
@@ -218,7 +218,7 @@ export default function HistoryPage() {
           <p className="font-bold">{c.issuerName}</p>
           <p className="text-[0.85rem] text-muted">{formatDateTime(c.at)}</p>
           <p className="mt-1 text-[0.9rem]">동의 항목 {c.claims.length}개</p>
-          <ReceiptLines receipt={c} anchor={anchors[c.hash]} names={{ [c.issuerDid]: c.issuerName }} labels={labels} />
+          <ReceiptLines receipt={c} anchor={anchors[c.hash]} onCheck={() => void checkAnchor(c.hash)} names={{ [c.issuerDid]: c.issuerName }} labels={labels} />
         </Card>
       ))}
     </div>

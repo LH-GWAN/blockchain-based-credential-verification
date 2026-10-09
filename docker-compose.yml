@@ -2,8 +2,12 @@
 #   net-issuer  : issuer ↔ chain            (발급기관은 원장에만 닿는다)
 #   net-verifier: verifier ↔ chain          (검증기관은 원장에만 닿는다)
 #   net-egress  : ai → LLM API              (외부로 나가는 유일한 서비스)
-#   net-citizen : wallet / verifier-app     (정적 앱 컨테이너; 브라우저는 호스트 포트로 서비스에 접근한다)
-# 시민 브라우저는 published 포트(localhost:8001/8002/8003/8004)로 서비스에 닿으므로 컨테이너끼리 공유 네트워크가 필요 없다.
+#   net-citizen : wallet / verifier-app     (정적 앱 컨테이너)
+# 이 스택은 격리 시연 전용이다. chain·issuer·verifier 는 internal 네트워크에만 붙어 있어 Docker 가 ports 를 호스트에 열지 않는다
+# → 지갑 앱 컨테이너가 떠도 브라우저가 localhost:8001/8002/8003 에 닿지 못한다. 지갑으로 하는 시연은 `make demo` (호스트 프로세스).
+# ports 는 모두 127.0.0.1 에만 묶는다 — 체인 RPC 와 서비스가 같은 LAN 에 노출되지 않게 (거버넌스 키가 공개된 Hardhat 키 #0 이다).
+# 배포 주소(latest.json·seed-summary.json)는 named volume `deployments` 에만 쓴다 — 호스트 chain/deployments 를 덮어쓰지 않아
+# make demo 와 동시에 운용해도 로컬 시연 스택의 원장 주소가 바뀌지 않는다.
 # verifier 와 issuer 는 어떤 네트워크도 공유하지 않는다 → 발급기관 직접 조회 불가 (프롬프트 §2-5). `make demo-isolation` 이 이를 검사한다.
 # (초기 토폴로지는 wallet 용 net-citizen 을 issuer·verifier 가 함께 써서 실제로는 닿았다 — 프로브가 잡아내 수정, DECISIONS D-20)
 # 기본 체인은 Hardhat 노드. Besu QBFT 는 `docker compose --profile besu` (chain/besu 참고).
@@ -17,8 +21,11 @@ x-python-base: &python-base
     RPC_URL: http://chain:8545
     DEPLOYMENT_FILE: /app/chain/deployments/latest.json
     RULE_EVAL_DATE: "2026-09-14"
+    # 서비스 기본 바인딩은 127.0.0.1 — 컨테이너 안에서는 다른 컨테이너·포트 매핑이 닿도록 0.0.0.0
+    HOST: 0.0.0.0
+    ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001
   volumes:
-    - ./chain/deployments:/app/chain/deployments:ro
+    - deployments:/app/chain/deployments:ro
 
 services:
   chain:
@@ -26,7 +33,7 @@ services:
       context: .
       dockerfile: docker/chain.Dockerfile
     command: ["pnpm", "--config.verify-deps-before-run=false", "--filter", "@dbp/chain", "exec", "hardhat", "node", "--hostname", "0.0.0.0", "--port", "8545"]
-    ports: ["8545:8545"]
+    ports: ["127.0.0.1:8545:8545"]
     networks: [net-issuer, net-verifier, net-ops]
     healthcheck:
       test: ["CMD-SHELL", "curl -sf -X POST -H 'content-type: application/json' --data '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_chainId\",\"params\":[]}' http://localhost:8545 >/dev/null"]
@@ -42,7 +49,7 @@ services:
     environment:
       RPC_URL: http://chain:8545
     volumes:
-      - ./chain/deployments:/app/chain/deployments
+      - deployments:/app/chain/deployments   # 호스트의 chain/deployments(make demo 용)를 건드리지 않는다
     depends_on:
       chain: { condition: service_healthy }
     networks: [net-ops]
@@ -55,10 +62,11 @@ services:
       ISSUER_ID: daegu
       ISSUER_PORT: "8001"
       ISSUER_DB_PATH: /data/issuer-daegu.db
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}   # 비어 있으면 /admin/* 은 컨테이너 루프백 요청만 허용
     volumes:
-      - ./chain/deployments:/app/chain/deployments:ro
+      - deployments:/app/chain/deployments:ro
       - issuer-daegu-data:/data
-    ports: ["8001:8001"]
+    ports: ["127.0.0.1:8001:8001"]
     depends_on:
       deployer: { condition: service_completed_successfully }
     networks: [net-issuer]
@@ -71,10 +79,11 @@ services:
       ISSUER_ID: welfare
       ISSUER_PORT: "8003"
       ISSUER_DB_PATH: /data/issuer-welfare.db
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}   # 비어 있으면 /admin/* 은 컨테이너 루프백 요청만 허용
     volumes:
-      - ./chain/deployments:/app/chain/deployments:ro
+      - deployments:/app/chain/deployments:ro
       - issuer-welfare-data:/data
-    ports: ["8003:8003"]
+    ports: ["127.0.0.1:8003:8003"]
     depends_on:
       deployer: { condition: service_completed_successfully }
     networks: [net-issuer]
@@ -86,7 +95,7 @@ services:
       <<: *python-env
       VERIFIER_PORT: "8002"
       VERIFIER_PUBLIC_URL: http://localhost:8002
-    ports: ["8002:8002"]
+    ports: ["127.0.0.1:8002:8002"]
     depends_on:
       deployer: { condition: service_completed_successfully }
     networks: [net-verifier]   # ← 발급기관과 공유하는 네트워크가 없다: 원장(chain)에만 닿는다
@@ -96,11 +105,13 @@ services:
     command: ["uv", "run", "python", "-m", "dbp_ai"]
     environment:
       AI_PORT: "8004"
+      HOST: 0.0.0.0
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       LLM_MODEL: ${LLM_MODEL:-claude-opus-5}
       LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
     volumes: []
-    ports: ["8004:8004"]
+    ports: ["127.0.0.1:8004:8004"]
     networks: [net-egress]     # LLM API 만 외부로; 원장·발급기관에는 닿지 않는다
 
   wallet:
@@ -114,7 +125,7 @@ services:
       NEXT_PUBLIC_VERIFIER_URL: http://localhost:8002
       NEXT_PUBLIC_AI_URL: http://localhost:8004
       NEXT_PUBLIC_RPC_URL: http://localhost:8545
-    ports: ["3000:3000"]
+    ports: ["127.0.0.1:3000:3000"]
     networks: [net-citizen]
 
   verifier-app:
@@ -125,7 +136,7 @@ services:
     environment:
       NEXT_PUBLIC_VERIFIER_URL: http://localhost:8002
       NEXT_PUBLIC_RPC_URL: http://localhost:8545
-    ports: ["3001:3000"]
+    ports: ["127.0.0.1:3001:3000"]
     networks: [net-citizen]
 
 networks:
@@ -136,5 +147,6 @@ networks:
   net-egress: {}
 
 volumes:
+  deployments: {}
   issuer-daegu-data: {}
   issuer-welfare-data: {}

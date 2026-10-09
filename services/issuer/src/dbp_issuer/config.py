@@ -15,6 +15,15 @@ DEFAULT_EVM_KEYS = {
     "daegu": "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d",   # hardhat #1
     "welfare": "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a",  # hardhat #2
 }
+# 브라우저에서 발급기관을 부르는 화면(지갑·검증기관 앱)의 기본 출처. ALLOWED_ORIGINS(쉼표 구분)로 덮어쓴다.
+DEFAULT_ALLOWED_ORIGINS = ",".join(
+    f"http://{h}:{p}" for h in ("localhost", "127.0.0.1") for p in (3000, 3001, 3010, 3011)
+)
+
+
+def _origins_from_env() -> list[str]:
+    raw = os.environ.get("ALLOWED_ORIGINS") or DEFAULT_ALLOWED_ORIGINS  # 빈 값도 기본값 (빈 목록이면 CORS 가 전부 막힌다)
+    return [o.strip() for o in raw.split(",") if o.strip()]
 
 
 def deterministic_seed(issuer_id: str) -> bytes:
@@ -26,6 +35,11 @@ def deterministic_seed(issuer_id: str) -> bytes:
 class Settings:
     issuer_id: str = field(default_factory=lambda: os.environ.get("ISSUER_ID", "daegu"))
     port: int = field(default_factory=lambda: int(os.environ.get("ISSUER_PORT", "8001")))
+    # 기본은 루프백만 — compose 는 HOST=0.0.0.0 을 준다 (F10)
+    host: str = field(default_factory=lambda: os.environ.get("HOST") or "127.0.0.1")
+    allowed_origins: list[str] = field(default_factory=_origins_from_env)
+    # 설정되면 /admin/* 은 X-Admin-Token 헤더가 같아야 하고, 비어 있으면 루프백 요청만 받는다 (F10)
+    admin_token: str = field(default_factory=lambda: os.environ.get("ADMIN_TOKEN", ""))
     db_path: str = field(default_factory=lambda: os.environ.get("ISSUER_DB_PATH", ""))
     evm_private_key: str = field(default_factory=lambda: os.environ.get("ISSUER_EVM_PRIVATE_KEY", ""))
     ed25519_seed_hex: str = field(default_factory=lambda: os.environ.get("ISSUER_ED25519_SEED", ""))
@@ -33,7 +47,7 @@ class Settings:
     ledger_optional: bool = field(default_factory=lambda: os.environ.get("LEDGER_OPTIONAL", "0") == "1")
     bundle: str = "daegu-eligibility"
     version: str = "2026.2"
-    vc_valid_days: int = 365
+    vc_valid_days: int = 365  # 실제 만료는 min(발급일+365일, 번들 기준 중위소득 연도 말일 KST) — 고시 연동 (F43)
 
     def __post_init__(self) -> None:
         if self.issuer_id not in ISSUER_NAMES:

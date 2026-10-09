@@ -33,15 +33,24 @@ export type PresentationRequest = {
   exp: number; // unix seconds
   responseUri: string;
   qrText: string;
+  /**
+   * 창구 토큰 — POST /requests 응답에만 있다(QR·qrText·GET /requests 에는 없음). GET /results 에 X-Counter-Token 으로 보내야
+   * 결과를 볼 수 있다 (F03). 이전 버전 서버에는 없을 수 있다.
+   */
+  counterToken?: string;
 };
 
 export type Verdict = "PASS" | "FAIL";
 
+/** 검증 단계 11개 (verify.py out.checks). 발급기관 활성·증명서 유효기간·발급 권한까지 화면에 따로 보인다 (F32). */
 export const CHECK_KEYS = [
   "nonce",
   "vpSignature",
   "issuerOnLedger",
+  "issuerActive",
+  "issuerAuthoritative",
   "vcSignature",
+  "notExpired",
   "notRevoked",
   "ruleVersion",
   "holderBinding",
@@ -100,9 +109,15 @@ export type VerificationResult = {
   credentials: CredentialInfo[];
   checks: Checks;
   timingsMs: TimingsMs;
-  holderDidShort: string;
+  /** 제출 지갑 DID 앞부분. 서버가 빼면 화면은 "—" 로 둔다. */
+  holderDidShort?: string;
   receipt: Receipt;
   verifiedAt: number;
+  /** sha256(vpJwt) 앞 8자리(16진) → 10진 % 10000, 4자리. 지갑도 같은 값을 계산해 보여 준다 (F39). */
+  confirmCode?: string;
+  /** 같은 요청에 따로 기록된 다른 제출 시도 수(재사용·거부된 제출, F08). */
+  otherAttempts?: number;
+  /** PASS 일 때만 온다 — FAIL 이면 서버가 policyCheck 를 넣지 않는다 (F09). */
   policyCheck?: PolicyCheck;
   comparison?: Comparison;
 };
@@ -123,11 +138,15 @@ export type Comparison = {
   honestyNote: string;
 };
 
-export type PendingResult = { status: "pending"; requestId: string; exp: number };
+/** exp 는 창구 토큰으로 조회했을 때만 온다(제출 해시로 조회한 지갑에는 없음). */
+export type PendingResult = { status: "pending"; requestId: string; exp?: number };
 export type DoneResult = VerificationResult & { status: "done" };
 export type ResultResponse = PendingResult | DoneResult;
 
 export type Health = { ok: boolean; ledgerConnected: boolean };
+
+/** POST /demo/attack 응답: 저장된 결과 + 결과 키. */
+export type AttackResult = VerificationResult & { resultId?: string };
 
 export const ATTACK_KINDS = ["replay", "expired", "forged", "wrong-holder"] as const;
 export type AttackKind = (typeof ATTACK_KINDS)[number];

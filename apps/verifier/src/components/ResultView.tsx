@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { api, isApiError, isUnreachable } from "@/lib/api";
 import { ERRORS, RESULT } from "@/lib/copy";
+import { loadCounterToken } from "@/lib/counter-token";
 import { formatCountdown, remainingSeconds } from "@/lib/format";
 import type { VerificationResult } from "@/lib/types";
 import {
@@ -15,6 +16,7 @@ import {
   PolicyCheckCard,
   ReasonsPanel,
   ReceiptPanel,
+  SubmissionCheck,
   TimingPanel,
   VerdictBanner,
 } from "./ResultParts";
@@ -27,11 +29,25 @@ type State =
   | { kind: "loading" }
   | { kind: "down" }
   | { kind: "unknown" }
-  | { kind: "pending"; exp: number }
+  | { kind: "forbidden" }
+  | { kind: "pending"; exp: number | null }
   | { kind: "done"; result: VerificationResult };
 
-/** 화면 2: 결과. pending 이면 1초 폴링, done 이후에도 txHash 가 생길 때까지 최대 30초 폴링. */
-export function ResultView({ requestId }: { requestId: string }) {
+/** 라우트 파라미터가 인코딩된 채로 올 수 있다("rid%23replay-…"). 이미 풀려 있으면 그대로. */
+function decodeParam(id: string): string {
+  try {
+    return decodeURIComponent(id);
+  } catch {
+    return id;
+  }
+}
+
+/**
+ * 화면 2: 결과. pending 이면 1초 폴링, done 이후에도 txHash 가 생길 때까지 최대 30초 폴링.
+ * 결과 조회에는 요청을 만들 때 받은 창구 토큰이 필요하다(F03) — 없거나 다르면 '권한 없음'.
+ */
+export function ResultView({ requestId: rawId }: { requestId: string }) {
+  const requestId = decodeParam(rawId);
   const [state, setState] = useState<State>({ kind: "loading" });
   const [txTimedOut, setTxTimedOut] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -45,10 +61,10 @@ export function ResultView({ requestId }: { requestId: string }) {
     };
     const tick = async () => {
       try {
-        const r = await api.getResult(requestId);
+        const r = await api.getResult(requestId, loadCounterToken(requestId));
         if (!alive) return;
         if (r.status === "pending") {
-          setState({ kind: "pending", exp: r.exp });
+          setState({ kind: "pending", exp: r.exp ?? null });
           schedule();
           return;
         }
@@ -62,6 +78,10 @@ export function ResultView({ requestId }: { requestId: string }) {
         if (!alive) return;
         if (isApiError(e, 404)) {
           setState({ kind: "unknown" });
+          return;
+        }
+        if (isApiError(e, 401) || isApiError(e, 403)) {
+          setState({ kind: "forbidden" });
           return;
         }
         if (isUnreachable(e)) setState((prev) => (prev.kind === "done" ? prev : { kind: "down" }));
@@ -100,9 +120,20 @@ export function ResultView({ requestId }: { requestId: string }) {
       </div>
     );
   }
+  if (state.kind === "forbidden") {
+    return (
+      <div className="card" role="alert">
+        <h1 className="text-2xl font-bold">{ERRORS.resultForbidden}</h1>
+        <p className="mt-2 text-muted">{ERRORS.resultForbiddenHint}</p>
+        <Link href="/" className="btn btn-primary mt-4">
+          {RESULT.newRequest}
+        </Link>
+      </div>
+    );
+  }
   if (state.kind === "pending") {
-    const remaining = remainingSeconds(state.exp, now);
-    const expired = remaining <= 0;
+    const remaining = state.exp === null ? null : remainingSeconds(state.exp, now);
+    const expired = remaining !== null && remaining <= 0;
     return (
       <div className="card flex flex-col items-start gap-3" aria-live="polite">
         <p className="kicker">2/3</p>
@@ -110,7 +141,7 @@ export function ResultView({ requestId }: { requestId: string }) {
         {!expired && (
           <>
             <p className="text-muted">{RESULT.pendingHint}</p>
-            <p className="mono text-2xl text-accent">{formatCountdown(remaining)}</p>
+            {remaining !== null && <p className="mono text-2xl text-accent">{formatCountdown(remaining)}</p>}
           </>
         )}
         <p className="mono text-sm text-muted">{requestId}</p>
@@ -121,14 +152,21 @@ export function ResultView({ requestId }: { requestId: string }) {
     );
   }
 
-  const { result } = state;
+  return <ResultDetails result={state.result} txTimedOut={txTimedOut} />;
+}
+
+/** 완료된 결과 화면 본문(상태 없음 — test/result-parts.test.tsx 가 렌더해 확인한다). */
+export function ResultDetails({ result, txTimedOut }: { result: VerificationResult; txTimedOut: boolean }) {
+  // 정책 판정·'실제로 받은 것' 비교는 PASS 일 때만 — FAIL 화면에 초록 '적격'·'받은 것 ✓'가 섞이지 않게 (F09).
+  const pass = result.verdict === "PASS";
   return (
     <div className="flex flex-col gap-6">
       <p className="kicker">2/3 · 결과</p>
       <VerdictBanner result={result} />
+      <SubmissionCheck result={result} />
       <DataNote result={result} />
-      <PolicyCheckCard result={result} />
-      <ComparisonPanel result={result} />
+      {pass && <PolicyCheckCard result={result} />}
+      {pass && <ComparisonPanel result={result} />}
       <div className="grid gap-6 lg:grid-cols-2">
         <ClaimsTable result={result} />
         <TimingPanel result={result} />

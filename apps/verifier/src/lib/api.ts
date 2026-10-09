@@ -5,12 +5,12 @@
  */
 import type {
   AttackKind,
+  AttackResult,
   ClaimDef,
   Health,
   PresentationRequest,
   Preset,
   ResultResponse,
-  VerificationResult,
   VerifierProfile,
 } from "./types";
 
@@ -46,14 +46,19 @@ export function isApiError(e: unknown, status?: number): e is ApiError {
 
 type Json = Record<string, unknown> | unknown[];
 
-async function call<T>(path: string, init: { method?: "GET" | "POST"; body?: Json; timeoutMs?: number } = {}): Promise<T> {
+async function call<T>(
+  path: string,
+  init: { method?: "GET" | "POST"; body?: Json; timeoutMs?: number; headers?: Record<string, string> } = {},
+): Promise<T> {
   const { method = "GET", body, timeoutMs = 8000 } = init;
+  const headers: Record<string, string> = { ...init.headers };
+  if (body !== undefined) headers["content-type"] = "application/json";
   let res: Response;
   try {
     res = await fetch(`${VERIFIER_URL}${path}`, {
       method,
       cache: "no-store",
-      headers: body === undefined ? undefined : { "content-type": "application/json" },
+      headers: Object.keys(headers).length ? headers : undefined,
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: AbortSignal.timeout(timeoutMs),
     });
@@ -95,15 +100,22 @@ export const api = {
   /** GET /presets → 용도 프리셋 목록. 실패하면 화면은 copy.ts 의 내장 사본을 쓴다. */
   presets: () => call<Preset[]>("/presets"),
 
-  /** POST /requests → QR 페이로드(+ qrText) */
+  /** POST /requests → QR 페이로드(+ qrText, 창구 토큰 counterToken) */
   createRequest: (body: CreateRequestBody) => call<PresentationRequest>("/requests", { method: "POST", body }),
 
-  /** GET /requests/{id|shortCode} */
-  getRequest: (idOrCode: string) => call<Omit<PresentationRequest, "qrText">>(`/requests/${encodeURIComponent(idOrCode)}`),
+  /** GET /requests/{id|shortCode} — 만료·사용된 요청은 404. 창구 토큰은 돌려주지 않는다. */
+  getRequest: (idOrCode: string) =>
+    call<Omit<PresentationRequest, "qrText" | "counterToken">>(`/requests/${encodeURIComponent(idOrCode)}`),
 
-  /** GET /results/{requestId} → pending | done */
-  getResult: (requestId: string) => call<ResultResponse>(`/results/${encodeURIComponent(requestId)}`),
+  /**
+   * GET /results/{requestId} → pending | done. 창구 토큰을 X-Counter-Token 으로 보낸다
+   * (없으면 401 RESULT_AUTH_REQUIRED, 틀리면 403 RESULT_FORBIDDEN).
+   */
+  getResult: (requestId: string, counterToken?: string | null) =>
+    call<ResultResponse>(`/results/${encodeURIComponent(requestId)}`, {
+      headers: counterToken ? { "X-Counter-Token": counterToken } : undefined,
+    }),
 
   /** POST /demo/attack → 차단 결과 (409 = 정상 제출 이력 없음) */
-  attack: (kind: AttackKind) => call<VerificationResult>("/demo/attack", { method: "POST", body: { kind } }),
+  attack: (kind: AttackKind) => call<AttackResult>("/demo/attack", { method: "POST", body: { kind } }),
 };

@@ -27,10 +27,18 @@ const MESSAGES: Record<string, string> = {
   CITIZEN_UNKNOWN: '발급기관에 등록되지 않은 시민 식별자입니다.',
   CLAIM_NOT_ISSUED_HERE: '이 발급기관이 발급하지 않는 항목이 포함되어 있습니다.',
   DEPLOYMENT_UNAVAILABLE: '공동원장 배포 정보를 찾을 수 없습니다.',
+  CLAIMS_INVALID: '요청한 증명서 항목이 비어 있거나 중복되었습니다.',
+  STATUS_LIST_FULL: '발급기관의 상태 목록이 가득 차 지금은 발급할 수 없습니다.',
   // 검증기관
-  REQUEST_UNKNOWN: '해당 코드의 요청을 찾을 수 없습니다. 코드를 다시 확인해 주세요.',
+  REQUEST_UNKNOWN: '해당 코드의 요청을 찾을 수 없습니다. 만료되었거나 이미 사용된 코드일 수 있습니다. 기관 화면의 코드를 다시 확인해 주세요.',
+  REQUESTED_INVALID: '요청 항목이 올바르지 않습니다.',
+  TOO_MANY_LOOKUPS: '확인번호 조회가 너무 많습니다 — 잠시 후 다시 시도하세요.',
+  RESULT_AUTH_REQUIRED: '이 결과를 볼 권한이 없습니다.',
+  RESULT_FORBIDDEN: '이 결과를 볼 권한이 없습니다.',
   VERIFIER_UNKNOWN: '알 수 없는 검증기관입니다.',
   NO_PRIOR_SUCCESSFUL_PRESENTATION: '아직 성공한 제출이 없습니다.',
+  // AI
+  USE_AUDIT_ID: 'AI 호출 기록은 호출마다 받은 기록 번호로만 볼 수 있습니다.',
 };
 
 /** 검증 거부 사유 코드 → 한국어 (검증 서비스가 reasons 를 주지 않을 때의 예비). */
@@ -53,6 +61,11 @@ export const REASON_KO: Record<string, string> = {
   CLAIM_MISSING: '요청한 항목의 증명서가 없습니다',
   CLAIM_FALSE: '요청한 항목이 충족되지 않았습니다',
   VP_MALFORMED: '제출 형식이 올바르지 않습니다',
+  ISSUER_NOT_AUTHORITATIVE: '이 항목을 발급할 권한이 없는 기관의 증명서입니다',
+  UNREQUESTED_CREDENTIAL: '요청하지 않은 증명서가 함께 제출되었습니다',
+  LEDGER_UNAVAILABLE: '공동원장에 연결할 수 없습니다 — 잠시 후 다시 시도하세요',
+  RULE_VERSION_NOT_ACCEPTED: '이 창구가 받지 않는 규칙 버전입니다',
+  STATUS_LIST_OWNER_MISMATCH: '상태 목록 게시자가 발급기관과 다릅니다',
 };
 
 export function messageForCode(code: string, fallback?: string): string {

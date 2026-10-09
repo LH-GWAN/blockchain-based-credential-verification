@@ -4,15 +4,25 @@ import Link from "next/link";
 import { useState } from "react";
 import { api, isApiError, isUnreachable } from "@/lib/api";
 import { ATTACK, ERRORS } from "@/lib/copy";
-import { ATTACK_KINDS, type AttackKind, type VerificationResult } from "@/lib/types";
+import { attackOutcome, type AttackOutcome } from "@/lib/format";
+import { ATTACK_KINDS, type AttackKind, type AttackResult } from "@/lib/types";
 import { ChecksList, ReasonsPanel, TimingPanel, VerdictBanner } from "./ResultParts";
 import { ServiceUnavailable } from "./ServiceUnavailable";
 
-type Cell = { kind: "idle" } | { kind: "running" } | { kind: "done"; result: VerificationResult } | { kind: "error"; code: string };
+type Cell = { kind: "idle" } | { kind: "running" } | { kind: "done"; result: AttackResult } | { kind: "error"; code: string };
 
 const ICONS: Record<AttackKind, string> = { replay: "🔁", expired: "⏰", forged: "✂️", "wrong-holder": "🎭" };
 
-/** 화면 3: 공격 시연. 버튼 4개 → POST /demo/attack → 차단 결과를 축약 카드로 표시. */
+const OUTCOME_TONE: Record<AttackOutcome, string> = {
+  blocked: "bg-fail-soft text-fail",
+  "other-reason": "bg-warn-soft text-warn",
+  "not-blocked": "bg-warn-soft text-warn",
+};
+
+/**
+ * 화면 3: 공격 시연. 버튼 4개 → POST /demo/attack → 차단 결과를 축약 카드로 표시.
+ * '차단됨'은 FAIL 이면서 그 공격의 예상 사유 코드가 있을 때만 표시한다 (F29). E2E 는 data-testid 로 카드·결과 블록을 집는다 (F26).
+ */
 export function AttackPanel() {
   const [cells, setCells] = useState<Record<AttackKind, Cell>>({
     replay: { kind: "idle" },
@@ -70,7 +80,7 @@ export function AttackPanel() {
           const cell = cells[kind];
           const running = cell.kind === "running";
           return (
-            <section key={kind} className="card flex flex-col gap-4">
+            <section key={kind} className="card flex flex-col gap-4" data-testid={`attack-card-${kind}`}>
               <button
                 type="button"
                 className={`btn btn-xl w-full justify-start gap-4 text-left ${cell.kind === "done" ? "btn-secondary" : "btn-primary"}`}
@@ -102,18 +112,9 @@ export function AttackPanel() {
               )}
 
               {cell.kind === "done" && (
-                <div className="flex flex-col gap-4 border-t border-line pt-4">
+                <div className="flex flex-col gap-4 border-t border-line pt-4" data-testid={`attack-result-${kind}`}>
                   <VerdictBanner result={cell.result} compact />
-                  <p
-                    className={`rounded-xl px-4 py-2 text-lg font-semibold ${
-                      cell.result.verdict === "FAIL" ? "bg-fail-soft text-fail" : "bg-warn-soft text-warn"
-                    }`}
-                  >
-                    {cell.result.verdict === "FAIL" ? `⛔ ${ATTACK.blocked}` : ATTACK.notBlocked}
-                    {cell.result.reasonCodes.includes(meta.expected) && (
-                      <span className="ml-2 text-base font-normal">· {meta.expected} 확인</span>
-                    )}
-                  </p>
+                  <AttackVerdict outcome={attackOutcome(cell.result, meta.expected)} expected={meta.expected} />
                   <ReasonsPanel result={cell.result} compact />
                   <TimingPanel result={cell.result} compact />
                   <details>
@@ -129,5 +130,23 @@ export function AttackPanel() {
         })}
       </div>
     </div>
+  );
+}
+
+/** 공격 결과 한 줄: 차단됨(+예상 코드 확인) · 다른 사유로 거부 · 차단되지 않음. */
+export function AttackVerdict({ outcome, expected }: { outcome: AttackOutcome; expected: string }) {
+  return (
+    <p className={`rounded-xl px-4 py-2 text-lg font-semibold ${OUTCOME_TONE[outcome]}`} data-outcome={outcome}>
+      {outcome === "blocked" ? (
+        <>
+          ⛔ {ATTACK.blocked}
+          <span className="ml-2 text-base font-normal">{ATTACK.confirmed(expected)}</span>
+        </>
+      ) : outcome === "other-reason" ? (
+        ATTACK.otherReason(expected)
+      ) : (
+        ATTACK.notBlocked
+      )}
+    </p>
   );
 }

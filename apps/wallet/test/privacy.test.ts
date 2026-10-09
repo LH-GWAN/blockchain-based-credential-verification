@@ -114,4 +114,16 @@ describe('네트워크 호출은 api.ts 한 곳으로만', () => {
     // fetch 호출 수 = getJson/postJson 공용 request 1 + 스트리밍 1
     expect((src.match(/\bfetch\s*\(/g) ?? []).length).toBe(2);
   });
+  it('DELETE 는 AI 상담 세션 삭제 하나뿐이고 본문이 없다 (F20)', () => {
+    const src = readFileSync(API, 'utf-8');
+    const deletes = [...src.matchAll(/request<[^>]*>\(\s*`([^`]*)`,\s*\{([^}]*)\}/g)].filter((m) => /method:\s*'DELETE'/.test(m[2] as string));
+    expect(deletes.map((m) => (m[1] as string).replace(/\$\{[^}]+\}/g, '*'))).toEqual(['*/chat/*']);
+    expect(deletes[0]![2]).not.toContain('body');
+  });
+
+  it('AI 감사 기록은 기록 번호로만 본다 — 프로세스 전체의 마지막 호출(last-payload)을 부르지 않는다 (F12)', () => {
+    const files = walk(SRC);
+    const offenders = files.filter((f) => readFileSync(f, 'utf-8').includes('last-payload'));
+    expect(offenders).toEqual([]);
+  });
 });

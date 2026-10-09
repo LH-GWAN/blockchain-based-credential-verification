@@ -57,6 +57,7 @@
 ## D-12 검증기관: 같은 요청에 대한 두 번째 제출·공격 시연 결과는 별도 키로 저장
 - 무엇: 원래 요청의 PASS 결과는 유지되고, 재사용·만료 공격은 `requestId#attack-…` 키로 기록된다.
 - 왜: 공격 시연 뒤에도 결과 화면이 그대로 남아야 발표 흐름이 끊기지 않는다.
+- (2026-10-09 주) 공격 시연이 아닌 일반 제출도 같은 원칙을 따른다. nonce 를 소모하지 못한 제출(서명 오류·다른 aud·알 수 없는/만료/사용된 nonce)은 `requestId#rejected-…`, 이미 결과가 있는 요청에 nonce 를 소모한 제출은 `requestId#replay-…` 로 저장해 원래 요청의 결과 자리를 차지하지 못하게 했다. 만료 공격은 원래 요청의 만료·사용 상태를 바꾸지 않는다(D-23).
 
 ## D-13 개발용 앱 포트: 3000 이 사용 중이면 지갑을 3010 으로
 - 무엇: `scripts/demo.sh` 가 포트 점유를 감지해 지갑 3000→3010, 검증기관 3001→3011 로 옮긴다. 이 머신은 3000 을 다른 프로젝트가 쓰고 있었다.
@@ -91,6 +92,7 @@
 - 무엇: `data/legacy-documents.json`(소득금액증명·주민등록표 등본·수급자증명서의 서식 항목과 출처, claim→서류 매핑) → `scripts/pii_items.py` 가 프리셋별 조회형 항목 수·보유형 항목 수·감소율을 계산하고 예시 VP 로 보유형 항목 수를 실측해 `data/comparison.json` 을 만든다. 검증 서비스는 같은 함수(`dbp_verifier.comparison.build_comparison`)로 검증 결과마다 `comparison` 블록을 붙이고, 앱은 그 값만 표시한다.
 - 왜: 프리셋이 늘어도 화면이 자동으로 따라오고, "실제 API 호출 결과가 아니라 서식 기준 비교"라는 정직성 표기를 데이터에 같이 담기 위해.
 - 결과: 햇살론뱅크·새희망홀씨 10→1 (90%), 서민금융 상담 13→2 (85%), 공공요금 감면 13→1 (92%). 종전 "10개 항목 기준 80%" 지표는 이 계산으로 대체했다.
+- (2026-10-09 주) 예시 VP 로 센 보유형 항목 수는 요청 claim 마다 VC 를 만들어 세므로 항상 요청 항목 수와 같다. '실측'이 아니라 '예시 VP 구성 확인'으로 표현을 바꿨다(F46). 보유형 숫자는 사실 항목 수이고 증명서 메타데이터는 세지 않는다(D-23 한계). 비교 패널의 보유형 '남는 기록'은 '없음'에서 '원장에 제출 영수증의 솔트 해시 1건(검증기관 주소·시각)…'으로 고쳤고(F13), 공공요금 감면 프리셋 안내문은 계산 기준과 같은 서류(소득금액증명·주민등록표 등본)를 적는다(F48).
 - (2026-10-09 주) 프리셋 키가 `sunshine-bank` → `sunshine-general`(햇살론 일반보증)로 바뀌었고, 새희망홀씨는 연소득 4,000만 원 1항목을 받는다. 두 프리셋 모두 소득금액증명 10항목 → 1 (90%)로 숫자는 그대로다(D-21).
 - (2026-10-09 주) 신용 하위 20% 고객용 프리셋 2종(연소득 4,500만·5,000만 원 1항목)도 10 → 1 (90%)이다. 6개 프리셋 모두 85% 이상(D-22).
 
@@ -123,3 +125,52 @@
   - **번들 버전은 2026.2 그대로, 해시만 바뀜**: `daegu-eligibility@2026.2` 해시 `0xb1eb8e28…f102`(D-21) → **`0xb24ad5f2…d94e`**. 2026.2 는 D-21 당일 만들어 매번 새로 띄우는 로컬 Hardhat 체인에만 등록했고 지속되는 원장에 올린 적이 없어, 2026.3 을 따로 만들지 않고 같은 버전에 합쳤다. 이전 해시로 발급된 증명서는 새 원장에서 `RULE_HASH_MISMATCH` 가 되므로 리허설 전에 지갑을 초기화한다.
 - 왜: 심사위원이 고시표·한전 약관과 대조하면 바로 반증되는 데이터 오류였고(어르신 페르소나를 고르면 전기요금 '적격'인데 요구 증명서는 발급받을 수 없고, 실제 대상인 통신요금은 '부적격'으로 숨겨졌다), OR 분기로 적격이 된 시민(예: 신용 하위 20%이면서 연소득 4,500만 원 이하)은 지갑에서 '적격'인데 창구에 낼 증명서가 없었다. 단일 분기만 적은 `requiredClaims` 와 미제출 항목을 거짓으로 채우는 `policyCheck` 는 규칙식과 증명 경로가 따로 노는 구조적 원인이었다. 혜택패스가 증명하는 것은 소득·자격 사실뿐이고, 신용평점·재직·보증 심사용 소득 증빙은 여전히 창구가 확인한다.
 - 실서비스: 지속 원장에 한 번이라도 등록된 버전은 D-03 대로 버전을 올려 새로 등록한다(이번 예외는 등록 이력이 없는 버전에만 해당). 기준 중위소득·기초연금 선정기준액 같은 연도별 고시값은 고시표 원문 값을 하드코딩한 대조 테스트로 고정하고, 7인 이상 가구는 고시 산정식을 전처리에 넣는다. 정책 문서의 증명 조합은 규칙식에서 자동 도출해 둘이 어긋나지 않게 검사한다.
+
+## D-23 (2026-10-09) 코드 리뷰 3~6순위 반영 — 공개 API 보호·검증 엄격화·시연 견고성
+- 무엇:
+  - **공통 실행 설정**: 발급기관·검증·AI 서비스는 `HOST`(기본 `127.0.0.1`, compose 는 `0.0.0.0`)에 바인딩하고, CORS 허용 출처를 `ALLOWED_ORIGINS`(쉼표 구분, 기본 localhost·127.0.0.1 의 3000·3001·3010·3011)에서 읽는다. 새 응답 헤더(`X-Audit-Id`)는 `expose_headers` 에 넣는다.
+  - **검증기관 결과 보호 (F03·F08)**:
+    - `POST /requests` 응답에 창구 토큰 `counterToken`(`secrets.token_hex(16)`)을 더했다. QR 페이로드·`qrText`·`GET /requests/{code}` 에는 들어가지 않는다. 검증기관 앱은 `sessionStorage` 의 `dbp-counter-token:<requestId>` 에 보관한다.
+    - `GET /results/{id}` 는 `X-Counter-Token`(그 요청의 창구 토큰) 또는 `X-Vp-Hash`(저장된 결과의 `receipt.object.vpHash`, 즉 `"0x" + sha256(vpJwt)`)가 맞아야 응답한다. 헤더가 없으면 401 `RESULT_AUTH_REQUIRED`, 틀리면 403 `RESULT_FORBIDDEN`, 모르는 id 는 404. 결과가 아직 없으면 `{requestId, status: "pending"}`(창구 토큰이면 `exp` 포함). `rid#…` 결과는 기본 요청의 창구 토큰으로 본다.
+    - `GET /requests/{id_or_code}` 는 모르는·만료된·이미 사용된 요청에 404 `REQUEST_UNKNOWN`. 같은 IP 에서 60초 안에 404 로 끝난 조회가 20회를 넘으면 429 `TOO_MANY_LOOKUPS`(성공한 조회는 세지 않는다). 6자리 코드→요청 연결은 nonce 가 소모되거나 요청이 만료되면 지운다.
+    - `POST /present` 순서: 파싱(형식 오류는 전부 `VP_MALFORMED`, 500 없음, F37) → VP 서명 → aud → **그 다음에** nonce 소모. 서명과 aud 가 맞는 VP 만 nonce 를 소모할 수 있고, 재사용·만료 판정은 '사용됨'을 '만료'보다 먼저 본다. 저장(잠금 안): nonce 를 소모한 제출(PASS, 또는 REVOKED 같은 FAIL)은 `results[rid]`(이미 있으면 `rid#replay-xxxxxx`), 소모하지 못한 제출은 `rid#rejected-xxxxxx` 이고 `results[rid]` 를 차지하지 않는다. 응답은 저장한 결과다.
+    - 결과에 확인 숫자 `confirmCode` = `str(int(sha256_hex(vpJwt)[:8], 16) % 10000).zfill(4)` 와, 같은 기본 요청의 `rid#…` 저장 건수 `otherAttempts`(조회 시점 계산)를 붙였다. 지갑은 같은 식으로 숫자를 계산해 "창구 화면의 확인 숫자 ○○○○와 같은지 직원과 확인하세요"라고 보여 준다(F39).
+  - **검증 엄격화 (F11·F32·F33·F35·F36·F43·F60)**:
+    - `POST /requests`: `requested` 가 비었거나, claim 이 중복이거나, 규칙 번들 `claims.issuerOf` 에 없거나 `self` 인 claim 이 있으면 400 `REQUESTED_INVALID`(기존 `PRESET_NOT_OFFERED`·`POLICY_UNKNOWN` 유지).
+    - VC 발급기관 DID 가 `claims.issuerOf[claim]` 과 다르거나 claim 이 `self`·미등록이면 `ISSUER_NOT_AUTHORITATIVE`. 요청하지 않은 claim 의 VC 가 VP 에 섞이면 `UNREQUESTED_CREDENTIAL`(FAIL).
+    - 원장 통신 오류·타임아웃은 `LEDGER_UNAVAILABLE` 로 따로 낸다. 컨트랙트 revert(미등록)는 종전대로 `ISSUER_UNKNOWN`·`STATUS_LIST_UNAVAILABLE`. 원장 상태목록 게시자(`owner`)가 발급기관 컨트롤러와 다르면 `STATUS_LIST_OWNER_MISMATCH`.
+    - 받는 규칙 번들 버전 목록 `Settings.accepted_bundles`(기본 `{"daegu-eligibility": ["2026.2"]}`, 환경변수 `ACCEPTED_BUNDLES="daegu-eligibility@2026.2"`)에 없는 (번들, 버전)의 증명서는 `RULE_VERSION_NOT_ACCEPTED`(F43 '창구가 버전을 정한다'의 구현. 최소 버전이 아니라 허용 목록이다).
+    - `result.checks` 는 항상 11개 불리언: `nonce`·`vpSignature`·`issuerOnLedger`·`vcSignature`·`notRevoked`·`ruleVersion`·`holderBinding`·`requestedClaims` + 새 `issuerActive`·`notExpired`·`issuerAuthoritative`. 정지된 발급기관·만료된 증명서로 FAIL 인데 체크리스트가 모두 ✓ 로 보이던 문제(F32)를 막는다. FAIL 결과에는 `policyCheck` 키가 없다(F09 화면 쪽과 짝).
+  - **원장 클라이언트 (F33·F34·F59·F61)**: 읽기 호출은 약 3초 타임아웃·재시도 없음, 통신 오류는 새 예외 `LedgerUnavailable`. `get_issuer` 캐시는 5초 이하, 상태목록은 2초 넘게 캐시하지 않는다(발급기관 정지·키 교체가 최대 60초 늦게 반영되던 문제). nonce 할당부터 송신까지 `threading.Lock` 으로 직렬화. 상태목록 조회는 `owner`, 발급기관 조회는 `controller` 를 돌려준다.
+  - **발급기관 (F07·F10·F43·F61·F62·F63·F65)**:
+    - `/admin/*`: `ADMIN_TOKEN` 이 있으면 `X-Admin-Token` 이 같아야 하고 아니면 403 `ADMIN_FORBIDDEN`. 없으면 접속 호스트가 `127.0.0.1`·`::1`·`localhost`(테스트 클라이언트 포함)일 때만 허용. `GET /admin/credentials` 항목은 `{jti, claim, issued_at, valid_until, revoked}` 만(지갑 DID·상태목록 인덱스 제외) + claim 별 건수 `byClaim`.
+    - 폐기 fail-closed: 원장 게시 실패·원장 없음이면 HTTP 503 `{"detail": "LEDGER_PUBLISH_FAILED"}`. 로컬은 폐기 상태로 두고 목록을 dirty 로 표시하며, 다음 게시(다른 폐기, `POST /admin/status-list/resync`, 재기동) 때 원장 버전이 로컬 이상이면 원장 비트를 로컬에 OR 로 합쳐 원장 버전 + 1 로 게시한다. 성공 응답은 종전과 같다(`txHash` 있음). 상태목록 읽기-수정-쓰기와 원장 게시는 하나의 `threading.Lock` 으로 직렬화.
+    - 일괄 폐기 `POST /admin/credentials/revoke-by-bundle` `{"bundle","version"}` → 그 번들·버전으로 발급한 VC 를 모두 폐기하고 원장에 한 번 게시, `{"revoked": n, "statusListVersion", "txHash"}`(F43 일괄 폐기).
+    - VC `validUntil` = min(`validFrom` + 365일, 번들 `tables.medianIncomeYear` 연도 말 KST `"<연도>-12-31T14:59:59Z"`)(F43 고시 연동 유효기간).
+    - `POST /admin/demo/reset` 은 원장의 상태목록 비트를 지우지 않는다(폐기는 되돌리지 않는다).
+    - `POST /credentials/issue`: claim 이 비었거나 중복이면 400 `CLAIMS_INVALID`, 상태목록 인덱스가 다 차면 503 `STATUS_LIST_FULL`, 만료된 챌린지는 정리. 동의 영수증 앵커는 `BackgroundTasks` 로 돌려 응답이 원장 확정을 기다리지 않는다(응답 형태는 지갑과 호환).
+    - `GET /.well-known/issuer` 의 `bundle` 에 발급기관의 판정 기준일 `evalDate`(`RULE_EVAL_DATE`, 기본 2026-09-14)를 더했고 지갑 사전 판정이 이 값을 쓴다(F65).
+  - **AI 서비스 (F12·F18·F20·F21·F22·F23·F69)**: 감사 기록을 무작위 `auditId` 로 저장(최대 100개, 600초). `/recommend`·`/chat/complete` 응답에 `auditId`, 스트리밍 `/chat` 은 `X-Audit-Id` 헤더. `GET /audit/{auditId}` 로 그 기록만 조회(모르거나 만료면 404), `GET /audit/last-payload` 는 410 `USE_AUDIT_ID`. 채팅 세션은 30분 TTL·최대 200개. 채팅 자유입력의 주민등록번호·전화번호·계좌형 숫자열·금액(원·만원·천원)을 LLM 과 세션 저장 전에 `[가림]` 으로 바꾸고, 가린 것이 있으면 `masked: true`. 채팅 응답의 `judgedBy` 를 없애고 `eligibilitySource: "rule-engine"` 과 `notice: "채팅 답변은 자격 판정이 아닙니다 — 판정은 규칙 엔진 결과만 따릅니다"` 를 넣었다. 인용 검증기는 부적격인 다른 정책을 언급하거나 정책 문서에 없는 숫자를 쓴 항목을 버리고, 용어는 정확히 일치할 때만 인정한다. LLM 클라이언트는 타임아웃 25초·재시도 0 으로 지갑이 포기하기 전에 템플릿 대체가 일어난다. README 의 템플릿 정렬 설명을 코드 순서(finance → discount → welfare → transport)로 고쳤다.
+  - **시연 견고성 (F06·F28·F29·F34)**: `docs/DEMO.md`·스토리보드에서 ⑤ 폐기를 ⑦ 발급기관 정지 앞으로 옮기고(E2E 순서와 같음), ⑦ 뒤 재기동 명령(`ISSUER_DB_PATH=.demo/issuer-<id>.db` 포함)을 적었다. 만료 공격은 원래 요청의 만료·사용 상태를 바꾸지 않고(F28), 위조·타인 증명서 공격은 마지막 PASS 요청과 정확히 같은 항목을 요청해 사유 코드가 하나로 정해진다(F29). `POST /demo/attack` 은 시연 전용으로 남기고 응답 형태(`resultId` 포함)는 같다. 지갑은 `/present` 가 시간 초과되면 다시 제출하지 않고 `X-Vp-Hash` 로 `GET /results/{rid}` 를 폴링한다(재시도가 `NONCE_REUSED` 가 되던 문제, F34).
+  - **문구 정정 (F13·F42·F44·F45·F46·F47·F48)**: `data/legacy-documents.json` `records.hold` = "원장에 제출 영수증의 솔트 해시 1건(검증기관 주소·시각) — 제출 내용·시민 식별 정보는 원장에 없고, 발급기관 조회 기록은 생기지 않는다", `data/comparison.json` 재생성. `ARCHITECTURE` 의 '⑦ 읽기만'을 '읽기 + 제출 영수증 해시 앵커'로. 공공요금 감면 안내문을 계산 기준 서류(소득금액증명·주민등록표 등본)에 맞췄다. '판정 390건 100%'는 '판정 일관성(규칙 엔진 TS·Py ↔ 같은 팀의 참조 구현), 공식 판정 대비 미검증'으로, 검증 시간은 '검증 서버 `/present` 처리, 로컬 Hardhat, 캐시 적중 상태'라는 조건과 함께 쓰고, '원장 개인정보 0건'은 스캐너 탐지 범위(문자열 패턴)와 함께 쓴다. 제안요약서·전체정리·멘토링 문서의 해당 문장과 대체 문장은 `../발표자료_정정사항_2026-10-09.txt` 에 행 번호로 정리했다.
+  - **새 사유 코드와 한국어 문구** (검증 서비스 `REASON_KO`, 지갑·검증기관 앱에 같은 문구):
+
+    | 코드 | 문구 |
+    |---|---|
+    | `ISSUER_NOT_AUTHORITATIVE` | 이 항목을 발급할 권한이 없는 기관의 증명서입니다 |
+    | `UNREQUESTED_CREDENTIAL` | 요청하지 않은 증명서가 함께 제출되었습니다 |
+    | `LEDGER_UNAVAILABLE` | 공동원장에 연결할 수 없습니다 — 잠시 후 다시 시도하세요 |
+    | `RULE_VERSION_NOT_ACCEPTED` | 이 창구가 받지 않는 규칙 버전입니다 |
+    | `STATUS_LIST_OWNER_MISMATCH` | 상태 목록 게시자가 발급기관과 다릅니다 |
+    | `REQUESTED_INVALID` | 요청 항목이 올바르지 않습니다 |
+    | `TOO_MANY_LOOKUPS` | 확인번호 조회가 너무 많습니다 — 잠시 후 다시 시도하세요 |
+    | `RESULT_AUTH_REQUIRED` · `RESULT_FORBIDDEN` | 이 결과를 볼 권한이 없습니다 |
+
+- 왜: 리뷰에서 핵심 암호 경로(위조·폐기·재사용·다른 aud)는 견고했지만, 그 바깥의 무인증 공개 API 가 성질 ③('발급기관은 제출 이력을 모른다')을 능동 공격으로 깨뜨릴 수 있었다. 6자리 코드를 열거하면 결과(jti 포함)를 볼 수 있었고, 관리 API 는 0.0.0.0 에 무인증으로 열려 있었으며, AI 감사 엔드포인트는 다른 사용자의 채팅 원문을 돌려줬다. 첫 제출이 서명 검증 전에 nonce 를 소모해 창구 결과를 선점할 수 있었고, 원장 게시에 실패한 폐기가 성공으로 응답했으며, 원장 장애는 '미등록 발급기관'·'위조'로 잘못 분류됐다. 문서는 '남는 기록: 없음'·'읽기만'·'참 1개만'·'이미 설계됨'처럼 실제 동작보다 앞서 있었다. 10/22 본선 심사위원(iM뱅크 포함)이 화면과 문서를 대조하면 바로 드러나는 지점이라, 동작을 고치거나 문구를 동작에 맞췄다.
+- 실서비스: 창구 토큰은 창구 단말 로그인 세션(기관 인증서·mTLS)으로, 관리 API 는 기관 내부망 + 다중 승인으로 바꾼다. 원장 접근은 기관별 노드와 허용 목록으로 제한하고, 제출 영수증은 일괄 앵커(여러 건의 머클 루트)·창구별 앵커 주소 분리로 '어느 창구가 언제 받았는지' 노출을 줄인다. 받는 규칙 버전 목록은 고시·상품 개편 일정과 함께 창구 정책으로 관리하고, 고시가 바뀌면 새 번들 등록 → 허용 목록 갱신 → 이전 버전 일괄 폐기 순서로 전환한다. AI 감사 기록은 시민 단말에만 두는 방식을 검토한다.
+- 알려진 한계:
+  - **영구 식별자**: VP 에는 참·거짓 1개와 함께 지갑 DID, 증명서 ID(`jti`), 상태목록 인덱스, 유효기간, 규칙 번들·버전이 넘어간다. 같은 증명서를 두 창구(예: ③ iM뱅크, ③′ iM저축은행)에 내면 두 창구가 같은 DID·`jti` 로 기록을 이을 수 있다. 비교 패널의 '1개'는 사실 항목 수다. 로드맵: 창구별 pairwise DID, BBS+ 선택적 공개(상태목록 인덱스·`jti` 를 드러내지 않는 증명)(F42).
+  - **원격 대리 제출**: VP 는 지갑 키 보유만 증명하고 창구 앞 방문자와 묶이지 않는다. 방문자가 6자리 코드를 자격 있는 지인에게 보내 대신 제출하게 하면 PASS 가 난다. 확인 숫자 4자리 대조로만 완화한다(직원이 방문자의 휴대폰 화면과 맞춰 봄). 로드맵: 모바일 신분증 VP 를 함께 제출해 신원과 자격을 한 제출로 묶는다(F39).
+  - **원장 메타데이터**: 제출 1건마다 검증기관 주소·시각이 붙은 솔트 해시 1건이 공개된다. 시민 수가 적으면 발급·제출 시각을 맞춰 추정할 여지가 있다(F13).
+  - **PII 스캔 범위**: `chain/scripts/scan-pii.ts` 는 calldata·로그에서 `data/citizens.json` 의 이름·citizenId·생년월일·소득(10진 문자열과 32바이트 `uint256`), 주민번호 패턴, 소득/생년월일 필드명, JWT, 시민 지갑 DID 를 찾는다. 해시·압축 값, 32바이트가 아닌 정수 폭, 1만 미만 정수, 목록에 없는 사람의 값, 블록 헤더는 찾지 못하므로, 원장 무기록의 근거는 여전히 원장에 쓰는 경로(해시·공개키·상태 비트·번들 해시)를 제한한 구조에 있다(F47, 범위 표: `chain/README.md`).
+  - 7인 이상 가구 = 6인 값 판정은 D-22 의 문서화로 유지한다(F64).

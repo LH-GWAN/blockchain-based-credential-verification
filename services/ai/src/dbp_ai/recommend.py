@@ -46,12 +46,13 @@ def recommend(req: RecommendRequest) -> RecommendResponse:
     ineligible = [r for r in known if not r.eligible]
     eligible_ids = {r.policyId for r in eligible}
 
+    audit_id = llm.new_audit_id()
     used_provider = "template"
     llm_items = []
     if eligible and llm.provider() == "anthropic":
         payload = build_recommend_payload(req.categoricalProfile, eligible, ineligible, store, llm.model_name())
         try:
-            parsed = llm.llm_call("recommend", payload)
+            parsed = llm.llm_call("recommend", payload, audit_id=audit_id)
             llm_items = list(parsed.recommendations)
             used_provider = "anthropic"
         except Exception as e:  # noqa: BLE001 — 시연은 절대 멈추지 않는다
@@ -62,7 +63,7 @@ def recommend(req: RecommendRequest) -> RecommendResponse:
             "categoricalProfile": req.categoricalProfile.model_dump(),
             "ruleResults": [r.model_dump() for r in known],
             "candidatePolicyIds": sorted(eligible_ids),
-        })
+        }, audit_id=audit_id)
 
     survivors, dropped = validate_llm_recommendations(llm_items, eligible_ids, store)
     if dropped:
@@ -72,4 +73,4 @@ def recommend(req: RecommendRequest) -> RecommendResponse:
     if len(items) < MAX_ITEMS:
         items += template_recommendations(eligible_ids, store, limit=MAX_ITEMS - len(items),
                                           exclude={i.policyId for i in items})
-    return RecommendResponse(recommendations=items, disclaimer=DISCLAIMER, provider=used_provider)
+    return RecommendResponse(recommendations=items, disclaimer=DISCLAIMER, provider=used_provider, auditId=audit_id)

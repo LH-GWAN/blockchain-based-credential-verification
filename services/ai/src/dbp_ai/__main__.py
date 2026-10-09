@@ -1,4 +1,4 @@
-"""`uv run python -m dbp_ai` → uvicorn 서버 (AI_HOST:AI_PORT, 기본 0.0.0.0:8004)."""
+"""`uv run python -m dbp_ai` → uvicorn 서버 (HOST:AI_PORT, 기본 127.0.0.1:8004)."""
 from __future__ import annotations
 
 import logging

@@ -6,15 +6,34 @@ import { QrScanner } from '@/components/QrScanner';
 import { Button, Card, KeyValue, LinkButton, Notice, SectionTitle, Spinner } from '@/components/ui';
 import { useWallet } from '@/hooks/useWallet';
 import { verifierApi } from '@/lib/api';
+import { confirmCodeOf, vpHashOf } from '@/lib/confirm';
 import { COPY } from '@/lib/copy';
-import { josa, selectVcsForRequest, type VcSelection } from '@/lib/eligibility';
-import { REASON_KO, toKoreanError } from '@/lib/errors';
+import { consentLabel, josa, selectVcsForRequest, type VcSelection } from '@/lib/eligibility';
+import { ApiError, REASON_KO, toKoreanError } from '@/lib/errors';
 import { shortHash } from '@/lib/format';
 import { hexToBytes } from '@/lib/hex';
 import { addPresentation, getCachedBundle, updatePresentation } from '@/lib/store';
-import type { Bundle, PresentResult, PresentationRequest } from '@/lib/types';
+import type { Bundle, PendingResult, PresentResult, PresentationRequest } from '@/lib/types';
 
-type View = 'input' | 'loading' | 'confirm' | 'submitting' | 'result';
+type View = 'input' | 'loading' | 'confirm' | 'submitting' | 'awaiting' | 'result';
+
+/** 보낸 제출물의 지문. 응답이 늦으면 이것으로 결과를 조회하고, 같은 요청으로 다시 제출하지 않는다 (F34). */
+interface Submission {
+  requestId: string;
+  vpHash: string;
+  confirmCode: string;
+  /** 결과를 끝내 받지 못함 / 다른 제출이 먼저 기록됨. */
+  outcome: 'waiting' | 'unknown' | 'other';
+}
+
+function isFinal(r: PresentResult | PendingResult): r is PresentResult {
+  return 'verdict' in r && (r.verdict === 'PASS' || r.verdict === 'FAIL');
+}
+
+/** 연결이 끊긴 경우에만 QR 에 담긴 요청으로 대신 진행한다. 만료·사용됨(404)·조회 제한(429)은 그대로 알린다. */
+function canUseQrFallback(e: unknown): boolean {
+  return e instanceof ApiError && (e.code === 'NETWORK' || e.code === 'TIMEOUT');
+}
 
 function parseQr(text: string): PresentationRequest | null {
   try {
@@ -42,6 +61,7 @@ export default function PresentPage() {
   const [labels, setLabels] = useState<Record<string, string>>({});
   const [result, setResult] = useState<PresentResult | null>(null);
   const [txStatus, setTxStatus] = useState<'pending' | 'found' | 'unknown'>('pending');
+  const [submission, setSubmission] = useState<Submission | null>(null);
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
 
   useEffect(() => {
@@ -63,7 +83,7 @@ export default function PresentPage() {
       try {
         req = await verifierApi.request(idOrCode);
       } catch (e) {
-        if (fallback && isComplete(fallback)) req = fallback;
+        if (fallback && isComplete(fallback) && canUseQrFallback(e)) req = fallback;
         else {
           setError(toKoreanError(e));
           setView('input');
@@ -72,6 +92,7 @@ export default function PresentPage() {
       }
       setRequest(req);
       setSelection(selectVcsForRequest(credentials, req.requested));
+      setSubmission(null);
       setView('confirm');
     },
     [credentials],
@@ -107,7 +128,7 @@ export default function PresentPage() {
   }
 
   async function agree() {
-    if (!wallet || !request || !selection) return;
+    if (!wallet || !request || !selection || submission) return;
     setView('submitting');
     setError(null);
     try {
@@ -118,40 +139,86 @@ export default function PresentPage() {
         nonce: request.nonce,
         vcJwts: selection.vcJwts,
       });
-      const res = await verifierApi.present({ requestId: request.requestId, vpJwt });
-      setResult(res);
-      setView('result');
-      await addPresentation({
-        requestId: request.requestId,
-        verifierDid: request.verifier,
-        verifierName: request.verifierName,
-        purpose: request.purpose,
-        requested: request.requested,
-        verdict: res.verdict,
-        reasonCodes: res.reasonCodes,
-        reasons: res.reasons ?? res.reasonCodes.map((c) => REASON_KO[c] ?? c),
-        receipt: res.receipt ? { hash: res.receipt.hash, object: res.receipt.object, txHash: res.receipt.txHash ?? null } : null,
-        totalMs: res.timingsMs?.total ?? null,
-        at: new Date().toISOString(),
-      });
-      // 영수증 앵커는 비동기 → 몇 번 폴링해 txHash 를 가져온다
-      if (res.receipt?.txHash) setTxStatus('found');
-      else if (res.receipt?.hash) void pollTx(request.requestId, res.receipt.hash);
-      else setTxStatus('unknown');
+      const sub: Submission = { requestId: request.requestId, vpHash: vpHashOf(vpJwt), confirmCode: confirmCodeOf(vpJwt), outcome: 'waiting' };
+      let res: PresentResult;
+      try {
+        res = await verifierApi.present({ requestId: request.requestId, vpJwt });
+      } catch (e) {
+        // 응답 시간 초과: 제출이 이미 처리됐을 수 있으므로 다시 POST 하지 않고 내 제출물 해시로 결과를 조회한다 (F34)
+        if (!(e instanceof ApiError && e.code === 'TIMEOUT')) throw e;
+        setSubmission(sub);
+        setView('awaiting');
+        await waitForResult(sub);
+        return;
+      }
+      await finish(res, sub);
     } catch (e) {
       setError(toKoreanError(e));
       setView('confirm');
     }
   }
 
-  /** 영수증 앵커는 비동기이므로 결과를 몇 번 폴링한다. 같은 요청에 다른 제출이 있을 수 있으므로 영수증 해시가 내 것일 때만 채택. */
-  async function pollTx(requestId: string, myReceiptHash: string) {
+  /** 시간 초과 뒤 결과 조회 (X-Vp-Hash). 결과가 오면 마무리하고, 끝내 없으면 확인 화면에 '결과 다시 확인' 을 남긴다. */
+  async function waitForResult(sub: Submission) {
+    setView('awaiting');
+    for (let i = 0; i < 15; i++) {
+      try {
+        const r = await verifierApi.result(sub.requestId, sub.vpHash);
+        if (isFinal(r)) {
+          await finish(r, sub);
+          return;
+        }
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 403) {
+          setSubmission({ ...sub, outcome: 'other' });
+          setView('confirm');
+          return;
+        }
+        if (e instanceof ApiError && e.status === 404) break;
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    setSubmission({ ...sub, outcome: 'unknown' });
+    setView('confirm');
+  }
+
+  async function finish(res: PresentResult, sub: Submission) {
+    if (!request) return;
+    setSubmission({ ...sub, outcome: 'waiting' });
+    setResult(res);
+    setView('result');
+    await addPresentation({
+      requestId: request.requestId,
+      verifierDid: request.verifier,
+      verifierName: request.verifierName,
+      purpose: request.purpose,
+      // 이력에도 검증기관이 보낸 label 이 아니라 지갑이 아는 이름으로 남긴다 (F41)
+      requested: request.requested.map((r) => ({
+        ...r,
+        label: consentLabel(r, labels, selection?.matched.find((m) => m.claim === r.claim)?.credential).label,
+      })),
+      verdict: res.verdict,
+      reasonCodes: res.reasonCodes,
+      reasons: res.reasons ?? res.reasonCodes.map((c) => REASON_KO[c] ?? c),
+      receipt: res.receipt ? { hash: res.receipt.hash, object: res.receipt.object, txHash: res.receipt.txHash ?? null } : null,
+      totalMs: res.timingsMs?.total ?? null,
+      at: new Date().toISOString(),
+      confirmCode: sub.confirmCode,
+    });
+    // 영수증 앵커는 비동기 → 몇 번 폴링해 txHash 를 가져온다
+    if (res.receipt?.txHash) setTxStatus('found');
+    else if (res.receipt?.hash) void pollTx(request.requestId, res.receipt.hash, sub.vpHash);
+    else setTxStatus('unknown');
+  }
+
+  /** 영수증 앵커는 비동기이므로 결과를 몇 번 폴링한다. 조회 권한은 내 제출물 해시, 영수증 해시가 내 것일 때만 채택. */
+  async function pollTx(requestId: string, myReceiptHash: string, vpHash: string) {
     setTxStatus('pending');
     for (let i = 0; i < 8; i++) {
       await new Promise((r) => setTimeout(r, 1500));
       try {
-        const r = await verifierApi.result(requestId);
-        if (r.status !== 'done' || !r.receipt || r.receipt.hash !== myReceiptHash) continue;
+        const r = await verifierApi.result(requestId, vpHash);
+        if (!isFinal(r) || !r.receipt || r.receipt.hash !== myReceiptHash) continue;
         if (r.receipt.txHash) {
           const txHash = r.receipt.txHash;
           setResult((cur) => (cur ? { ...cur, receipt: { ...cur.receipt, txHash } } : cur));
@@ -172,6 +239,7 @@ export default function PresentPage() {
     setRequest(null);
     setSelection(null);
     setResult(null);
+    setSubmission(null);
     setError(null);
     setCode('');
     setPasted('');
@@ -209,6 +277,21 @@ export default function PresentPage() {
           )}
           {result.timingsMs?.total !== undefined && <p className="mt-2 text-[0.9rem] text-muted">{COPY.present.elapsed(Math.round(result.timingsMs.total))}</p>}
         </Card>
+        {submission && (
+          <Card>
+            <p className="text-[0.9rem] font-semibold text-muted">{COPY.present.confirmLabel}</p>
+            <p data-testid="confirm-code" className="font-mono text-4xl font-bold tracking-[0.3em]" aria-label={`${COPY.present.confirmLabel} ${submission.confirmCode.split('').join(' ')}`}>
+              {submission.confirmCode}
+            </p>
+            <p className="mt-1 text-[0.95rem]">{COPY.present.confirmCode(submission.confirmCode)}</p>
+            {result.confirmCode !== undefined && result.confirmCode !== submission.confirmCode && (
+              <Notice kind="error" className="mt-2">
+                {COPY.present.confirmMismatch}
+              </Notice>
+            )}
+            {(result.otherAttempts ?? 0) > 0 && <p className="mt-1 text-[0.85rem] text-muted">{COPY.present.otherAttempts(result.otherAttempts!)}</p>}
+          </Card>
+        )}
         <Card>
           <KeyValue
             items={[
@@ -237,10 +320,14 @@ export default function PresentPage() {
   }
 
   // ---------- 요청 확인 ----------
-  if ((view === 'confirm' || view === 'submitting') && request && selection) {
+  if ((view === 'confirm' || view === 'submitting' || view === 'awaiting') && request && selection) {
     const remaining = request.exp - now;
     const expired = remaining <= 0;
-    const canSubmit = selection.missing.length === 0 && !expired && view === 'confirm';
+    const canSubmit = selection.missing.length === 0 && !expired && view === 'confirm' && !submission;
+    const items = request.requested.map((r) => {
+      const m = selection.matched.find((x) => x.claim === r.claim);
+      return { r, m, ...consentLabel(r, labels, m?.credential) };
+    });
     return (
       <div className="space-y-4">
         <SectionTitle>{COPY.present.title}</SectionTitle>
@@ -251,9 +338,7 @@ export default function PresentPage() {
             {request.purpose}
           </p>
           <ul className="mt-3 space-y-1 text-[1.05rem]">
-            {request.requested.map((r) => {
-              const m = selection.matched.find((x) => x.claim === r.claim);
-              const label = r.label ?? labels[r.claim] ?? r.claim;
+            {items.map(({ r, m, label }) => {
               return (
                 <li key={r.claim} className="flex gap-2">
                   <span className={m ? 'text-ok' : 'text-danger'} aria-hidden="true">
@@ -273,18 +358,41 @@ export default function PresentPage() {
             {COPY.present.nonceLabel} {shortHash(request.nonce, 8, 4)} · {expired ? COPY.present.expired : COPY.present.remaining(remaining)}
           </p>
         </Card>
+        {items
+          .filter((it) => it.mismatch !== null)
+          .map((it) => (
+            <Notice key={`label-${it.r.claim}`} kind="warn">
+              {COPY.present.labelMismatch(it.mismatch!, it.label)}
+            </Notice>
+          ))}
         {selection.missing.map((m) => (
           <Notice key={m.claim} kind="error">
-            {COPY.present.missing(m.label ?? labels[m.claim] ?? m.claim)}{' '}
+            {COPY.present.missing(consentLabel(m, labels).label)}{' '}
             <LinkButton href="/credentials" variant="ghost">
               {COPY.present.goCredentials}
             </LinkButton>
           </Notice>
         ))}
-        {expired && selection.missing.length === 0 && <Notice kind="warn">{COPY.present.expired}</Notice>}
+        {expired && selection.missing.length === 0 && !submission && <Notice kind="warn">{COPY.present.expired}</Notice>}
         {error && <Notice kind="error">{error}</Notice>}
+        {submission && submission.outcome !== 'waiting' && (
+          <Notice kind="warn">
+            {submission.outcome === 'other' ? COPY.present.otherSubmission : COPY.present.resultUnknown} ({COPY.present.confirmLabel} {submission.confirmCode})
+          </Notice>
+        )}
         {view === 'submitting' ? (
           <Spinner label={COPY.present.submitting} />
+        ) : view === 'awaiting' ? (
+          <Spinner label={COPY.present.awaiting} />
+        ) : submission ? (
+          <div className="grid grid-cols-2 gap-3">
+            <Button variant="secondary" onClick={resetAll}>
+              {COPY.present.another}
+            </Button>
+            <Button onClick={() => void waitForResult(submission)} disabled={submission.outcome === 'other'}>
+              {COPY.present.recheck}
+            </Button>
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
             <Button variant="danger" onClick={resetAll}>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { api, isApiError, isUnreachable } from "@/lib/api";
 import { policyLabel, PRESETS_FALLBACK, REQUEST, requestErrorText, RULES_VERSION, verifierKindLabel } from "@/lib/copy";
+import { saveCounterToken } from "@/lib/counter-token";
 import { presetCounterCheckedNote } from "@/lib/format";
 import { initialRequestState, isClaimSelected, presetsForKind, requestFormReducer } from "@/lib/request-state";
 import type { ClaimDef, PresentationRequest, Preset, VerifierProfile } from "@/lib/types";
@@ -75,6 +76,8 @@ export function RequestForm() {
         ...(form.policyId ? { policyId: form.policyId } : {}),
         ...(form.presetId ? { presetId: form.presetId } : {}),
       });
+      // 창구 토큰은 이 탭에만 보관한다 — 결과 조회(X-Counter-Token)에 필요하다 (F03).
+      saveCounterToken(req.requestId, req.counterToken);
       setRequest(req);
     } catch (e) {
       if (isUnreachable(e)) setMeta({ kind: "down" });

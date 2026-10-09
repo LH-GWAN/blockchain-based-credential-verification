@@ -3,6 +3,7 @@ from ai_testing import PROBE_MESSAGE, VERDICT_MARKERS, FakeAnthropic
 from dbp_ai import llm
 from dbp_ai.prompts import SYSTEM_RULES, system_prompt_text
 from dbp_ai.retriever import get_store
+from dbp_ai.schemas import CHAT_NOTICE
 
 REQUIRED_RULE_SENTENCES = [
     "당신은 자격을 판정하지 않는다",
@@ -18,7 +19,8 @@ def test_probe_under_template_provider(client, chat_body):
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["provider"] == "template"
-    assert body["judgedBy"] == "rule-engine"
+    assert body["eligibilitySource"] == "rule-engine" and "judgedBy" not in body
+    assert body["notice"] == CHAT_NOTICE
     assert "등록되어 있지 않" in body["text"]
     for marker in VERDICT_MARKERS:
         assert marker not in body["text"], marker

@@ -2,7 +2,8 @@
 
 - 조회형: 검증기관 프리셋의 요청 항목을 확인하려면 공공 마이데이터로 어떤 행정서류(원문)가 넘어오는지,
   그 서류들에 담긴 항목의 합집합을 센다 (data/legacy-documents.json — 공식 서식 기준, 실제 API 호출 결과가 아님).
-- 보유형: 같은 프리셋에서 혜택패스가 실제로 전달하는 참·거짓 항목. 예시 VP 를 만들어 VC 안의 사실 개수를 실측한다.
+- 보유형: 같은 프리셋에서 혜택패스가 전달하는 참·거짓 항목. 예시 VP 를 만들어 VC 하나에 사실이 하나씩만 담기는지 구성을 확인한다
+  (요청 항목마다 VC 를 만들어 세므로 실제 발급기관·지갑 경로를 거친 측정값은 아니다 — 그 경로는 make smoke·E2E 가 본다).
 - 결과: 프리셋별 {pullDocuments, pullItems, pullCount, holdItems, holdCount, reductionPercent, pullRecords, holdRecords}.
 숫자·항목을 화면에 하드코딩하지 않고 검증 서비스가 이 파일을 읽어 결과에 넣는다.
 실행: uv run python scripts/pii_items.py   (종료 코드 1 = 어느 프리셋이든 70% 미달)
@@ -11,20 +12,16 @@ from __future__ import annotations
 
 import json
 import sys
-from pathlib import Path
 
 from dbp_rules import load_bundle, repo_root
 
 ROOT = repo_root()
 LEGACY = json.loads((ROOT / "data/legacy-documents.json").read_text(encoding="utf-8"))
-from dbp_verifier.comparison import HONESTY  # noqa: E402
+from dbp_verifier.comparison import HONESTY, build_comparison  # 단일 출처
 
 
-from dbp_verifier.comparison import build_comparison  # noqa: E402  (단일 출처)
-
-
-def measured_hold_count(requested: list[dict], issuer_of: dict[str, str]) -> int:
-    """예시 VP 를 실제로 만들어 VC 안의 사실 개수를 센다 (문서 주장이 아니라 실측)."""
+def example_vp_hold_count(requested: list[dict], issuer_of: dict[str, str]) -> int:
+    """예시 VP 를 만들어 VC 안의 사실 개수를 센다 — 예시 VP 구성 확인 (VC 1개 = 사실 1개). 발급·지갑 경로 실측이 아니다."""
     from dbp_vc import create_vp, decode_vc, generate_holder_key, issue_vc
     from dbp_verifier.verify import decode_jwt_unverified
     holder = generate_holder_key(bytes([2]) * 32)
@@ -56,11 +53,11 @@ def main() -> int:
     for p in PRESETS:
         c = build_comparison(p["requested"], labels, p["id"])
         c["label"] = p["label"]
-        c["measuredHoldCount"] = measured_hold_count(p["requested"], issuer_of)
-        assert c["measuredHoldCount"] == c["holdCount"], (p["id"], c)
+        c["exampleVpHoldCount"] = example_vp_hold_count(p["requested"], issuer_of)
+        assert c["exampleVpHoldCount"] == c["holdCount"], (p["id"], c)
         presets[p["id"]] = c
     out = {
-        "source": "scripts/pii_items.py (data/legacy-documents.json 기반 계산 + 예시 VP 실측)",
+        "source": "scripts/pii_items.py (data/legacy-documents.json 기반 계산 + 예시 VP 구성 확인)",
         "honestyNote": HONESTY,
         "target": ">=70%",
         "documents": LEGACY["documents"], "claimDocuments": LEGACY["claimDocuments"], "records": LEGACY["records"],

@@ -7,9 +7,23 @@ import { VcError } from './errors.js';
  * 프로젝트 전체에서 부동소수점은 금지이므로 정수가 아닌 number는 예외를 던진다.
  * Python 쪽 `json.dumps(sort_keys=True, separators=(',',':'), ensure_ascii=False)` 와 바이트 단위로 일치한다.
  * (객체의 undefined 값 키는 JSON.stringify와 같이 생략한다.)
+ * 두 언어가 같은 입력만 받도록(F68) 다음은 양쪽에서 VcError 로 거부한다:
+ * - 짝 없는 서로게이트(lone surrogate) — UTF-8 로 인코딩할 수 없다 (MALFORMED)
+ * - 보조평면(비BMP) 문자가 든 객체 키 — 코드포인트 순(Python)과 UTF-16 순(JS)이 갈린다 (MALFORMED)
+ * - ±(2^53-1) 밖의 정수(number·bigint) — Python int 와 JS number 가 같은 값을 갖지 않는다 (FLOAT_FORBIDDEN)
  */
 export function canonicalize(value: unknown): string {
   return serialize(value);
+}
+
+const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+const NON_BMP = /[\uD800-\uDBFF][\uDC00-\uDFFF]/;
+const MAX_SAFE = BigInt(Number.MAX_SAFE_INTEGER);
+
+function quote(s: string, isKey = false): string {
+  if (LONE_SURROGATE.test(s)) throw new VcError('MALFORMED', 'lone surrogate cannot be UTF-8 encoded');
+  if (isKey && NON_BMP.test(s)) throw new VcError('MALFORMED', `object key outside the BMP not allowed: ${s}`);
+  return JSON.stringify(s);
 }
 
 function serialize(v: unknown): string {
@@ -18,11 +32,15 @@ function serialize(v: unknown): string {
     case 'boolean':
       return v ? 'true' : 'false';
     case 'string':
-      return JSON.stringify(v);
+      return quote(v);
     case 'number':
-      if (!Number.isSafeInteger(v)) throw new VcError('FLOAT_FORBIDDEN', `non-integer number not allowed: ${v}`);
+      if (!Number.isSafeInteger(v)) {
+        const why = Number.isInteger(v) ? 'integer outside the JS safe range' : 'non-integer number';
+        throw new VcError('FLOAT_FORBIDDEN', `${why} not allowed: ${v}`);
+      }
       return String(v); // -0 → "0"
     case 'bigint':
+      if (v > MAX_SAFE || v < -MAX_SAFE) throw new VcError('FLOAT_FORBIDDEN', `integer outside the JS safe range not allowed: ${v}`);
       return v.toString();
     case 'object': {
       if (Array.isArray(v)) return '[' + v.map(serialize).join(',') + ']';
@@ -32,7 +50,7 @@ function serialize(v: unknown): string {
       for (const key of Object.keys(obj).sort()) {
         const val = obj[key];
         if (val === undefined) continue;
-        parts.push(JSON.stringify(key) + ':' + serialize(val));
+        parts.push(quote(key, true) + ':' + serialize(val));
       }
       return '{' + parts.join(',') + '}';
     }

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { PRESETS_FALLBACK } from "../src/lib/copy";
 import {
+  attackOutcome,
+  credentialValueLabel,
   factLabel,
   formatCountdown,
   formatMs,
@@ -79,6 +81,48 @@ describe("statusLabel", () => {
     expect(statusLabel({ verdict: "FAIL", reasonCodes: ["NONCE_REUSED"] })).toBe("재사용 차단");
     expect(statusLabel({ verdict: "FAIL", reasonCodes: ["NONCE_EXPIRED"] })).toBe("요청 만료");
     expect(statusLabel({ verdict: "FAIL", reasonCodes: ["SOMETHING_ELSE"] })).toBe("무효");
+  });
+
+  it("정지된 발급기관은 '미등록'이 아니라 '정지'로, 새 사유 코드도 각각의 상태로 (F32)", () => {
+    expect(statusLabel({ verdict: "FAIL", reasonCodes: ["ISSUER_UNKNOWN"] })).toBe("발급기관 미등록");
+    expect(statusLabel({ verdict: "FAIL", reasonCodes: ["ISSUER_INACTIVE"] })).toBe("발급기관 정지");
+    expect(statusLabel({ verdict: "FAIL", reasonCodes: ["EXPIRED"] })).toBe("유효기간 만료");
+    expect(statusLabel({ verdict: "FAIL", reasonCodes: ["ISSUER_NOT_AUTHORITATIVE", "CLAIM_MISSING"] })).toBe("발급 권한 없음");
+    expect(statusLabel({ verdict: "FAIL", reasonCodes: ["STATUS_LIST_OWNER_MISMATCH"] })).toBe("상태 목록 불일치");
+    expect(statusLabel({ verdict: "FAIL", reasonCodes: ["RULE_VERSION_NOT_ACCEPTED"] })).toBe("규칙 버전 불일치");
+    expect(statusLabel({ verdict: "FAIL", reasonCodes: ["UNREQUESTED_CREDENTIAL"] })).toBe("요청 외 증명서 포함");
+  });
+
+  it("원장 장애(LEDGER_UNAVAILABLE)는 다른 사유보다 먼저 — '미등록·위조'로 보이지 않게", () => {
+    expect(statusLabel({ verdict: "FAIL", reasonCodes: ["LEDGER_UNAVAILABLE"] })).toBe("원장 연결 실패");
+    expect(statusLabel({ verdict: "FAIL", reasonCodes: ["CLAIM_MISSING", "LEDGER_UNAVAILABLE"] })).toBe("원장 연결 실패");
+  });
+});
+
+describe("credentialValueLabel (F38)", () => {
+  it("참·거짓은 그대로, 해석하지 못한 값(null·없음)은 '거짓'이 아니라 확인 안 함(중립)", () => {
+    expect(credentialValueLabel(true)).toEqual({ text: "참", tone: "pass" });
+    expect(credentialValueLabel(false)).toEqual({ text: "거짓", tone: "fail" });
+    expect(credentialValueLabel(null)).toEqual({ text: "—(확인 안 함)", tone: "muted" });
+    expect(credentialValueLabel(undefined)).toEqual({ text: "—(확인 안 함)", tone: "muted" });
+  });
+});
+
+describe("attackOutcome (F28·F29)", () => {
+  it("FAIL + 예상 사유 코드 포함일 때만 '차단됨'", () => {
+    expect(attackOutcome({ verdict: "FAIL", reasonCodes: ["NONCE_REUSED"] }, "NONCE_REUSED")).toBe("blocked");
+    expect(attackOutcome({ verdict: "FAIL", reasonCodes: ["HOLDER_MISMATCH", "VC_SIG_INVALID"] }, "VC_SIG_INVALID")).toBe("blocked");
+  });
+
+  it("FAIL 이지만 예상 코드가 없으면 다른 사유 — 만료 공격 뒤 재사용 카드가 NONCE_EXPIRED 로 막힌 경우", () => {
+    expect(attackOutcome({ verdict: "FAIL", reasonCodes: ["NONCE_EXPIRED"] }, "NONCE_REUSED")).toBe("other-reason");
+    expect(attackOutcome({ verdict: "FAIL", reasonCodes: ["CLAIM_MISSING"] }, "HOLDER_MISMATCH")).toBe("other-reason");
+    expect(attackOutcome({ verdict: "FAIL", reasonCodes: [] }, "VC_SIG_INVALID")).toBe("other-reason");
+  });
+
+  it("PASS 는 사유 코드와 상관없이 차단되지 않음", () => {
+    expect(attackOutcome({ verdict: "PASS", reasonCodes: [] }, "NONCE_REUSED")).toBe("not-blocked");
+    expect(attackOutcome({ verdict: "PASS", reasonCodes: ["NONCE_REUSED"] }, "NONCE_REUSED")).toBe("not-blocked");
   });
 });
 

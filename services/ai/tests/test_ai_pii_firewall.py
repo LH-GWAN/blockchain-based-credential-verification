@@ -15,7 +15,7 @@ LONG_NUMBER_RE = re.compile(r"\d{7,}")
 def _install_fake_llm_call(monkeypatch, result):
     captured = {}
 
-    def fake_llm_call(kind, payload):
+    def fake_llm_call(kind, payload, audit_id=None):
         captured["kind"] = kind
         captured["payload"] = payload
         json.dumps(payload)  # JSON 직렬화 가능해야 한다 (감사 엔드포인트가 그대로 돌려준다)
@@ -71,3 +71,16 @@ def test_policy_corpus_itself_has_no_long_numbers():
     text = system_prompt_text()
     assert not LONG_NUMBER_RE.search(text), LONG_NUMBER_RE.findall(text)
     assert not RRN_RE.search(text)
+
+
+def test_chat_free_text_pii_is_masked_before_llm(client, chat_body, anthropic_env, persona, monkeypatch):
+    """F21: 질문에 주민번호·전화번호·계좌·금액을 적어도 LLM 페이로드에는 가려져서 간다."""
+    captured = _install_fake_llm_call(monkeypatch, "말씀하지 않으셔도 됩니다.")
+    msg = (f"{persona['citizen']['monthlyIncomeKRW']:,}원 벌어요. 주민번호 580312-1234567, "
+           "전화 010-9876-5432, 계좌 3333-01-2345678 입니다. 기초연금 되나요?")
+    r = client.post("/chat/complete", json=chat_body(msg))
+    assert r.status_code == 200 and r.json()["masked"] is True
+    _assert_no_pii(captured["payload"], persona["citizen"])
+    js = json.dumps(captured["payload"], ensure_ascii=False)
+    for leak in ("580312", "010-9876-5432", "3333-01-2345678", f"{persona['citizen']['monthlyIncomeKRW']:,}"):
+        assert leak not in js, leak

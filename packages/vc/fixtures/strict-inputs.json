@@ -1,0 +1,116 @@
+{
+  "_comment": "F67·F68 크로스언어 거부 벡터 (손으로 만든 고정값, 생성기 없음). TS·Python 테스트가 같은 판정을 내는지 확인한다. 정상 키 = 시드 0x07×32, message = UTF-8 'dbp'.",
+  "messageUtf8": "dbp",
+  "ed25519": [
+    {
+      "name": "honest",
+      "publicKeyHex": "ea4a6c63e29c520abef5507b132ec5f9954776aebebe7b92421eea691446d22c",
+      "signatureHex": "c21d438ed7ecfe65a69f0fed63746b779a4f793c325f2269b206fc965fac7f3ad80bb742a9c1a895ef8868968d5f7134f343acdfb342a27b1f0dfe53f1e9b00f",
+      "validKey": true,
+      "verify": true
+    },
+    {
+      "name": "identity-key (R=identity, S=0 forgery)",
+      "publicKeyHex": "0100000000000000000000000000000000000000000000000000000000000000",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "validKey": false,
+      "verify": false
+    },
+    {
+      "name": "order-8 key",
+      "publicKeyHex": "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "validKey": false,
+      "verify": false
+    },
+    {
+      "name": "order-4 key (y=0)",
+      "publicKeyHex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "validKey": false,
+      "verify": false
+    },
+    {
+      "name": "non-canonical y (y = p)",
+      "publicKeyHex": "edffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "validKey": false,
+      "verify": false
+    },
+    {
+      "name": "mixed-order key signed by its owner",
+      "publicKeyHex": "1f4f580e73ac208f06760190e9edc6f5916775dabd9c1cdca393175c2d6d1083",
+      "signatureHex": "7db0dc9222f3c183457ddde4c708de8e5ea6bf3d5c4404cca14b32729a05c32a3c0c5076ec16d76796f6018b4ccd3c9cb79e3c65b1944d6a9ebbadfd74801609",
+      "validKey": false,
+      "verify": false
+    },
+    {
+      "name": "honest key, mixed-order R",
+      "publicKeyHex": "ea4a6c63e29c520abef5507b132ec5f9954776aebebe7b92421eea691446d22c",
+      "signatureHex": "d63c01223147541df4e170763e9e2788a8bf5971f52a93c5829dbe6f5ff6bba9ac9dd47294ca53b4b9753a0a68f4d7f2ca0b588cdfdd381bec19f1c3406c020e",
+      "validKey": true,
+      "verify": false
+    }
+  ],
+  "base64url": {
+    "canonical": "wh1Djtfs_mWmnw_tY3Rrd5pPeTwyXyJpsgb8ll-sfzrYC7dCqcGole-IaJaNX3E080Os37NConsfDf5T8emwDw",
+    "nonCanonical": [
+      "wh1Djtfs_mWmnw_tY3Rrd5pPeTwyXyJpsgb8ll-sfzrYC7dCqcGole-IaJaNX3E080Os37NConsfDf5T8emwDx",
+      "wh1Djtfs_mWmnw_tY3Rrd5pPeTwyXyJpsgb8ll-sfzrYC7dCqcGole-IaJaNX3E080Os37NConsfDf5T8emwDw\n",
+      "wh1Djtfs_mWmnw_tY3Rrd5pPeTwyXyJpsgb8ll-sfzrYC7dCqcGole-IaJaNX3E080Os37NConsfDf5T8emwDw=",
+      "wh1Djtfs_mWmnw_tY3Rrd5pPeTwyXyJpsgb8ll-sfzrYC7dCqcGole-IaJaNX3E080Os37NConsfDf5T8emwD+"
+    ]
+  },
+  "didKey": {
+    "valid": [
+      "did:key:z6MkvDqGT54cXesYGvABpF1UapVNwjCqRcafi4Px6Thv5T3Z",
+      "did:key:z6MkvDqGT54cXesYGvABpF1UapVNwjCqRcafi4Px6Thv5T3Z#z6MkvDqGT54cXesYGvABpF1UapVNwjCqRcafi4Px6Thv5T3Z"
+    ],
+    "invalid": [
+      "did:key:z6MkeXATEjyXENzBXBxgC5EHk2JE5aqd7qMGGtDpLUH1e2Sj",
+      "did:key:z6MksrRtMyx4CiuAvgkmwsiPXKj7ULY8yG49hjvu11gGFbhb",
+      "did:key:z6MkgZUrcuw1KzSgf4heqTgYCiSQLBNDcqEkQNdwbbnPWQtr",
+      "did:key:z6MkvDqGT54cXesYGvABpF1UapVNwjCqRcafi4Px6Thv5T3Z ",
+      "did:key:z6MkvDqGT54cXesYGvABpF1UapVNwjCqRcafi4Px6Thv5T3Z\n",
+      " did:key:z6MkvDqGT54cXesYGvABpF1UapVNwjCqRcafi4Px6Thv5T3Z",
+      "did:key:z6MkvDqGT54cXesYGvABpF1UapVNwjCqRcafi4Px6Thv5T3Z#",
+      "did:key:z6MkvDqGT54cXesYGvABpF1UapVNwjCqRcafi4Px6Thv5T3Z#a b",
+      "did:key:z0OIl"
+    ]
+  },
+  "jcs": {
+    "_comment": "각 문자열을 그 언어의 JSON 파서로 읽은 뒤 canonicalize 한다.",
+    "reject": [
+      {
+        "json": "{\"k\":\"\\ud800\"}",
+        "code": "MALFORMED"
+      },
+      {
+        "json": "[\"a\\udc00b\"]",
+        "code": "MALFORMED"
+      },
+      {
+        "json": "{\"\\udc00\":1}",
+        "code": "MALFORMED"
+      },
+      {
+        "json": "{\"\\ud83d\\ude00\":1}",
+        "code": "MALFORMED"
+      },
+      {
+        "json": "{\"n\":9007199254740992}",
+        "code": "FLOAT_FORBIDDEN"
+      },
+      {
+        "json": "[-9007199254740992]",
+        "code": "FLOAT_FORBIDDEN"
+      }
+    ],
+    "accept": [
+      {
+        "json": "{\"e\":\"\\ud83d\\ude00\",\"n\":-9007199254740991,\"\\uffff\":0,\"가\":[9007199254740991]}",
+        "canonical": "{\"e\":\"😀\",\"n\":-9007199254740991,\"가\":[9007199254740991],\"￿\":0}"
+      }
+    ]
+  }
+}

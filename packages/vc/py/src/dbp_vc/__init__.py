@@ -5,7 +5,13 @@ TS `@dbp/vc` 와 동작이 동일하다. 함수명은 snake_case, 반환/입력 
 """
 
 from .didkey import HolderKey, did_key_to_public_key, generate_holder_key, public_key_to_did_key
-from .ed25519 import ed25519_public_key, ed25519_public_key_hex, ed25519_sign, ed25519_verify
+from .ed25519 import (
+    ed25519_is_valid_public_key,
+    ed25519_public_key,
+    ed25519_public_key_hex,
+    ed25519_sign,
+    ed25519_verify,
+)
 from .errors import VcError
 from .jcs import bundle_hash, canonicalize, sha256_hex
 from .jws import DecodedJws, b64url_decode, b64url_encode, decode_jws, sign_jws, verify_jws
@@ -42,6 +48,7 @@ __all__ = [
     "decode_status_list",
     "decode_vc",
     "did_key_to_public_key",
+    "ed25519_is_valid_public_key",
     "ed25519_public_key",
     "ed25519_public_key_hex",
     "ed25519_sign",

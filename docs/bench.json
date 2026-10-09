@@ -3,13 +3,15 @@
   "verdicts": {
     "PASS": 50
   },
-  "meanMs": 12.4,
-  "p50Ms": 12.4,
-  "p95Ms": 13.2,
-  "maxMs": 13.9,
-  "serverMeanMs": 10.9,
+  "scope": "검증 서버 처리(POST /present 왕복) — 로컬 루프백, 같은 VC 2장 반복 제출(규칙 번들 60초·발급기관 5초 캐시, 상태 목록은 매번 원장 조회). QR·화면·영수증 앵커 제외",
+  "chain": "hardhat-localhost",
+  "meanMs": 10.6,
+  "p50Ms": 10.5,
+  "p95Ms": 12.5,
+  "maxMs": 23.5,
+  "firstMs": 23.5,
+  "flowP95Ms": 13.8,
+  "serverMeanMs": 8.8,
   "target": "p95 < 2000ms",
-  "pass": true,
-  "piiScan": "PASS (blocks=80, txs=79, logs=76, findings=0)",
-  "chain": "hardhat localhost 31337"
+  "pass": true
 }

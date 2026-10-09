@@ -3,6 +3,7 @@
  * SSR 프리렌더 중에는 indexedDB 가 없으므로 스토어를 지연 생성한다.
  */
 import { clear, createStore, get, set, type UseStore } from 'idb-keyval';
+import type { LedgerAddresses } from './ledger';
 import type { Bundle, ConsentReceiptRecord, PolicyMeta, PresentationRecord, StoredCredential, WalletRecord } from './types';
 
 const KEYS = {
@@ -12,6 +13,8 @@ const KEYS = {
   presentations: 'presentationReceipts',
   bundle: 'ruleBundle',
   policies: 'policies',
+  evalDate: 'ruleEvalDate',
+  ledgerAddresses: 'ledgerAddresses',
 } as const;
 
 let _store: UseStore | undefined;
@@ -103,4 +106,22 @@ export function getCachedPolicies(): Promise<PolicyMeta[] | undefined> {
 
 export function setCachedPolicies(p: PolicyMeta[]): Promise<void> {
   return set(KEYS.policies, p, db());
+}
+
+/** 발급기관이 알린 규칙 평가 기준일 (bundle.evalDate). 발급기관이 꺼져 있어도 같은 날짜로 사전 판정하도록 보관. */
+export function getCachedEvalDate(): Promise<string | undefined> {
+  return get<string>(KEYS.evalDate, db());
+}
+
+export function setCachedEvalDate(d: string): Promise<void> {
+  return set(KEYS.evalDate, d, db());
+}
+
+/** 공동원장 컨트랙트 주소 (공개 정보). 한 번 받아 두면 원장 조회 때 발급기관에 다시 묻지 않는다. */
+export function getCachedLedgerAddresses(): Promise<LedgerAddresses | undefined> {
+  return get<LedgerAddresses>(KEYS.ledgerAddresses, db());
+}
+
+export function setCachedLedgerAddresses(a: LedgerAddresses): Promise<void> {
+  return set(KEYS.ledgerAddresses, a, db());
 }

@@ -9,18 +9,26 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  ATTACK,
+  CHECK_LABELS,
   CLAIM_LABELS,
+  CRED_CHECK_LABELS,
   ERRORS,
   HEADER,
   policyLabel,
   POLICY_LABELS,
   PRESETS_FALLBACK,
+  REASON_KO,
+  reasonText,
   REQUEST,
   requestErrorText,
   RESULT,
   RULES_VERSION,
   verifierKindLabel,
 } from "../src/lib/copy";
+import { CHECK_KEYS } from "../src/lib/types";
+
+const CONFIG_PY = join(__dirname, "..", "..", "..", "services", "verifier", "src", "dbp_verifier", "config.py");
 
 const SRC = join(__dirname, "..", "src");
 
@@ -126,7 +134,7 @@ describe("PRESETS_FALLBACK", () => {
   });
 
   it("services/verifier config.py 의 PRESETS 와 문구·항목·취급 창구가 글자 그대로 같다", () => {
-    const py = readFileSync(join(__dirname, "..", "..", "..", "services", "verifier", "src", "dbp_verifier", "config.py"), "utf8");
+    const py = readFileSync(CONFIG_PY, "utf8");
     const presetsPy = py.slice(py.indexOf("PRESETS = ["), py.indexOf("REASON_KO"));
     // 프리셋 하나당 한 덩어리 ({"id": ... 부터 다음 {"id": 앞까지) — 서버 순서와 같다
     const chunks = presetsPy.split(/(?=\{"id": )/).slice(1);
@@ -158,6 +166,14 @@ describe("PRESETS_FALLBACK", () => {
     expect(sunshine?.label).toBe("햇살론 일반보증 대상 확인");
     expect(sunshine?.purpose).toBe("햇살론 일반보증 대상 확인");
     for (const p of PRESETS_FALLBACK) expect(JSON.stringify(p)).not.toMatch(/햇살론뱅크|햇살론 ?뱅크/);
+  });
+
+  it("공공요금 감면 안내문은 비교 패널과 같은 서류(소득금액증명·등본) 기준 — 수급자증명서 언급 없음 (F48)", () => {
+    const discount = PRESETS_FALLBACK.find((p) => p.id === "discount");
+    expect(discount?.hint).toBe(
+      "전기·도시가스·통신 요금 감면 창구가 소득금액증명·주민등록표 등본 원본 대신 '기준 중위소득 50% 이하 = 참' 1개 항목만 받습니다.",
+    );
+    expect(discount?.hint).not.toContain("수급자증명서");
   });
 
   it("요청 항목은 모두 알려진 claim 이고 기대값은 참", () => {
@@ -200,6 +216,65 @@ describe("정책 판정 보조 문구", () => {
       `규칙 ${RULES_VERSION}, 제출된 항목과 창구 확인값만으로 계산 — 재직 등 그 밖의 창구 심사 요건은 포함하지 않음`,
     );
     expect(withCounter).not.toContain("신용평점");
+  });
+});
+
+describe("검증 단계 체크리스트 (F32)", () => {
+  it("11개 단계 — 발급기관 활성·발급 권한·증명서 유효기간이 따로 보인다", () => {
+    expect(CHECK_KEYS).toHaveLength(11);
+    for (const k of ["issuerActive", "issuerAuthoritative", "notExpired"] as const) expect(CHECK_KEYS).toContain(k);
+    expect(Object.keys(CHECK_LABELS).sort()).toEqual([...CHECK_KEYS].sort());
+    for (const k of CHECK_KEYS) expect(CHECK_LABELS[k].length, k).toBeGreaterThan(0);
+  });
+
+  it("증명서별 확인 키(verify.py) 라벨: 유효기간·발급 권한 포함", () => {
+    for (const k of ["issuerRegistered", "issuerActive", "issuerAuthoritative", "signature", "notExpired", "holderBinding", "notRevoked", "ruleVersion"]) {
+      expect(CRED_CHECK_LABELS, k).toHaveProperty(k);
+    }
+  });
+});
+
+describe("REASON_KO", () => {
+  it("새 사유 코드 문구 (검증 서비스·지갑과 같은 문구)", () => {
+    expect(REASON_KO).toMatchObject({
+      ISSUER_NOT_AUTHORITATIVE: "이 항목을 발급할 권한이 없는 기관의 증명서입니다",
+      UNREQUESTED_CREDENTIAL: "요청하지 않은 증명서가 함께 제출되었습니다",
+      LEDGER_UNAVAILABLE: "공동원장에 연결할 수 없습니다 — 잠시 후 다시 시도하세요",
+      RULE_VERSION_NOT_ACCEPTED: "이 창구가 받지 않는 규칙 버전입니다",
+      STATUS_LIST_OWNER_MISMATCH: "상태 목록 게시자가 발급기관과 다릅니다",
+      REQUESTED_INVALID: "요청 항목이 올바르지 않습니다",
+      TOO_MANY_LOOKUPS: "확인번호 조회가 너무 많습니다 — 잠시 후 다시 시도하세요",
+      RESULT_AUTH_REQUIRED: "이 결과를 볼 권한이 없습니다",
+      RESULT_FORBIDDEN: "이 결과를 볼 권한이 없습니다",
+    });
+    expect(ERRORS.resultForbidden).toBe(REASON_KO.RESULT_FORBIDDEN);
+  });
+
+  it("services/verifier config.py 의 REASON_KO 와 같은 코드는 글자 그대로 같은 문구", () => {
+    const py = readFileSync(CONFIG_PY, "utf8");
+    const block = py.slice(py.indexOf("REASON_KO = {"), py.indexOf("\n}", py.indexOf("REASON_KO = {")));
+    const pyReasons = Object.fromEntries([...block.matchAll(/"([A-Z_]+)": "([^"]*)"/g)].map((m) => [m[1], m[2]]));
+    expect(Object.keys(pyReasons).length).toBeGreaterThan(15);
+    // 서버가 내는 사유 코드는 모두 화면 폴백에도 있어야 한다 (응답 reasons 가 빠졌을 때 코드가 그대로 보이지 않게)
+    for (const [code, text] of Object.entries(pyReasons)) expect(REASON_KO[code], code).toBe(text);
+  });
+
+  it("요청 생성 실패 REQUESTED_INVALID 는 한국어로, 서버 문구가 있으면 서버 문구 우선", () => {
+    expect(requestErrorText("REQUESTED_INVALID")).toBe("요청 항목이 올바르지 않습니다");
+    expect(reasonText("LEDGER_UNAVAILABLE")).toBe("공동원장에 연결할 수 없습니다 — 잠시 후 다시 시도하세요");
+    expect(reasonText("LEDGER_UNAVAILABLE", "서버 문구")).toBe("서버 문구");
+  });
+});
+
+describe("공격 시연 문구 (F26·F29)", () => {
+  it("예상과 다른 사유로 거부된 경우는 '차단됨'·'… 확인' 문구를 쓰지 않는다 (E2E 가 두 경우를 구분)", () => {
+    for (const meta of Object.values(ATTACK.kinds)) {
+      const other = ATTACK.otherReason(meta.expected);
+      expect(other).not.toContain(ATTACK.blocked);
+      expect(other).not.toContain(ATTACK.confirmed(meta.expected));
+      expect(ATTACK.confirmed(meta.expected)).toBe(`· ${meta.expected} 확인`);
+    }
+    expect(ATTACK.notBlocked).not.toContain(ATTACK.blocked);
   });
 });
 

@@ -54,3 +54,11 @@
 - 화면: 지갑은 보유 사실로 성립하는 증명 조합을 골라 '창구에 제출할 증명서'를 안내하고, 신용평점은 '창구가 직접 확인 (증명서 아님)'으로 따로 표시. 검증기관 화면은 판정 불가 시 미제출 항목과 창구 자체 확인 항목을 표시. AI 상담 검색에서 일반어 '요금감면' 별칭을 빼, 전기요금 질문이 통신요금 판정으로 연결되던 문제 수정
 - 테스트 통과: Python 251 · 규칙 엔진 TS 93 · VC 58 · 체인 30 · 지갑 51 · 검증기관 화면 74. 중위소득표 경계값, 증명 조합의 충분성·필요성(규칙 변수 전 조합), 부분 판정 교차 검증 테스트 추가
 - 문서: DECISIONS(D-22 추가, D-06·D-15·D-17·D-19·D-21 에 날짜 주석)·README·ARCHITECTURE·DEMO·스토리보드·PROPOSAL_DELTA·PLAN 갱신. `docs/TEST_REPORT.md`·`docs/DEMO_RUN.md`·스크린샷은 E2E 재실행 후 다시 생성한다
+
+## 2026-10-09 (코드 리뷰 3~6순위, D-23)
+- 공개 API 보호: 검증 요청에 창구 토큰(`counterToken`), 결과 조회는 창구 토큰 또는 VP 해시가 있어야 응답(401/403). 6자리 코드는 만료·사용 시 404, 실패 조회가 잦으면 429. 서명·aud 가 맞는 VP 만 nonce 를 소모하고, 그렇지 않은 제출은 `rid#rejected-…` 로 따로 저장(결과 선점 차단). 발급기관 `/admin/*` 은 `ADMIN_TOKEN` 또는 로컬 접속만, 서비스 기본 바인딩 127.0.0.1(`HOST`), CORS 는 `ALLOWED_ORIGINS`. AI 감사 기록은 무작위 `auditId` 로만 조회(`/audit/last-payload` 410)
+- 검증 엄격화: 요청 항목 검사(`REQUESTED_INVALID`), claim 별 소관 발급기관 대조(`ISSUER_NOT_AUTHORITATIVE`), 요청하지 않은 증명서 거절(`UNREQUESTED_CREDENTIAL`), 원장 장애 분리(`LEDGER_UNAVAILABLE`), 받는 규칙 버전 목록(`RULE_VERSION_NOT_ACCEPTED`), 상태목록 게시자 대조(`STATUS_LIST_OWNER_MISMATCH`). 체크리스트 8 → 11개(`issuerActive`·`notExpired`·`issuerAuthoritative` 추가), FAIL 결과에는 `policyCheck` 없음. 원장 읽기 3초 타임아웃·재시도 없음, 발급기관 캐시 5초 이하
+- 발급기관: 폐기는 원장 게시 실패 시 503(`LEDGER_PUBLISH_FAILED`)과 다음 게시 때 병합(`POST /admin/status-list/resync`), 번들·버전 단위 일괄 폐기(`revoke-by-bundle`), 유효기간 = min(발급 + 365일, 고시 연도 말), 발급 입력 검증(`CLAIMS_INVALID`·`STATUS_LIST_FULL`), 동의 영수증 앵커 비동기화, `/.well-known/issuer` 에 `bundle.evalDate`
+- 시연: 확인 숫자 4자리(`confirmCode`, 지갑·창구 화면 대조), 지갑은 제출 시간 초과 시 VP 해시로 결과 폴링. 만료 공격이 원래 요청 상태를 바꾸지 않고 위조·타인 공격은 사유 코드 하나로 결정. AI 채팅 마스킹·세션 30분·'자격 판정이 아님' 안내
+- 문서: DEMO(⑤ 폐기 → ⑦ 발급기관 정지 순서, ⑦ 뒤 재기동 명령, 체크리스트 11개, 확인 숫자, 예상 질의 '남는 기록'·대리 제출·식별자·390건·검증 시간·PII 스캔·결과 조회), 스토리보드 장면 순서, ARCHITECTURE('읽기만' → 제출 영수증 앵커, 원장 기록/비기록 표, 결과 조회 보호), README(보안·실행 메모), DECISIONS(D-23 추가, D-12·D-19 날짜 주석), PLAN·PROPOSAL_DELTA. 발표자료(제안요약서·전체정리·멘토링 문서) 정정 목록은 `../발표자료_정정사항_2026-10-09.txt`
+- 남은 것: E2E 재실행 → `docs/TEST_REPORT.md`·`docs/DEMO_RUN.md`·스크린샷 재생성(체크리스트 11개·확인 숫자·영수증 표시가 바뀐 화면), 벤치 재측정(캐시 TTL 단축 반영)
