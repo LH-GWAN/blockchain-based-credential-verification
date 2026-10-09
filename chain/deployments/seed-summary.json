@@ -1,7 +1,7 @@
 {
-  "rpc": "http://chain:8545",
+  "rpc": "http://127.0.0.1:8545",
   "chainId": 31337,
-  "bundleHash": "0x2032a0249e8f763c07de77a046c98dd97a6a0af87cb7ba5a3225e061002adc15",
+  "bundleHash": "0xb1eb8e28a1735506f65df6304be36c7a4d6133f4d99ff31f0391a3c4774ef102",
   "issuers": {
     "did:dbp:daegu": {
       "name": "대구광역시",
@@ -24,16 +24,16 @@
       "tx": "0x0ab735e49a5444f9e322d5e5cf91dfa810d6783fd96755e8c287b9e0690d932a"
     },
     {
-      "registerBundle": "daegu-eligibility@2026.1",
-      "tx": "0xb52d62b2e3181e768087ccc8eff3f60ff8de3c6ea4a2a88404220fbb0276501f"
+      "registerBundle": "daegu-eligibility@2026.2",
+      "tx": "0x6a272264df83fff78c483c718e4c47921565177f4d58b3b16eb9bc6129ba3943"
     },
     {
       "publishStatusList": "dbp:status:daegu:list-1",
-      "tx": "0xbc56c027402e5413eeee3cee69bd23a117902fa6ac4b9a82a3a5e4795e18c005"
+      "tx": "0xbecdcc0d8332cd71f39d6be3f0108bc8a8fbbb736b47b5711ea79adc725bdad9"
     },
     {
       "publishStatusList": "dbp:status:welfare:list-1",
-      "tx": "0xad5c0af2d20feb735d45616cf09e60d54ee26f4b2a07a03cfb51bd8e04e50efb"
+      "tx": "0xbee7484e75cc7e400a2bb2059b8720bca7e9839c1f732b9768ea09616cd68956"
     }
   ]
 }

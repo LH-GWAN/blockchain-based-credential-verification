@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { api, isApiError, isUnreachable } from "@/lib/api";
-import { ERRORS, policyLabel, PRESETS_FALLBACK, REQUEST, RULES_VERSION, verifierKindLabel } from "@/lib/copy";
-import { initialRequestState, isClaimSelected, requestFormReducer } from "@/lib/request-state";
+import { policyLabel, PRESETS_FALLBACK, REQUEST, requestErrorText, RULES_VERSION, verifierKindLabel } from "@/lib/copy";
+import { initialRequestState, isClaimSelected, presetsForKind, requestFormReducer } from "@/lib/request-state";
 import type { ClaimDef, PresentationRequest, Preset, VerifierProfile } from "@/lib/types";
 import { RequestQr } from "./RequestQr";
 import { ServiceUnavailable } from "./ServiceUnavailable";
@@ -49,6 +49,13 @@ export function RequestForm() {
     void loadMeta();
   }, [loadMeta]);
 
+  // 창구 종류가 정해지거나 바뀌면, 그 창구가 취급하지 않는 활성 프리셋을 해제한다 (취급하면 그대로 — 리듀서가 같은 상태를 돌려준다).
+  const verifierKind = meta.kind === "ready" ? meta.verifiers.find((v) => v.id === verifierId)?.kind : undefined;
+  const presets = meta.kind === "ready" ? meta.presets : null;
+  useEffect(() => {
+    if (presets) dispatch({ type: "verifierChanged", kind: verifierKind, presets });
+  }, [presets, verifierKind]);
+
   const create = useCallback(async () => {
     if (meta.kind !== "ready") return;
     const known = new Set(meta.claims.map((c) => c.claim));
@@ -70,7 +77,8 @@ export function RequestForm() {
       setRequest(req);
     } catch (e) {
       if (isUnreachable(e)) setMeta({ kind: "down" });
-      else setError(ERRORS.generic(isApiError(e) ? e.code : String(e)));
+      // 400 PRESET_NOT_OFFERED 등 아는 사유 코드는 한국어 문구로 보여 준다.
+      else setError(requestErrorText(isApiError(e) ? e.code : String(e)));
     } finally {
       setSubmitting(false);
     }
@@ -91,6 +99,8 @@ export function RequestForm() {
   }
 
   const activePreset = meta.presets.find((p) => p.id === form.presetId);
+  // 이 창구가 취급하는 상품의 프리셋만 보인다 (예: 새희망홀씨는 은행 창구에만).
+  const visiblePresets = presetsForKind(meta.presets, verifierKind);
   const selectedClaims = meta.claims.filter((c) => isClaimSelected(form, c.claim));
 
   return (
@@ -125,7 +135,10 @@ export function RequestForm() {
                     name="verifier"
                     value={v.id}
                     checked={active}
-                    onChange={() => setVerifierId(v.id)}
+                    onChange={() => {
+                      setVerifierId(v.id);
+                      setError(null);
+                    }}
                     className="h-5 w-5 accent-accent"
                   />
                   <span className="flex flex-col">
@@ -142,7 +155,7 @@ export function RequestForm() {
           <legend className="mb-1 text-lg font-semibold">{REQUEST.presets}</legend>
           <p className="mb-3 text-sm text-muted">{REQUEST.presetsLead}</p>
           <div className="flex flex-wrap gap-2">
-            {meta.presets.map((p) => {
+            {visiblePresets.map((p) => {
               const active = p.id === form.presetId;
               return (
                 <button

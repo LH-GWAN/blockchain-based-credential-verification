@@ -294,7 +294,7 @@ export function templateRecommendation(policy: PolicyMeta): Recommendation {
   return {
     policyId: policy.policyId,
     headline: `${policy.name} — 신청하실 수 있습니다`,
-    explanation: `${policy.summary} 규칙 엔진이 확인한 결과, 이 제도의 신청 기준을 충족합니다.${clause ? ` 근거는 ${clause.title}입니다.` : ''}`,
+    explanation: `${policy.summary} 규칙 엔진이 확인한 결과, 이 제도의 규칙 기준(소득·자격)을 충족합니다.${clause ? ` 근거는 ${clause.title}입니다.` : ''}`,
     citations: clause ? [clause.clauseId] : [],
     nextSteps: `${policy.howToApply}. 최종 수급 여부는 담당 기관 심사로 정해집니다.`,
     source: 'template',

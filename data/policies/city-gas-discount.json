@@ -25,7 +25,7 @@
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",
-    "version": "2026.1"
+    "version": "2026.2"
   },
   "notes": "규칙: 수급자 OR 차상위(50% 이하)."
 }

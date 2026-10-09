@@ -1,8 +1,8 @@
 {
   "evalDate": "2026-09-14",
   "bundle": "daegu-eligibility",
-  "version": "2026.1",
-  "bundleHash": "0x2032a0249e8f763c07de77a046c98dd97a6a0af87cb7ba5a3225e061002adc15",
+  "version": "2026.2",
+  "bundleHash": "0xb1eb8e28a1735506f65df6304be36c7a4d6133f4d99ff31f0391a3c4774ef102",
   "citizenCount": 30,
   "policyCount": 13,
   "verdictCount": 390,
@@ -22,7 +22,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": true,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -34,7 +36,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": true,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -55,7 +57,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": true,
@@ -67,7 +71,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -88,7 +92,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -100,7 +106,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -121,7 +127,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -133,7 +141,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -154,7 +162,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -166,7 +176,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -187,7 +197,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -199,7 +211,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -220,7 +232,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -232,7 +246,7 @@
         "telecom-discount": false,
         "micro-livelihood-loan": false,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": false,
         "city-gas-discount": false
@@ -253,7 +267,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -265,7 +281,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -286,7 +302,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -298,7 +316,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -319,7 +337,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": false,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -331,8 +351,8 @@
         "telecom-discount": true,
         "micro-livelihood-loan": false,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": false,
-        "new-hope-loan": false,
+        "sunshine-loan-general": false,
+        "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
       }
@@ -352,7 +372,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": false,
-        "annualIncomeUnder45M": false
+        "annualIncomeUnder40M": false,
+        "annualIncomeUnder45M": false,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -364,7 +386,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": false,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": false,
+        "sunshine-loan-general": false,
         "new-hope-loan": false,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -385,7 +407,9 @@
         "incomeBelowBasicPensionLine": false,
         "creditBottom20": false,
         "annualIncomeUnder35M": false,
-        "annualIncomeUnder45M": false
+        "annualIncomeUnder40M": false,
+        "annualIncomeUnder45M": false,
+        "annualIncomeUnder50M": false
       },
       "policies": {
         "nbl-livelihood": false,
@@ -397,7 +421,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": false,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": false,
+        "sunshine-loan-general": false,
         "new-hope-loan": false,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -418,7 +442,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -430,7 +456,7 @@
         "telecom-discount": false,
         "micro-livelihood-loan": false,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": false
@@ -451,7 +477,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -463,7 +491,7 @@
         "telecom-discount": false,
         "micro-livelihood-loan": false,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": false,
         "city-gas-discount": false
@@ -484,7 +512,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -496,7 +526,7 @@
         "telecom-discount": false,
         "micro-livelihood-loan": false,
         "daegu-metro-free": true,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": false
@@ -517,7 +547,9 @@
         "incomeBelowBasicPensionLine": false,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -529,7 +561,7 @@
         "telecom-discount": false,
         "micro-livelihood-loan": false,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": false,
         "city-gas-discount": false
@@ -550,7 +582,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": false,
-        "annualIncomeUnder45M": false
+        "annualIncomeUnder40M": false,
+        "annualIncomeUnder45M": false,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -562,7 +596,7 @@
         "telecom-discount": false,
         "micro-livelihood-loan": false,
         "daegu-metro-free": true,
-        "sunshine-loan-bank": false,
+        "sunshine-loan-general": false,
         "new-hope-loan": false,
         "electricity-welfare-discount": true,
         "city-gas-discount": false
@@ -583,7 +617,9 @@
         "incomeBelowBasicPensionLine": false,
         "creditBottom20": false,
         "annualIncomeUnder35M": false,
-        "annualIncomeUnder45M": false
+        "annualIncomeUnder40M": false,
+        "annualIncomeUnder45M": false,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -595,7 +631,7 @@
         "telecom-discount": false,
         "micro-livelihood-loan": false,
         "daegu-metro-free": true,
-        "sunshine-loan-bank": false,
+        "sunshine-loan-general": false,
         "new-hope-loan": false,
         "electricity-welfare-discount": false,
         "city-gas-discount": false
@@ -616,7 +652,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": true,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -628,7 +666,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -649,7 +687,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": true,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -661,7 +701,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -682,7 +722,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": true,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -694,7 +736,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -715,7 +757,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": true,
@@ -727,7 +771,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": true,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -748,7 +792,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": true,
@@ -760,7 +806,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -781,7 +827,9 @@
         "incomeBelowBasicPensionLine": false,
         "creditBottom20": true,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -793,7 +841,7 @@
         "telecom-discount": false,
         "micro-livelihood-loan": true,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": false,
         "city-gas-discount": false
@@ -814,7 +862,9 @@
         "incomeBelowBasicPensionLine": false,
         "creditBottom20": true,
         "annualIncomeUnder35M": false,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -826,7 +876,7 @@
         "telecom-discount": false,
         "micro-livelihood-loan": false,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": false,
         "city-gas-discount": false
@@ -847,7 +897,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -859,7 +911,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true
@@ -880,7 +932,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": true,
         "annualIncomeUnder35M": false,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": false,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -892,7 +946,7 @@
         "telecom-discount": false,
         "micro-livelihood-loan": false,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": false,
         "city-gas-discount": false
@@ -913,7 +967,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": true,
         "annualIncomeUnder35M": false,
-        "annualIncomeUnder45M": false
+        "annualIncomeUnder40M": false,
+        "annualIncomeUnder45M": false,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -925,8 +981,8 @@
         "telecom-discount": false,
         "micro-livelihood-loan": false,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": false,
-        "new-hope-loan": false,
+        "sunshine-loan-general": false,
+        "new-hope-loan": true,
         "electricity-welfare-discount": false,
         "city-gas-discount": false
       }
@@ -946,7 +1002,9 @@
         "incomeBelowBasicPensionLine": false,
         "creditBottom20": false,
         "annualIncomeUnder35M": false,
-        "annualIncomeUnder45M": false
+        "annualIncomeUnder40M": false,
+        "annualIncomeUnder45M": false,
+        "annualIncomeUnder50M": false
       },
       "policies": {
         "nbl-livelihood": false,
@@ -958,7 +1016,7 @@
         "telecom-discount": false,
         "micro-livelihood-loan": false,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": false,
+        "sunshine-loan-general": false,
         "new-hope-loan": false,
         "electricity-welfare-discount": false,
         "city-gas-discount": false
@@ -979,7 +1037,9 @@
         "incomeBelowBasicPensionLine": true,
         "creditBottom20": false,
         "annualIncomeUnder35M": true,
-        "annualIncomeUnder45M": true
+        "annualIncomeUnder40M": true,
+        "annualIncomeUnder45M": true,
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": true,
@@ -991,7 +1051,7 @@
         "telecom-discount": true,
         "micro-livelihood-loan": true,
         "daegu-metro-free": false,
-        "sunshine-loan-bank": true,
+        "sunshine-loan-general": true,
         "new-hope-loan": true,
         "electricity-welfare-discount": true,
         "city-gas-discount": true

@@ -43,12 +43,22 @@ describe('selectVcsForRequest', () => {
     expect(sel.vcJwts.some((j) => j.includes('ageOver65') || j.includes('annualIncomeUnder35M'))).toBe(false);
   });
 
-  it('은행 창구(햇살론뱅크) 요청: 소득 사실은 사회보장정보원 발급으로 표시된다', () => {
+  it('은행·저축은행 창구(햇살론 일반보증) 요청: 소득 사실은 사회보장정보원 발급으로 표시된다', () => {
     const sel = selectVcsForRequest(WALLET, [{ claim: 'annualIncomeUnder35M', expected: true }]);
     expect(sel.vcJwts).toEqual(['jwt.annualIncomeUnder35M.true']);
     expect(sel.matched[0]?.credential.issuerDid).toBe('did:dbp:welfare');
     // 제출 화면의 "(발급기관 발급)" 접미사는 저장된 증명서의 issuerName 을 그대로 쓴다
     expect(COPY.present.issuedBy(sel.matched[0]!.credential.issuerName)).toBe('(사회보장정보원(복지기관) 발급)');
+  });
+
+  it('새희망홀씨(연소득 4,000만 원 이하) 요청: 3,500만 원 이하 증명서로 대신 채우지 않는다', () => {
+    // 지갑에 3,500만 원 이하 VC 만 있으면 missing — claim 이름이 정확히 같은 VC 만 제출한다
+    expect(selectVcsForRequest(WALLET, [{ claim: 'annualIncomeUnder40M', expected: true }]).missing.map((m) => m.claim)).toEqual([
+      'annualIncomeUnder40M',
+    ]);
+    const sel = selectVcsForRequest([...WALLET, cred('annualIncomeUnder40M', true, 'welfare')], [{ claim: 'annualIncomeUnder40M', expected: true }]);
+    expect(sel.vcJwts).toEqual(['jwt.annualIncomeUnder40M.true']);
+    expect(sel.vcJwts.some((j) => j.includes('annualIncomeUnder35M'))).toBe(false);
   });
 
   it('expected 와 값이 다르면 매칭하지 않는다', () => {

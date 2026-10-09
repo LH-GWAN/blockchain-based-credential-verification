@@ -39,7 +39,7 @@ def compose_bundle(bundle: str, version: str, preprocess: dict, claims: dict, po
     }
 
 
-def load_bundle(bundle: str = "daegu-eligibility", version: str = "2026.1", root: Path | None = None) -> dict:
+def load_bundle(bundle: str = "daegu-eligibility", version: str = "2026.2", root: Path | None = None) -> dict:
     root = root or repo_root()
     base = root / "packages/rules/bundles" / bundle / version
     return compose_bundle(

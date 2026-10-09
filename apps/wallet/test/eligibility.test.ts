@@ -38,7 +38,7 @@ const C001_ELIGIBLE = [
   'telecom-discount',
   'micro-livelihood-loan',
   'daegu-metro-free',
-  'sunshine-loan-bank',
+  'sunshine-loan-general',
   'new-hope-loan',
   'electricity-welfare-discount',
   'city-gas-discount',
@@ -77,11 +77,13 @@ describe('로컬 사전 판정 (김복례)', () => {
     expect(daegu.denied.map((d) => d.claim)).toEqual(['hasStudentChild']);
   });
 
-  it('사회보장정보원: 소득구간·연소득 발급 가능, 32% 이하·수급 여부는 발급 불가', () => {
+  it('사회보장정보원: 소득구간·연소득(3,500·4,000·4,500·5,000만 원) 발급 가능, 32% 이하·수급 여부는 발급 불가', () => {
     const welfare = plans[1]!;
     expect(welfare.issuable.map((d) => d.claim).sort()).toEqual([
       'annualIncomeUnder35M',
+      'annualIncomeUnder40M',
       'annualIncomeUnder45M',
+      'annualIncomeUnder50M',
       'incomeBelow48Median',
       'incomeBelow50Median',
       'incomeBelowBasicPensionLine',
@@ -90,10 +92,15 @@ describe('로컬 사전 판정 (김복례)', () => {
     expect(welfare.denied.find((d) => d.claim === 'incomeBelow32Median')?.label).toBe('기준 중위소득 32% 이하 여부');
   });
 
+  it('발급 가능한 사실은 두 기관 합쳐 11개 (대구광역시 4 + 사회보장정보원 7)', () => {
+    expect(plans.flatMap((p) => p.issuable)).toHaveLength(11);
+  });
+
   it("issuerOf 가 'self' 인 creditBottom20 은 어느 발급기관에도 요청하지 않고, 연소득 3,500만 원 이하는 사회보장정보원에 요청한다", () => {
     const requestedBy = (claim: string) => plans.filter((p) => [...p.issuable, ...p.denied].some((d) => d.claim === claim)).map((p) => p.did);
     expect(requestedBy('creditBottom20')).toEqual([]);
     expect(requestedBy('annualIncomeUnder35M')).toEqual(['did:dbp:welfare']);
+    expect(requestedBy('annualIncomeUnder40M')).toEqual(['did:dbp:welfare']);
     // 발급 요청 본문(requestedClaims = issuable) 어디에도 creditBottom20 이 없다
     expect(plans.flatMap((p) => p.issuable.map((d) => d.claim))).not.toContain('creditBottom20');
   });
@@ -157,7 +164,7 @@ describe('창구 종류별 분류 (김복례)', () => {
 
   it('A. 은행·민간 창구: 서민금융 3종 + 민간 감면 3종 (finance → discount → 이름순)', () => {
     expect(groups.counter.map((p) => p.policyId)).toEqual(
-      expect.arrayContaining(['sunshine-loan-bank', 'new-hope-loan', 'micro-livelihood-loan', 'telecom-discount', 'electricity-welfare-discount', 'city-gas-discount']),
+      expect.arrayContaining(['sunshine-loan-general', 'new-hope-loan', 'micro-livelihood-loan', 'telecom-discount', 'electricity-welfare-discount', 'city-gas-discount']),
     );
     expect(groups.counter).toHaveLength(6);
     expect(groups.counter.slice(0, 3).every((p) => policyChannel(p) === 'finance')).toBe(true);
@@ -189,15 +196,19 @@ describe('창구 종류별 분류 (김복례)', () => {
   });
 
   it("창구에 제출할 증명서: expected=true 이고 발급기관이 있는 claim 만 (self 제외), 소득 사실은 '사회보장정보원(복지기관)'", () => {
-    expect(submitDocuments(bundle, index['sunshine-loan-bank']!)).toEqual([
+    expect(submitDocuments(bundle, index['sunshine-loan-general']!)).toEqual([
       { claim: 'annualIncomeUnder35M', label: '연소득 3,500만 원 이하 여부', issuerDid: 'did:dbp:welfare', issuerName: '사회보장정보원(복지기관)' },
+    ]);
+    // 새희망홀씨Ⅱ 는 연소득 4,000만 원 이하 증명서 1개
+    expect(submitDocuments(bundle, index['new-hope-loan']!)).toEqual([
+      { claim: 'annualIncomeUnder40M', label: '연소득 4,000만 원 이하 여부', issuerDid: 'did:dbp:welfare', issuerName: '사회보장정보원(복지기관)' },
     ]);
     expect(submitDocuments(bundle, index['telecom-discount']!).map((d) => [d.claim, d.issuerName])).toEqual([['incomeBelow50Median', '사회보장정보원(복지기관)']]);
     // expected=false (수급자 아님) 항목은 증명서가 아니다
     expect(submitDocuments(bundle, index['near-poor']!).map((d) => d.claim)).toEqual(['incomeBelow50Median']);
     // self 항목이 requiredClaims 에 끼어 있어도 제출 목록에는 오르지 않는다
     const withSelf: PolicyMeta = { ...index['new-hope-loan']!, requiredClaims: [...index['new-hope-loan']!.requiredClaims, { claim: 'creditBottom20', expected: true }] };
-    expect(submitDocuments(bundle, withSelf).map((d) => d.claim)).toEqual(['annualIncomeUnder35M']);
+    expect(submitDocuments(bundle, withSelf).map((d) => d.claim)).toEqual(['annualIncomeUnder40M']);
     for (const p of policies) expect(p.verifierHint).toBeTruthy();
   });
 });
@@ -227,10 +238,10 @@ describe('추천 필터 (근거 없으면 비노출)', () => {
 
   it('AI 항목이 있으면 그것을, 없으면 템플릿 카드를 쓴다', () => {
     expect(pickRecommendation(index['new-hope-loan']!, [good])).toBe(good);
-    const t = pickRecommendation(index['sunshine-loan-bank']!, [good]);
+    const t = pickRecommendation(index['sunshine-loan-general']!, [good]);
     expect(t.source).toBe('template');
-    expect(t).toEqual(templateRecommendation(index['sunshine-loan-bank']!));
-    expect(t.citations).toEqual(['sunshine-bank-c1']);
+    expect(t).toEqual(templateRecommendation(index['sunshine-loan-general']!));
+    expect(t.citations).toEqual(['sunshine-general-c1']);
     expect(t.explanation).toContain('규칙 엔진');
   });
 });
@@ -265,7 +276,7 @@ describe('증명서 보유 표시', () => {
   });
   it("issuerOf 가 'self' 인 항목은 보유 목록에 오르지 않는다", () => {
     const withSelf: PolicyMeta = { ...index['new-hope-loan']!, requiredClaims: [...index['new-hope-loan']!.requiredClaims, { claim: 'creditBottom20', expected: true }] };
-    expect(credentialHoldings(withSelf, creds, claims, bundle).map((x) => x.claim)).toEqual(['annualIncomeUnder35M']);
+    expect(credentialHoldings(withSelf, creds, claims, bundle).map((x) => x.claim)).toEqual(['annualIncomeUnder40M']);
   });
 });
 

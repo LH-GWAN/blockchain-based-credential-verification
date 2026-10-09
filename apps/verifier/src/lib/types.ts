@@ -12,8 +12,11 @@ export type Preset = {
   label: string;
   purpose: string;
   requested: { claim: string; expected: boolean }[];
-  policyId?: string;
+  /** 정책 판정 ID. 서버는 판정이 없는 프리셋에 null 을 보낸다. */
+  policyId?: string | null;
   hint: string;
+  /** 이 상품을 취급하는 창구 종류(VerifierProfile.kind). 없으면 모든 창구에 보인다. */
+  verifierKinds?: string[];
 };
 
 export type PresentationRequest = {

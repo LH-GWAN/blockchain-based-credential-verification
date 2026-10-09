@@ -58,7 +58,7 @@ describe('engine matches data/expected.json', () => {
     expect(BUNDLE.tables.basicPensionLineByHouseholdKind).toEqual({ single: 2470000, couple: 3952000 });
   });
 
-  it('all 30 citizens x 9 policies match (claims and policies)', () => {
+  it('all 30 citizens x 13 policies match (claims and policies)', () => {
     const mismatches: unknown[] = [];
     for (const row of EXPECTED.rows) {
       const c = CITIZENS[row.citizenId]!;

@@ -23,8 +23,8 @@ def test_persona_template_recommend(client, recommend_body, persona):
         assert it["headline"] and it["explanation"] and it["nextSteps"]
         assert store.by_id[it["policyId"]]["legalBasis"][0]["clauseId"] == it["citations"][0]
 
-    # 정렬: 은행 서민금융(finance) 먼저, 제도명 가나다순 → 새희망홀씨, 소액생계비대출, 햇살론뱅크
-    assert [it["policyId"] for it in items] == ["new-hope-loan", "micro-livelihood-loan", "sunshine-loan-bank"]
+    # 정렬: 은행 서민금융(finance) 먼저, 제도명 가나다순 → 새희망홀씨, 소액생계비대출, 햇살론 일반보증
+    assert [it["policyId"] for it in items] == ["new-hope-loan", "micro-livelihood-loan", "sunshine-loan-general"]
 
 
 def test_template_ordering_across_channels(client, recommend_body):

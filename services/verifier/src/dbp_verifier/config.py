@@ -9,18 +9,22 @@ VERIFIERS = {
     "im-savings-01": {"did": "did:dbp:verifier-im-savings-01", "name": "iM저축은행 대구지점 (모사)", "kind": "savings"},
 }
 # 창구 용도 프리셋: 어떤 참/거짓 항목만 받으면 되는지 (소득금액증명 원본 대신)
+# verifierKinds: 그 상품을 실제로 취급하는 창구 종류. 새희망홀씨는 은행권 상품이라 저축은행에는 없다.
 PRESETS = [
     {"id": "consult", "label": "서민금융 상담 대상 확인", "purpose": "서민금융 상담 대상 확인",
      "requested": [{"claim": "daeguResident", "expected": True}, {"claim": "incomeBelow50Median", "expected": True}],
-     "policyId": None, "hint": "대구 거주 여부와 기준 중위소득 50% 이하 여부, 두 항목의 참/거짓만 받습니다."},
-    {"id": "sunshine-bank", "label": "햇살론뱅크 대상 확인", "purpose": "햇살론뱅크 대상 확인",
-     "requested": [{"claim": "annualIncomeUnder35M", "expected": True}], "policyId": "sunshine-loan-bank",
-     "hint": "소득금액증명 원본 대신 '연소득 3,500만 원 이하 = 참' 1개 항목만 받습니다. 신용평점은 은행이 자체 조회합니다."},
+     "policyId": None, "verifierKinds": ["bank", "savings"],
+     "hint": "대구 거주 여부와 기준 중위소득 50% 이하 여부, 두 항목의 참/거짓만 받습니다."},
+    {"id": "sunshine-general", "label": "햇살론 일반보증 대상 확인", "purpose": "햇살론 일반보증 대상 확인",
+     "requested": [{"claim": "annualIncomeUnder35M", "expected": True}], "policyId": "sunshine-loan-general",
+     "verifierKinds": ["bank", "savings"],
+     "hint": "소득금액증명 원본 대신 '연소득 3,500만 원 이하 = 참' 1개 항목만 받습니다. 신용평점·재직(사업) 기간·보증 심사용 소득 증빙은 창구가 자체 확인합니다. 2026년 개편으로 은행·저축은행 모두 취급합니다."},
     {"id": "new-hope", "label": "새희망홀씨 대상 확인", "purpose": "새희망홀씨 대상 확인",
-     "requested": [{"claim": "annualIncomeUnder35M", "expected": True}], "policyId": "new-hope-loan",
-     "hint": "소득금액증명 원본 대신 '연소득 3,500만 원 이하 = 참' 1개 항목만 받습니다. 신용평점은 은행이 자체 조회합니다."},
+     "requested": [{"claim": "annualIncomeUnder40M", "expected": True}], "policyId": "new-hope-loan",
+     "verifierKinds": ["bank"],
+     "hint": "소득금액증명 원본 대신 '연소득 4,000만 원 이하 = 참' 1개 항목만 받습니다. 신용평점·재직 등 대출 심사는 은행이 자체 확인합니다. 은행권 상품이라 저축은행 창구에는 없습니다."},
     {"id": "discount", "label": "공공요금 감면 대상 확인", "purpose": "공공요금 감면 대상 확인",
-     "requested": [{"claim": "incomeBelow50Median", "expected": True}], "policyId": None,
+     "requested": [{"claim": "incomeBelow50Median", "expected": True}], "policyId": None, "verifierKinds": ["bank", "savings"],
      "hint": "전기·도시가스·통신 요금 감면 창구가 수급자증명서 원본 대신 '기준 중위소득 50% 이하 = 참' 1개 항목만 받습니다."},
 ]
 REASON_KO = {
@@ -42,6 +46,7 @@ REASON_KO = {
     "CLAIM_MISSING": "요청한 항목의 증명서가 없습니다",
     "CLAIM_FALSE": "요청한 항목이 충족되지 않았습니다",
     "VP_MALFORMED": "제출 형식이 올바르지 않습니다",
+    "PRESET_NOT_OFFERED": "이 창구에서 취급하지 않는 상품입니다",
 }
 
 

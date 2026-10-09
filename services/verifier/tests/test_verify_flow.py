@@ -14,6 +14,7 @@ BUNDLE = load_bundle()
 BHASH = bundle_hash(BUNDLE)
 ISSUER = generate_holder_key(bytes([1]) * 32)
 ISSUER_DID = "did:dbp:daegu"
+VERIFIER_DIDS = {"imbank-branch-01": "did:dbp:verifier-imbank-branch-01", "im-savings-01": "did:dbp:verifier-im-savings-01"}
 
 
 class FakeLedger:
@@ -51,7 +52,7 @@ def _vc(holder_did, claim, index, issuer_key=ISSUER, valid_until="2027-09-14T00:
     return issue_vc(id=f"urn:uuid:{claim}-{index}", issuer_did=ISSUER_DID, issuer_kid=ISSUER_DID + "#key-1",
                     issuer_private_key=issuer_key.private_key, holder_did=holder_did, claim={"name": claim, "value": True},
                     valid_from=valid_from, valid_until=valid_until, status={"listId": "dbp:status:daegu:list-1", "index": index},
-                    evidence={"bundle": "daegu-eligibility", "version": "2026.1", "bundleHash": bhash})
+                    evidence={"bundle": "daegu-eligibility", "version": "2026.2", "bundleHash": bhash})
 
 
 @pytest.fixture()
@@ -151,21 +152,60 @@ def test_aud_mismatch(env):
 
 
 def test_comparison_block_from_single_source(env):
-    """결과의 비교 블록은 data/legacy-documents.json 계산값이며 하드코딩이 아니다. 햇살론뱅크: 소득금액증명 10항목 → 참 1개."""
-    client, ledger, holder, vcs = env
+    """결과의 비교 블록은 data/legacy-documents.json 계산값이며 하드코딩이 아니다. 햇살론 일반보증: 소득금액증명 10항목 → 참 1개."""
+    client, _, holder, _ = env
     inc = _vc(holder.did, "annualIncomeUnder35M", 21)
-    req = client.post("/requests", json={"presetId": "sunshine-bank", "purpose": "햇살론뱅크 대상 확인",
+    req = client.post("/requests", json={"presetId": "sunshine-general", "purpose": "햇살론 일반보증 대상 확인",
                                          "requested": [{"claim": "annualIncomeUnder35M", "expected": True}]}).json()
     vp = create_vp(holder_did=holder.did, holder_private_key=holder.private_key, verifier_did=req["verifier"],
                    nonce=req["nonce"], vc_jwts=[inc])
     res = client.post("/present", json={"requestId": req["requestId"], "vpJwt": vp}).json()
     assert res["verdict"] == "PASS"
     c = res["comparison"]
-    assert c["presetId"] == "sunshine-bank" and [d["name"] for d in c["pullDocuments"]] == ["소득금액증명"]
+    assert c["presetId"] == "sunshine-general" and [d["name"] for d in c["pullDocuments"]] == ["소득금액증명"]
     assert c["pullCount"] == 10 and c["holdCount"] == 1 and c["reductionPercent"] == 90
     assert c["holdItems"] == ["연소득 3,500만 원 이하 여부 = 참"] and "3년" in c["pullRecords"]
     assert "실제 API 호출 결과가 아니다" in c["honestyNote"]
-    pre = client.get("/comparison").json()["presets"]["sunshine-bank"]
+    presets = client.get("/comparison").json()["presets"]
+    assert "sunshine-bank" not in presets
+    pre = presets["sunshine-general"]
     assert pre["pullCount"] == c["pullCount"] and pre["holdCount"] == c["holdCount"]
     for banned in ["유출이 불가", "유출 불가", "개인정보가 사라"]:
         assert banned not in json.dumps(c, ensure_ascii=False)
+
+
+def test_preset_offered_only_at_matching_verifier_kind(env):
+    """새희망홀씨는 은행권 상품이라 저축은행 창구에서는 요청 자체가 거부된다.
+    햇살론 일반보증은 2026 개편으로 저축은행도 취급하므로, 은행에서 쓴 같은 VC 를 재발급 없이 다시 낸다."""
+    client, _, holder, _ = env
+    presets = {p["id"]: p for p in client.get("/presets").json()}
+    assert presets["new-hope"]["verifierKinds"] == ["bank"]
+    assert presets["sunshine-general"]["verifierKinds"] == ["bank", "savings"]
+    assert {v["id"]: v["kind"] for v in client.get("/verifiers").json()} == {"imbank-branch-01": "bank", "im-savings-01": "savings"}
+
+    r = client.post("/requests", json={"verifierId": "im-savings-01", "presetId": "new-hope", "purpose": "새희망홀씨 대상 확인",
+                                       "requested": [{"claim": "annualIncomeUnder40M", "expected": True}]})
+    assert r.status_code == 400 and r.json()["detail"] == "PRESET_NOT_OFFERED"
+    # presetId 없이 policyId 만 보내도 우회되지 않는다
+    r = client.post("/requests", json={"verifierId": "im-savings-01", "policyId": "new-hope-loan",
+                                       "requested": [{"claim": "annualIncomeUnder40M", "expected": True}]})
+    assert r.status_code == 400 and r.json()["detail"] == "PRESET_NOT_OFFERED"
+    # 같은 상품이라도 은행 창구에서는 요청이 만들어진다
+    ok = client.post("/requests", json={"verifierId": "imbank-branch-01", "presetId": "new-hope",
+                                        "requested": [{"claim": "annualIncomeUnder40M", "expected": True}]})
+    assert ok.status_code == 200 and ok.json()["verifier"] == "did:dbp:verifier-imbank-branch-01"
+
+    inc = _vc(holder.did, "annualIncomeUnder35M", 22)  # 한 번 발급받은 VC
+    for verifier_id in ["imbank-branch-01", "im-savings-01"]:
+        r = client.post("/requests", json={"verifierId": verifier_id, "presetId": "sunshine-general",
+                                           "purpose": "햇살론 일반보증 대상 확인",
+                                           "requested": [{"claim": "annualIncomeUnder35M", "expected": True}]})
+        assert r.status_code == 200, r.text
+        req = r.json()
+        assert req["verifier"] == VERIFIER_DIDS[verifier_id]
+        vp = create_vp(holder_did=holder.did, holder_private_key=holder.private_key, verifier_did=req["verifier"],
+                       nonce=req["nonce"], vc_jwts=[inc])
+        res = client.post("/present", json={"requestId": req["requestId"], "vpJwt": vp}).json()
+        assert res["verdict"] == "PASS", res
+        assert res["claims"] == {"annualIncomeUnder35M": True}
+        assert res["comparison"]["presetId"] == "sunshine-general"

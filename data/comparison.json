@@ -89,7 +89,13 @@
     "annualIncomeUnder35M": [
       "income-certificate"
     ],
+    "annualIncomeUnder40M": [
+      "income-certificate"
+    ],
     "annualIncomeUnder45M": [
+      "income-certificate"
+    ],
+    "annualIncomeUnder50M": [
       "income-certificate"
     ]
   },
@@ -164,8 +170,8 @@
       "label": "서민금융 상담 대상 확인",
       "measuredHoldCount": 2
     },
-    "sunshine-bank": {
-      "presetId": "sunshine-bank",
+    "sunshine-general": {
+      "presetId": "sunshine-general",
       "pullDocuments": [
         {
           "id": "income-certificate",
@@ -208,7 +214,7 @@
       "pullRecords": "제공 내역 + 이용 내역 (이용 내역은 제공일로부터 3년 보관 — 「본인에 관한 행정정보의 제공 등에 관한 고시」 제27조 제2항)",
       "holdRecords": "없음 — 검증기관은 발급기관에 접속하지 않는다",
       "honestyNote": "※ 조회형 열은 공공 마이데이터 서비스 문서에 기재된 전달 항목으로 구성한 비교이며, 실제 API 호출 결과가 아니다.",
-      "label": "햇살론뱅크 대상 확인",
+      "label": "햇살론 일반보증 대상 확인",
       "measuredHoldCount": 1
     },
     "new-hope": {
@@ -247,7 +253,7 @@
       ],
       "pullCount": 10,
       "holdItems": [
-        "연소득 3,500만 원 이하 여부 = 참"
+        "연소득 4,000만 원 이하 여부 = 참"
       ],
       "holdCount": 1,
       "reductionPercent": 90,

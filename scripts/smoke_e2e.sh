@@ -45,13 +45,22 @@ b = issue(B, ["incomeBelow50Median","incomeBelow32Median","annualIncomeUnder35M"
 print(" 대구시 발급:", [c["claim"] for c in d["credentials"]], "거부:", [x["claim"] for x in d["denied"]], "동의영수증 tx:", (d["consentReceipt"]["txHash"] or "")[:14])
 print(" 복지기관 발급:", [c["claim"] for c in b["credentials"]], "거부:", [x["claim"] for x in b["denied"]], "tx:", (b["consentReceipt"]["txHash"] or "")[:14])
 vcs = {c["claim"]: c for c in d["credentials"] + b["credentials"]}
-def present(claims, requested):
-    r = httpx.post(f"{V}/requests", json={"requested":[{"claim":c,"expected":True} for c in requested]}).json()
+def present(claims, requested, **kw):
+    r = httpx.post(f"{V}/requests", json={"requested":[{"claim":c,"expected":True} for c in requested], **kw}).json()
     vp = create_vp(holder_did=h.did, holder_private_key=h.private_key, verifier_did=r["verifier"], nonce=r["nonce"], vc_jwts=[vcs[c]["vcJwt"] for c in claims])
     return httpx.post(f"{V}/present", json={"requestId":r["requestId"],"vpJwt":vp}, timeout=60).json()
 res = present(["daeguResident","annualIncomeUnder35M"], ["daeguResident","annualIncomeUnder35M"])
-print(" 두 발급기관 혼합 제출(햇살론뱅크 용도):", res["verdict"], res["reasonCodes"], "발급기관:", res["issuers"], f"{res['timingsMs']['total']}ms")
+print(" 두 발급기관 혼합 제출(햇살론 일반보증 용도):", res["verdict"], res["reasonCodes"], "발급기관:", res["issuers"], f"{res['timingsMs']['total']}ms")
 assert res["verdict"] == "PASS"
+# ③ iM뱅크 → ③′ iM저축은행: 같은 '연소득 3,500만 원 이하' VC 를 재발급 없이 다시 제출 (2026 개편으로 저축은행도 햇살론 일반보증 취급)
+for vid in ["imbank-branch-01", "im-savings-01"]:
+    res = present(["annualIncomeUnder35M"], ["annualIncomeUnder35M"], verifierId=vid, presetId="sunshine-general", purpose="햇살론 일반보증 대상 확인")
+    print(f" 햇살론 일반보증 확인 @ {res['verifier']['name']}:", res["verdict"], res["reasonCodes"], f"{res['timingsMs']['total']}ms")
+    assert res["verdict"] == "PASS"
+# 새희망홀씨는 은행권 상품 → 저축은행 창구에서는 요청 단계에서 거부
+r = httpx.post(f"{V}/requests", json={"verifierId":"im-savings-01","presetId":"new-hope","requested":[{"claim":"annualIncomeUnder40M","expected":True}]})
+print(" 새희망홀씨 요청 @ 저축은행:", r.status_code, r.json().get("detail"))
+assert r.status_code == 400 and r.json()["detail"] == "PRESET_NOT_OFFERED"
 rv = httpx.post(f"{D}/admin/credentials/{vcs['incomeBelow50Median']['jti']}/revoke", timeout=60).json()
 print(" 폐기:", rv["revoked"], "상태목록 v", rv["statusListVersion"], "tx:", (rv["txHash"] or "")[:14])
 res = present(["daeguResident","incomeBelow50Median"], ["daeguResident","incomeBelow50Median"])

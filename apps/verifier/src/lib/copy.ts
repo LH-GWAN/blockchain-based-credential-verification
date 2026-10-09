@@ -2,7 +2,7 @@
 import type { AttackKind, CheckKey, Preset, TimingPart } from "./types";
 
 /** 원장에 등록된 판정 규칙 버전. 헤더 배지·정책 판정 카드에 표시한다. */
-export const RULES_VERSION = "v2026.1";
+export const RULES_VERSION = "v2026.2";
 
 export const HEADER = {
   title: "검증기관 화면",
@@ -67,8 +67,9 @@ export const REQUEST = {
 } as const;
 
 /**
- * GET /presets 가 실패했을 때 쓰는 내장 사본. services/verifier 의 프리셋과 동일하게 유지한다.
- * 은행·저축은행 창구에서 실제로 쓰이는 네 가지 용도만 둔다.
+ * GET /presets 가 실패했을 때 쓰는 내장 사본. services/verifier/src/dbp_verifier/config.py 의 PRESETS 와 동일하게 유지한다
+ * (ID·문구·요청 항목·정책 ID·힌트·취급 창구 종류까지). 은행·저축은행 창구에서 실제로 쓰이는 네 가지 용도만 둔다.
+ * verifierKinds: 그 상품을 실제로 취급하는 창구 종류. 새희망홀씨는 은행권 상품이라 저축은행에는 없다.
  */
 export const PRESETS_FALLBACK: readonly Preset[] = [
   {
@@ -79,30 +80,36 @@ export const PRESETS_FALLBACK: readonly Preset[] = [
       { claim: "daeguResident", expected: true },
       { claim: "incomeBelow50Median", expected: true },
     ],
-    hint: "상담 접수 단계에서는 거주·소득구간 참/거짓 2개 항목만 받습니다 — 소득 금액은 보지 않습니다.",
+    policyId: null,
+    verifierKinds: ["bank", "savings"],
+    hint: "대구 거주 여부와 기준 중위소득 50% 이하 여부, 두 항목의 참/거짓만 받습니다.",
   },
   {
-    id: "sunshine-bank",
-    label: "햇살론뱅크 대상 확인",
-    purpose: "햇살론뱅크 대상 확인",
+    id: "sunshine-general",
+    label: "햇살론 일반보증 대상 확인",
+    purpose: "햇살론 일반보증 대상 확인",
     requested: [{ claim: "annualIncomeUnder35M", expected: true }],
-    policyId: "sunshine-loan-bank",
-    hint: "신용평점은 은행이 자체 조회합니다 — 소득금액증명 원본 대신 참/거짓 1개 항목만 받습니다.",
+    policyId: "sunshine-loan-general",
+    verifierKinds: ["bank", "savings"],
+    hint: "소득금액증명 원본 대신 '연소득 3,500만 원 이하 = 참' 1개 항목만 받습니다. 신용평점·재직(사업) 기간·보증 심사용 소득 증빙은 창구가 자체 확인합니다. 2026년 개편으로 은행·저축은행 모두 취급합니다.",
   },
   {
     id: "new-hope",
     label: "새희망홀씨 대상 확인",
     purpose: "새희망홀씨 대상 확인",
-    requested: [{ claim: "annualIncomeUnder35M", expected: true }],
+    requested: [{ claim: "annualIncomeUnder40M", expected: true }],
     policyId: "new-hope-loan",
-    hint: "재직·연체 이력은 은행 심사 항목입니다 — 소득금액증명 원본 대신 참/거짓 1개 항목만 받습니다.",
+    verifierKinds: ["bank"],
+    hint: "소득금액증명 원본 대신 '연소득 4,000만 원 이하 = 참' 1개 항목만 받습니다. 신용평점·재직 등 대출 심사는 은행이 자체 확인합니다. 은행권 상품이라 저축은행 창구에는 없습니다.",
   },
   {
     id: "discount",
     label: "공공요금 감면 대상 확인",
     purpose: "공공요금 감면 대상 확인",
     requested: [{ claim: "incomeBelow50Median", expected: true }],
-    hint: "수급자 증명서 원본 대신 소득구간 참/거짓 1개 항목만 받습니다 — 급여 종류·금액은 받지 않습니다.",
+    policyId: null,
+    verifierKinds: ["bank", "savings"],
+    hint: "전기·도시가스·통신 요금 감면 창구가 수급자증명서 원본 대신 '기준 중위소득 50% 이하 = 참' 1개 항목만 받습니다.",
   },
 ];
 
@@ -118,7 +125,7 @@ export function verifierKindLabel(kind: string | null | undefined): string {
 
 /** 정책 ID → 이름. data/policies/*.json 의 name 과 동일. */
 export const POLICY_LABELS: Record<string, string> = {
-  "sunshine-loan-bank": "햇살론뱅크",
+  "sunshine-loan-general": "햇살론 일반보증",
   "new-hope-loan": "새희망홀씨",
   "micro-livelihood-loan": "소액생계비대출",
   "nbl-livelihood": "생계급여",
@@ -178,7 +185,7 @@ export const RESULT = {
   credChecks: "확인",
   dataNote: (n: number) => `기관이 받은 것: 참/거짓 항목 ${n}개 + 발급기관 + 유효상태. 이름·소득 금액·주민번호는 받지 않았습니다.`,
   policyCheck: "정책 판정 재현",
-  policyRuleNote: `규칙 ${RULES_VERSION}, 제출된 항목만으로 계산`,
+  policyRuleNote: `규칙 ${RULES_VERSION}, 제출된 항목만으로 계산 — 재직·신용평점 등 창구 심사 요건은 포함하지 않음`,
   eligible: "적격",
   ineligible: "부적격",
   undetermined: "판정 불가",
@@ -293,13 +300,19 @@ export const REASON_KO: Record<string, string> = {
   CLAIM_MISSING: "요청한 항목의 증명서가 없습니다",
   CLAIM_FALSE: "요청한 항목이 충족되지 않았습니다",
   VP_MALFORMED: "제출 형식이 올바르지 않습니다",
+  PRESET_NOT_OFFERED: "이 창구에서 취급하지 않는 상품입니다",
 };
 
 export function reasonText(code: string, fromServer?: string): string {
   return fromServer ?? REASON_KO[code] ?? code;
 }
 
-/** claim 키 → 문구 폴백 (서버 응답의 label 이 우선). packages/rules/bundles/daegu-eligibility/2026.1/claims.json 과 동일. */
+/** 요청 생성 실패(4xx detail 코드) → 화면 문구. 아는 코드(예: PRESET_NOT_OFFERED)는 한국어로, 그 외는 코드를 붙인 일반 오류. */
+export function requestErrorText(code: string): string {
+  return REASON_KO[code] ?? ERRORS.generic(code);
+}
+
+/** claim 키 → 문구 폴백 (서버 응답의 label 이 우선). packages/rules/bundles/daegu-eligibility/2026.2/claims.json 과 동일. */
 export const CLAIM_LABELS: Record<string, string> = {
   daeguResident: "대구 거주 여부",
   ageOver65: "65세 이상 여부",
@@ -313,6 +326,9 @@ export const CLAIM_LABELS: Record<string, string> = {
   incomeBelowBasicPensionLine: "기초연금 선정기준액 이하 여부",
   creditBottom20: "신용평점 하위 20% 여부",
   annualIncomeUnder35M: "연소득 3,500만 원 이하 여부",
+  annualIncomeUnder40M: "연소득 4,000만 원 이하 여부",
+  annualIncomeUnder45M: "연소득 4,500만 원 이하 여부",
+  annualIncomeUnder50M: "연소득 5,000만 원 이하 여부",
 };
 
 export function claimLabel(claim: string, fromServer?: string): string {

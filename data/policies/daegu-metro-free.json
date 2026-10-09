@@ -29,7 +29,7 @@
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",
-    "version": "2026.1"
+    "version": "2026.2"
   },
   "notes": "도시철도 무임(1958년생 이전)만 구현. 시내버스 통합무임(72세 이상)은 별도 claim으로 확장 가능."
 }

@@ -30,7 +30,7 @@ def template_item(policy: dict) -> Recommendation:
     name = policy["name"]
     explanation = (
         f"{policy['summary']} "
-        "규칙 엔진이 확인한 결과, 이 제도의 신청 기준을 충족합니다. "
+        "규칙 엔진이 확인한 결과, 이 제도의 규칙 기준(소득·자격)을 충족합니다. "
         f"근거는 {clause['title']}입니다. {clause['text']}"
     )
     hint = f" 창구 제출: {policy['verifierHint']}." if policy.get("verifierHint") else ""

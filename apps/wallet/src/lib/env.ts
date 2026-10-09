@@ -39,7 +39,7 @@ export function issuerName(did: string): string {
   return issuerByDid(did)?.name ?? did;
 }
 
-export const BUNDLE = { bundle: 'daegu-eligibility', version: '2026.1' } as const;
+export const BUNDLE = { bundle: 'daegu-eligibility', version: '2026.2' } as const;
 
 /** 규칙 평가 기준일 (프롬프트 §15-5: 테스트 결정론). */
 export const EVAL_DATE = '2026-09-14';

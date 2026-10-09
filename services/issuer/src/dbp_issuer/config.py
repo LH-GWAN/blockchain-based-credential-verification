@@ -32,7 +32,7 @@ class Settings:
     rpc_url: str = field(default_factory=lambda: os.environ.get("RPC_URL", "http://127.0.0.1:8545"))
     ledger_optional: bool = field(default_factory=lambda: os.environ.get("LEDGER_OPTIONAL", "0") == "1")
     bundle: str = "daegu-eligibility"
-    version: str = "2026.1"
+    version: str = "2026.2"
     vc_valid_days: int = 365
 
     def __post_init__(self) -> None:

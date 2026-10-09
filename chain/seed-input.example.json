@@ -18,7 +18,7 @@
     {
       "issuerDid": "did:dbp:daegu",
       "bundle": "daegu-eligibility",
-      "version": "2026.1",
+      "version": "2026.2",
       "bundleHash": "0xc3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
       "schemaHash": "0xd4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4"
     }

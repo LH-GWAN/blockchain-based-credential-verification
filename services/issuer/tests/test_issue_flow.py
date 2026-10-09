@@ -69,7 +69,8 @@ def test_welfare_issuer_only_knows_its_fields(tmp_path, monkeypatch):
     wk = client.get("/.well-known/issuer").json()
     assert {c["claim"] for c in wk["claims"]} == {"isBenefitRecipient", "incomeBelow32Median", "incomeBelow48Median",
                                                  "incomeBelow50Median", "incomeBelowBasicPensionLine",
-                                                 "annualIncomeUnder35M", "annualIncomeUnder45M"}
+                                                 "annualIncomeUnder35M", "annualIncomeUnder40M", "annualIncomeUnder45M",
+                                                 "annualIncomeUnder50M"}
     r = client.post("/credentials/issue", json={
         "citizenId": "C-001", "holderDid": holder.did, "holderProof": _holder_proof(client, holder),
         "requestedClaims": ["daeguResident"], "consent": {"scope": ["daeguResident"], "ts": "2026-09-14T09:00:00Z"},
@@ -82,10 +83,11 @@ def test_welfare_issuer_only_knows_its_fields(tmp_path, monkeypatch):
     assert r.status_code == 400 and "CLAIM_NOT_ISSUED_HERE" in r.text
     r = client.post("/credentials/issue", json={
         "citizenId": "C-001", "holderDid": holder.did, "holderProof": _holder_proof(client, holder),
-        "requestedClaims": ["annualIncomeUnder35M", "incomeBelow50Median"],
-        "consent": {"scope": ["annualIncomeUnder35M", "incomeBelow50Median"], "ts": "2026-09-14T09:00:00Z"},
+        "requestedClaims": ["annualIncomeUnder35M", "annualIncomeUnder40M", "incomeBelow50Median"],
+        "consent": {"scope": ["annualIncomeUnder35M", "annualIncomeUnder40M", "incomeBelow50Median"], "ts": "2026-09-14T09:00:00Z"},
     })
-    assert r.status_code == 200 and {c["claim"] for c in r.json()["credentials"]} == {"annualIncomeUnder35M", "incomeBelow50Median"}
+    assert r.status_code == 200 and {c["claim"] for c in r.json()["credentials"]} == {
+        "annualIncomeUnder35M", "annualIncomeUnder40M", "incomeBelow50Median"}
 
 
 def test_rule_hash_mismatch_blocks_issuance(tmp_path, monkeypatch):

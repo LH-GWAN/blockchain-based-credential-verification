@@ -35,7 +35,7 @@
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",
-    "version": "2026.1"
+    "version": "2026.2"
   },
   "notes": "세대원 특성기준 중 '노인(65세 이상)'만 구현. 주거급여 신청 후 수급자가 되면 신청 가능하다는 안내를 AI 설명에 포함."
 }

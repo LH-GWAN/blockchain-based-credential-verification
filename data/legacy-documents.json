@@ -32,7 +32,9 @@
     "incomeBelow50Median": ["income-certificate", "resident-register"],
     "incomeBelowBasicPensionLine": ["income-certificate", "resident-register"],
     "annualIncomeUnder35M": ["income-certificate"],
-    "annualIncomeUnder45M": ["income-certificate"]
+    "annualIncomeUnder40M": ["income-certificate"],
+    "annualIncomeUnder45M": ["income-certificate"],
+    "annualIncomeUnder50M": ["income-certificate"]
   },
   "records": {
     "pull": "제공 내역 + 이용 내역 (이용 내역은 제공일로부터 3년 보관 — 「본인에 관한 행정정보의 제공 등에 관한 고시」 제27조 제2항)",

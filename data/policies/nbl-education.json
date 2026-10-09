@@ -35,7 +35,7 @@
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",
-    "version": "2026.1"
+    "version": "2026.2"
   },
   "notes": "학생 자녀 유무는 합성 프로필의 hasStudentChild 필드로 단순화."
 }

@@ -15,7 +15,7 @@ class Ledger(Protocol):
 class FakeLedger:
     """메모리 원장 (단위 테스트·오프라인 데모용)."""
 
-    def __init__(self, bundle_hash: str, bundle: str = "daegu-eligibility", version: str = "2026.1"):
+    def __init__(self, bundle_hash: str, bundle: str = "daegu-eligibility", version: str = "2026.2"):
         self.bundles = {(bundle, version): {"bundleHash": bundle_hash, "schemaHash": "0x" + "00" * 32, "by": "0x0", "at": 0}}
         self.status_lists: dict[str, dict] = {}
         self.receipts: dict[str, int] = {}

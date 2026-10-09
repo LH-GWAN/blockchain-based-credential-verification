@@ -29,7 +29,9 @@ def reference_claims(c: dict, median: dict, pension: dict, as_of: date) -> dict[
         "incomeBelowBasicPensionLine": inc <= line,
         "creditBottom20": c["creditScoreTier"] == "bottom20",
         "annualIncomeUnder35M": c["annualIncomeKRW"] <= 35_000_000,
+        "annualIncomeUnder40M": c["annualIncomeKRW"] <= 40_000_000,
         "annualIncomeUnder45M": c["annualIncomeKRW"] <= 45_000_000,
+        "annualIncomeUnder50M": c["annualIncomeKRW"] <= 50_000_000,
     }
 
 
@@ -44,8 +46,8 @@ def reference_policies(k: dict[str, bool]) -> dict[str, bool]:
         "telecom-discount": k["isBenefitRecipient"] or k["incomeBelow50Median"],
         "micro-livelihood-loan": k["annualIncomeUnder35M"] and (k["creditBottom20"] or k["isBenefitRecipient"] or k["incomeBelow50Median"]),
         "daegu-metro-free": k["daeguResident"] and k["daeguMetroFreeAge"],
-        "sunshine-loan-bank": k["annualIncomeUnder35M"] or (k["creditBottom20"] and k["annualIncomeUnder45M"]),
-        "new-hope-loan": k["annualIncomeUnder35M"] or (k["creditBottom20"] and k["annualIncomeUnder45M"]),
+        "sunshine-loan-general": k["annualIncomeUnder35M"] or (k["creditBottom20"] and k["annualIncomeUnder45M"]),
+        "new-hope-loan": k["annualIncomeUnder40M"] or (k["creditBottom20"] and k["annualIncomeUnder50M"]),
         "electricity-welfare-discount": k["isBenefitRecipient"] or k["incomeBelow50Median"] or (k["ageOver65"] and k["incomeBelowBasicPensionLine"]),
         "city-gas-discount": k["isBenefitRecipient"] or k["incomeBelow50Median"],
     }

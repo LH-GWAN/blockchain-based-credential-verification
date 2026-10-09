@@ -46,9 +46,9 @@ LLM 키는 **선택 항목**입니다. `ANTHROPIC_API_KEY` 가 있으면 Claude(
 apps/wallet            시민 혜택지갑 PWA (Next.js) — 발급·AI 추천·제출·이력
 apps/verifier          검증기관 화면 (Next.js) — 요청 QR·결과·비교 패널·공격 시연
 services/issuer        발급기관 서버 (FastAPI) — ISSUER_ID=daegu|welfare (대구광역시 / 사회보장정보원 모사) 2개 인스턴스
-services/verifier      검증 서비스 (FastAPI) — 은행·저축은행 창구, 용도 프리셋(햇살론뱅크·새희망홀씨…), 원장만 조회
+services/verifier      검증 서비스 (FastAPI) — 은행·저축은행 창구, 창구 종류별 용도 프리셋(햇살론 일반보증·새희망홀씨…), 원장만 조회
 services/ai            AI 추천·설명 (FastAPI + Anthropic SDK) — 범주값만 수신, 인용 검증, 템플릿 폴백
-packages/rules         규칙 엔진 (ts/ + py/) + 규칙 번들 + 참조 구현 + 기댓값
+packages/rules         규칙 엔진 (ts/ + py/) + 규칙 번들(daegu-eligibility@2026.2) + 참조 구현 + 기댓값
 packages/vc            did:key · VC/VP(JWS EdDSA) · Bitstring Status List · JCS 해시 (ts/ + py/, 교차 검증)
 packages/ledger-client 공동원장 클라이언트 (web3.py)
 chain/                 Solidity 컨트랙트 4종 · Hardhat · 배포/시드 · PII 스캔 · Besu QBFT compose
@@ -67,8 +67,9 @@ scripts/               시드 · 시연 · 벤치 · PII 지표 · 격리 프로
 ## 고지
 
 - 시민 데이터는 **전원 가명·합성 데이터**입니다 (`data/citizens.json`). 실존 인물과 무관합니다.
-- 발급기관(대구광역시·사회보장정보원)은 **모사**입니다. 실제 도입 시 모바일 신분증·행정정보·마이데이터 연계 어댑터(`IssuerDataSource`)로 교체되는 구조입니다. 은행은 발급기관이 아니라 검증기관이며, 신용평점은 창구가 자체 조회합니다.
+- 발급기관(대구광역시·사회보장정보원)은 **모사**입니다. 실제 도입 시 모바일 신분증·행정정보·마이데이터 연계 어댑터(`IssuerDataSource`)로 교체되는 구조입니다. 은행은 발급기관이 아니라 검증기관이며, 신용평점과 재직·소득 증빙 요건은 창구가 자체 확인합니다(규칙에 넣지 않음).
 - 제도 기준값은 보건복지부 고시(2026년 기준 중위소득 제2025-135호) 등 공개 자료를 따르되, 소득인정액을 월 소득으로 단순화했습니다 (`docs/DECISIONS.md` D-06).
+- 서민금융 상품은 2026년 현행 기준입니다: 햇살론 일반보증(2026.1.2 개편 — 근로자햇살론·햇살론뱅크 통합, 은행·저축은행 등 전 금융업권 취급), 새희망홀씨Ⅱ(연소득 4,000만 원 이하 또는 신용평점 하위 20%이면서 5,000만 원 이하, 은행권 전용). 근거는 `data/policies/` 와 `docs/DECISIONS.md` D-21.
 - 키·계정은 로컬 데모용입니다. 실서비스에서는 HSM/KMS 와 다중서명 거버넌스로 교체합니다.
 
 ## 개발 환경 주의 (macOS · iCloud)

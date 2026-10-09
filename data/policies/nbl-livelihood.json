@@ -31,7 +31,7 @@
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",
-    "version": "2026.1"
+    "version": "2026.2"
   },
   "notes": "MVP는 소득인정액(소득평가액+재산의 소득환산액) 대신 월 소득으로 단순화했다. 부양의무자 기준은 제외."
 }

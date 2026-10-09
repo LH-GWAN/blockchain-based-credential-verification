@@ -91,7 +91,7 @@
         }
       ]
     },
-    "sunshine-loan-bank": {
+    "sunshine-loan-general": {
       "or": [
         {
           "var": "annualIncomeUnder35M"
@@ -111,7 +111,7 @@
     "new-hope-loan": {
       "or": [
         {
-          "var": "annualIncomeUnder35M"
+          "var": "annualIncomeUnder40M"
         },
         {
           "and": [
@@ -119,7 +119,7 @@
               "var": "creditBottom20"
             },
             {
-              "var": "annualIncomeUnder45M"
+              "var": "annualIncomeUnder50M"
             }
           ]
         }

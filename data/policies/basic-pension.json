@@ -35,7 +35,7 @@
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",
-    "version": "2026.1"
+    "version": "2026.2"
   },
   "notes": "MVP는 1인 가구를 단독가구, 2인 이상을 부부가구 기준으로 단순화하고 소득인정액을 월 소득으로 대체."
 }

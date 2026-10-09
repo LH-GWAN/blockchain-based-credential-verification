@@ -26,7 +26,7 @@ export function repoRoot(): string {
   }
 }
 
-export function loadBundle(root?: string, bundle = 'daegu-eligibility', version = '2026.1'): Bundle {
+export function loadBundle(root?: string, bundle = 'daegu-eligibility', version = '2026.2'): Bundle {
   const r = root ?? repoRoot();
   const base = join(r, 'packages/rules/bundles', bundle, version);
   return composeBundle(

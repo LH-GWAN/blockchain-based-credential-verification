@@ -69,3 +69,12 @@ def test_refusal_in_chat_falls_back_to_template(client, chat_body, anthropic_env
     llm.set_client(FakeAnthropic(text="", stop_reason="refusal"))
     r = client.post("/chat/complete", json=chat_body("기초연금 알려 주세요", "s-ref"))
     assert r.json()["provider"] == "template" and "기초연금" in r.json()["text"]
+
+
+def test_old_sunshine_loan_names_map_to_general_guarantee(client, chat_body):
+    # 2026.1.2 개편: 햇살론뱅크·근로자햇살론 → 햇살론 일반보증. 옛 이름으로 물어도 후속 상품을 근거와 함께 안내한다.
+    for i, question in enumerate(["햇살론뱅크 받으려면 창구에 뭘 내야 하나요?", "근로자 햇살론 신청 방법 알려 주세요"]):
+        text = client.post("/chat/complete", json=chat_body(question, f"s-sun-{i}")).json()["text"]
+        assert text.startswith("햇살론 일반보증:")
+        assert "sunshine-general-c1" in text
+        assert "정책 DB에 등록되지" not in text

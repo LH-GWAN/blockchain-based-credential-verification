@@ -153,6 +153,11 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
         v = VERIFIERS.get(body.verifierId or settings.default_verifier)
         if not v:
             raise HTTPException(400, "VERIFIER_UNKNOWN")
+        # 창구 종류가 취급하지 않는 상품 프리셋(예: 저축은행의 새희망홀씨)은 받지 않는다. policyId 만 보내도 같다.
+        offered = [p for p in PRESETS if (body.presetId and p["id"] == body.presetId)
+                   or (not body.presetId and body.policyId and p["policyId"] == body.policyId)]
+        if offered and all(v["kind"] not in p.get("verifierKinds", [v["kind"]]) for p in offered):
+            raise HTTPException(400, "PRESET_NOT_OFFERED")
         rid = "r_" + uuid.uuid4().hex[:12]
         code = f"{secrets.randbelow(900000) + 100000}"
         nonce = "n_" + secrets.token_hex(32)

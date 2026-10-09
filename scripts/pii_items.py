@@ -37,7 +37,7 @@ def measured_hold_count(requested: list[dict], issuer_of: dict[str, str]) -> int
                             claim={"name": r["claim"], "value": bool(r.get("expected", True))},
                             valid_from="2026-09-01T00:00:00Z", valid_until="2027-09-14T00:00:00Z",
                             status={"listId": f"dbp:status:{issuer_did.split(':')[-1]}:list-1", "index": i},
-                            evidence={"bundle": "daegu-eligibility", "version": "2026.1", "bundleHash": "0x" + "00" * 32}))
+                            evidence={"bundle": "daegu-eligibility", "version": "2026.2", "bundleHash": "0x" + "00" * 32}))
     vp = create_vp(holder_did=holder.did, holder_private_key=holder.private_key,
                    verifier_did="did:dbp:verifier-imbank-branch-01", nonce="n_demo", vc_jwts=vcs)
     _, payload = decode_jwt_unverified(vp)

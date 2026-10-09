@@ -4,12 +4,12 @@
  */
 export const COPY = {
   appName: '대구 혜택패스',
-  tagline: '공공이 판정한 자격을 내가 보유하고, 은행 창구에는 참·거짓만 제출합니다',
+  tagline: '공공이 판정한 자격을 내가 보유하고, 은행·저축은행 창구에는 참·거짓만 제출합니다',
   subTagline: '복지 안내는 복지멤버십이, 창구 증명은 혜택패스가',
   syntheticNotice: '이 앱의 시민 정보는 모두 가명·합성 데이터입니다.',
 
   steps: ['1/3 증명서 받기', '2/3 혜택 찾기', '3/3 제출하기'] as const,
-  badges: ['판정: 규칙 엔진 v2026.1', '설명: AI', '검증: 공동원장'] as const,
+  badges: ['판정: 규칙 엔진 v2026.2', '설명: AI', '검증: 공동원장'] as const,
 
   nav: { home: '시작', credentials: '증명서', benefits: '혜택', present: '제출', history: '이력' },
 

@@ -1,6 +1,6 @@
 /**
  * 시연 ①~⑤ 자동 재현 (docs/DEMO.md). 스크린샷은 docs/screenshots/ 에 저장한다.
- *  ① 지갑 생성·증명서 발급  ② 창구 혜택 안내  ③ QR(코드) 제출  ③′ 햇살론뱅크 1항목·저축은행 재사용  ④ 기관 검증 PASS  ⑥ 조회형 대비 비교 패널
+ *  ① 지갑 생성·증명서 발급  ② 창구 혜택 안내  ③ QR(코드) 제출  ③′ 햇살론 일반보증 1항목(iM뱅크)·같은 증명서로 iM저축은행 재사용  ④ 기관 검증 PASS  ⑥ 조회형 대비 비교 패널
  *  ⑤ 폐기 후 차단 + 공격 시연 4종  ⑦ (선택) 발급기관 정지 후 검증 PASS — E2E_ISSUER_DOWN_CMD
  */
 import { test, expect, type Browser, type Page } from '@playwright/test';
@@ -30,10 +30,21 @@ async function newContexts(browser: Browser) {
   return { wallet, verifier };
 }
 
-async function createVerifierRequest(verifier: Page, preset?: string, verifierName?: string): Promise<string> {
+/**
+ * 검증기관 → 프리셋 순서로 고른다. 검증기관 앱은 고른 창구 종류(verifierKinds)가 취급하지 않는 프리셋을 숨기고,
+ * 창구를 바꾸면 취급하지 않는 프리셋 선택을 지우므로 창구를 먼저 골라야 한다.
+ * hiddenPresets: 이 창구에서 보이지 않아야 하는 프리셋 이름 (예: 저축은행의 새희망홀씨).
+ */
+async function createVerifierRequest(verifier: Page, preset?: string, verifierName?: string, hiddenPresets: readonly string[] = []): Promise<string> {
   await verifier.goto(`${VERIFIER_APP}/`);
   if (verifierName) await verifier.getByRole('radio', { name: new RegExp(verifierName) }).check();
-  if (preset) await verifier.getByRole('button', { name: preset }).first().click();
+  if (preset) {
+    const chip = verifier.getByRole('button', { name: preset }).first();
+    await expect(chip).toBeVisible(); // 프리셋 목록이 그려진 뒤에 숨김 여부를 본다
+    for (const hidden of hiddenPresets) await expect(verifier.getByRole('button', { name: hidden })).toHaveCount(0);
+    await chip.click();
+    await expect(chip).toHaveAttribute('aria-pressed', 'true');
+  }
   await verifier.getByRole('button', { name: '요청 QR 만들기' }).click();
   const codeEl = verifier.getByLabel(/^확인 코드/);
   await expect(codeEl).toBeVisible();
@@ -99,7 +110,7 @@ test('①~⑦ 전체 시연 흐름', async ({ browser }) => {
   await expect(wallet.getByText(/은행·민간 창구 혜택/).first()).toBeVisible();
   await expect(wallet.getByText(/공공 복지/).first()).toBeVisible();
   await expect(wallet.getByText('지금은 해당되지 않는 혜택').first()).toBeVisible();
-  await expect(wallet.getByText('햇살론뱅크').first()).toBeVisible({ timeout: 60_000 });
+  await expect(wallet.getByText('햇살론 일반보증').first()).toBeVisible({ timeout: 60_000 });
   await expect(wallet.getByText(/창구에 제출할 증명서/).first()).toBeVisible();
   await expect(wallet.getByText('근거 조항').first()).toBeVisible({ timeout: 60_000 });
   await shot(wallet, '05-wallet-benefits');
@@ -134,8 +145,8 @@ test('①~⑦ 전체 시연 흐름', async ({ browser }) => {
   expect(verifierText).not.toContain('김복례');
   expect(verifierText).not.toContain('1000000');
 
-  // ── ③' 햇살론뱅크 용도: 소득금액증명 원본 대신 '연소득 3,500만 원 이하 = 참' 1개 항목만 ──
-  const code3 = await createVerifierRequest(verifier, '햇살론뱅크 대상 확인');
+  // ── ③' 햇살론 일반보증 용도 (iM뱅크): 소득금액증명 원본 대신 '연소득 3,500만 원 이하 = 참' 1개 항목만 ──
+  const code3 = await createVerifierRequest(verifier, '햇살론 일반보증 대상 확인');
   await presentWithCode(wallet, code3);
   await expect(wallet.getByText('연소득 3,500만 원 이하 여부', { exact: false }).first()).toBeVisible();
   await wallet.getByRole('button', { name: '동의하고 제출' }).click();
@@ -143,7 +154,7 @@ test('①~⑦ 전체 시연 흐름', async ({ browser }) => {
   await verifier.waitForURL(/\/result\//, { timeout: 30_000 });
   await expect(verifier.getByText('자격 충족').first()).toBeVisible();
   await expect(verifier.getByText(/정책 판정 재현/).first()).toBeVisible();
-  await shot(verifier, '10b-verifier-result-sunshine-bank');
+  await shot(verifier, '10b-verifier-result-sunshine-bank'); // 파일명은 docs 참조 유지를 위해 그대로 둔다
 
   // ── ⑥ 조회형 대비 비교 패널 (§12.5): 숫자는 서비스(data/comparison.json)에서 온다 ──
   const panel = verifier.getByTestId('comparison-panel');
@@ -168,14 +179,16 @@ test('①~⑦ 전체 시연 흐름', async ({ browser }) => {
   await mobileVerifier.getByTestId('comparison-panel').screenshot({ path: join(SHOTS, '15b-verifier-comparison-mobile.png') });
   await mobileVerifier.context().close();
 
-  // ── ③' 재사용: 같은 카드, 다른 창구 (iM저축은행 + 새희망홀씨) — 재발급 없이 통과 (§2-8) ──
+  // ── ③' 재사용: 같은 카드, 다른 창구 (iM저축은행 + 햇살론 일반보증) — 재발급 없이 통과 (§2-8) ──
+  // 2026.1.2 개편으로 햇살론 일반보증은 저축은행도 취급한다. 새희망홀씨는 은행권 상품이라 저축은행 창구에는 보이지 않는다.
   // 스택을 오래 켜 두면 이전 실행의 발급분이 발급기관 DB 에 누적되므로, 절대 건수 대신 ③' 전후 건수를 비교한다.
   const countIssued = async (claim: string) =>
     ((await (await fetch(`${ISSUER_WELFARE}/admin/credentials`)).json()).credentials as { claim: string }[]).filter((c) => c.claim === claim).length;
   const issuedBefore = await countIssued('annualIncomeUnder35M');
-  const code4 = await createVerifierRequest(verifier, '새희망홀씨 대상 확인', 'iM저축은행');
+  const code4 = await createVerifierRequest(verifier, '햇살론 일반보증 대상 확인', 'iM저축은행', ['새희망홀씨 대상 확인']);
   await presentWithCode(wallet, code4);
   await expect(wallet.getByText('iM저축은행', { exact: false }).first()).toBeVisible();
+  await expect(wallet.getByText('연소득 3,500만 원 이하 여부', { exact: false }).first()).toBeVisible();
   await wallet.getByRole('button', { name: '동의하고 제출' }).click();
   await expect(wallet.getByText('자격 충족').first()).toBeVisible();
   await verifier.waitForURL(/\/result\//, { timeout: 30_000 });
@@ -221,7 +234,7 @@ test('①~⑦ 전체 시연 흐름', async ({ browser }) => {
     await expect
       .poll(async () => { try { const r = await fetch(`${ISSUER_WELFARE}/health`); return r.ok; } catch { return false; } }, { timeout: 30_000 })
       .toBe(false);
-    const code5 = await createVerifierRequest(verifier, '햇살론뱅크 대상 확인');
+    const code5 = await createVerifierRequest(verifier, '햇살론 일반보증 대상 확인');
     await presentWithCode(wallet, code5);
     await wallet.getByRole('button', { name: '동의하고 제출' }).click();
     await expect(wallet.getByText('자격 충족').first()).toBeVisible();

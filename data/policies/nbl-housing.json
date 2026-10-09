@@ -31,7 +31,7 @@
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",
-    "version": "2026.1"
+    "version": "2026.2"
   },
   "notes": "MVP는 소득인정액을 월 소득으로 단순화."
 }

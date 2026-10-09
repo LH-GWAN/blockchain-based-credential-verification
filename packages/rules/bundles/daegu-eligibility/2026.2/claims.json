@@ -12,7 +12,9 @@
     "incomeBelow50Median": "did:dbp:welfare",
     "incomeBelowBasicPensionLine": "did:dbp:welfare",
     "annualIncomeUnder35M": "did:dbp:welfare",
+    "annualIncomeUnder40M": "did:dbp:welfare",
     "annualIncomeUnder45M": "did:dbp:welfare",
+    "annualIncomeUnder50M": "did:dbp:welfare",
     "creditBottom20": "self"
   },
   "labels": {
@@ -28,7 +30,9 @@
     "incomeBelowBasicPensionLine": "기초연금 선정기준액 이하 여부",
     "creditBottom20": "신용평점 하위 20% 여부 (창구 자체 조회)",
     "annualIncomeUnder35M": "연소득 3,500만 원 이하 여부",
-    "annualIncomeUnder45M": "연소득 4,500만 원 이하 여부"
+    "annualIncomeUnder40M": "연소득 4,000만 원 이하 여부",
+    "annualIncomeUnder45M": "연소득 4,500만 원 이하 여부",
+    "annualIncomeUnder50M": "연소득 5,000만 원 이하 여부"
   },
   "rules": {
     "daeguResident": {
@@ -165,12 +169,28 @@
         35000000
       ]
     },
+    "annualIncomeUnder40M": {
+      "<=": [
+        {
+          "var": "annualIncomeKRW"
+        },
+        40000000
+      ]
+    },
     "annualIncomeUnder45M": {
       "<=": [
         {
           "var": "annualIncomeKRW"
         },
         45000000
+      ]
+    },
+    "annualIncomeUnder50M": {
+      "<=": [
+        {
+          "var": "annualIncomeKRW"
+        },
+        50000000
       ]
     }
   }
