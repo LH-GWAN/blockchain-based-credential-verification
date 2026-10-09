@@ -13,7 +13,7 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field
 
-from dbp_rules import load_bundle
+from dbp_rules import evaluate_policy_partial, load_bundle, rule_vars
 from dbp_vc import create_vp, generate_holder_key, random_salt, receipt_hash, sha256_hex
 
 from .comparison import build_comparison, precomputed
@@ -133,10 +133,20 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
         # 조회형 대비 비교 (§12.5): 이번 요청 항목으로 계산 — 숫자를 화면에 하드코딩하지 않는다
         result["comparison"] = build_comparison(req["requested"], labels, req.get("presetId"))
         if req.get("policyId"):
-            from dbp_rules import evaluate_policies
-            full = {k: False for k in bundle["claims"]["rules"]}
-            full.update(out.claims)
-            result["policyCheck"] = {"policyId": req["policyId"], "eligible": evaluate_policies(bundle, full).get(req["policyId"])}
+            # 제출된 항목 + 창구가 자체 조회한 항목(프리셋 counterChecked)만으로 판정한다.
+            # 제출되지 않은 항목을 거짓으로 채우지 않으므로, 결과가 그 항목에 달려 있으면 eligible=None.
+            preset = next((p for p in PRESETS if p["id"] == req.get("presetId")), None)
+            used = rule_vars(bundle["policies"]["rules"].get(req["policyId"], {}))
+            counter = {c["claim"]: c["expected"] for c in (preset or {}).get("counterChecked", [])
+                       if preset["policyId"] == req["policyId"] and c["claim"] in used}
+            pc = evaluate_policy_partial(bundle, req["policyId"], {**counter, **out.claims})
+            issuer_of = bundle["claims"]["issuerOf"]
+            result["policyCheck"] = {
+                "policyId": req["policyId"], "eligible": pc["eligible"],
+                "pending": [{"claim": c, "label": labels.get(c, c), "counterCheck": issuer_of.get(c) == "self"}
+                            for c in pc["pending"]],
+                "counterChecked": [{"claim": c, "expected": v, "label": labels.get(c, c)} for c, v in counter.items()],
+            }
         key = store_as or request_id
         result["resultId"] = key
         results[key] = result
@@ -158,6 +168,8 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
                    or (not body.presetId and body.policyId and p["policyId"] == body.policyId)]
         if offered and all(v["kind"] not in p.get("verifierKinds", [v["kind"]]) for p in offered):
             raise HTTPException(400, "PRESET_NOT_OFFERED")
+        if body.policyId and body.policyId not in bundle["policies"]["rules"]:
+            raise HTTPException(400, "POLICY_UNKNOWN")  # nonce 를 쓰기 전에 거른다
         rid = "r_" + uuid.uuid4().hex[:12]
         code = f"{secrets.randbelow(900000) + 100000}"
         nonce = "n_" + secrets.token_hex(32)

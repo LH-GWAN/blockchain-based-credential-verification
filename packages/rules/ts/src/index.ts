@@ -15,7 +15,7 @@ export {
   type DateLike,
   type Ymd,
 } from './engine.js';
-export { policyIndex, type PolicyMeta, type LegalBasis, type RequiredClaim } from './policies.js';
+export { claimSetsOf, policyIndex, type PolicyMeta, type LegalBasis, type RequiredClaim } from './policies.js';
 export type {
   Json,
   JsonObject,

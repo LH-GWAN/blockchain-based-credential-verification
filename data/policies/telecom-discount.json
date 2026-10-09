@@ -4,9 +4,9 @@
   "category": "생활",
   "channel": "discount",
   "welfareMembership": false,
-  "verifierHint": "통신사 대리점에 '기준 중위소득 50% 이하 = 참' 증명서 제출 (수급자증명서 원본 불필요)",
+  "verifierHint": "통신사 대리점에 '기준 중위소득 50% 이하 = 참' 또는 '기초생활보장 급여 수급 = 참' 증명서 제출 (수급자증명서 원본 대신). 기초연금 경로는 '65세 이상 = 참'과 '기초연금 선정기준액 이하 = 참'(실제 기초연금 수급 여부는 감면 신청 때 통신사·복지로가 확인)",
   "agency": "과학기술정보통신부 / 이동통신 3사",
-  "summary": "기초생활수급자·차상위계층 등에게 이동전화 기본료·통화료를 감면합니다.",
+  "summary": "기초생활수급자·차상위계층·장애인·국가유공자와 기초연금 수급 어르신 등에게 이동전화 요금을 감면합니다. 혜택패스는 이 가운데 수급자·차상위·기초연금 경로만 다룹니다. 기초연금 수급자는 이용료의 50%, 월 최대 11,000원까지 감면됩니다.",
   "howToApply": "통신사 대리점 방문, 통신사 고객센터(114), 또는 복지로·정부24 온라인 신청",
   "legalBasis": [
     {
@@ -20,18 +20,42 @@
       "title": "요금감면 대상 (기초생활수급자·차상위계층)",
       "text": "생계·의료·주거·교육급여 수급자와 차상위계층(차상위계층 확인서 발급 대상 등)은 이동전화 요금감면 대상이다.",
       "sourceUrl": "https://www.gov.kr"
+    },
+    {
+      "clauseId": "telecom-discount-c3",
+      "title": "기초연금 수급자 이동통신요금 감면 (복지로 안내)",
+      "text": "기초연금을 받는 65세 이상 어르신은 이동통신 기본료와 통화료를 합한 이용료의 50%, 월 최대 11,000원을 감면받는다. 알뜰폰은 제외되고 다른 감면과 중복되지 않는다.",
+      "sourceUrl": "https://www.bokjiro.go.kr/ssis-tbu/cms/pc/customer/notice/1209854_1141.html"
     }
   ],
   "basisVerified": true,
-  "requiredClaims": [
-    {
-      "claim": "incomeBelow50Median",
-      "expected": true
-    }
+  "requiredClaimSets": [
+    [
+      {
+        "claim": "incomeBelow50Median",
+        "expected": true
+      }
+    ],
+    [
+      {
+        "claim": "isBenefitRecipient",
+        "expected": true
+      }
+    ],
+    [
+      {
+        "claim": "ageOver65",
+        "expected": true
+      },
+      {
+        "claim": "incomeBelowBasicPensionLine",
+        "expected": true
+      }
+    ]
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",
     "version": "2026.2"
   },
-  "notes": "규칙은 '수급자 또는 기준 중위소득 50% 이하(차상위)'로 구현. 검증기관 요청 예시는 차상위 기준(50% 이하)만 사용."
+  "notes": "규칙: 수급자 OR 기준 중위소득 50% 이하(차상위) OR (65세 이상 AND 기초연금 선정기준액 이하). 기초연금 경로는 소득인정액을 월 소득으로 단순화한 D-06 을 따른다(2026-10-09 추가, D-22). 검증기관 요청 예시는 차상위 기준(50% 이하)만 사용."
 }

@@ -2,7 +2,7 @@
 
 import { Card, Collapsible, LinkButton } from '@/components/ui';
 import { COPY } from '@/lib/copy';
-import { resolveCitations, type Holding, type SubmitDocument } from '@/lib/eligibility';
+import { resolveCitations, type CounterCheck, type Holding, type SubmitDocument } from '@/lib/eligibility';
 import type { LegalBasis, PolicyMeta, Recommendation } from '@/lib/types';
 
 /** AI 설명 / 규칙 설명(템플릿) 표지. */
@@ -43,6 +43,7 @@ export function RecommendationCard({
   holdings,
   isAi,
   submitDocs,
+  counterChecked,
   presentHref,
 }: {
   rec: Recommendation;
@@ -51,6 +52,8 @@ export function RecommendationCard({
   isAi: boolean;
   /** 창구에 제출할 증명서 (은행·민간 창구 혜택 카드에만). */
   submitDocs?: SubmitDocument[];
+  /** 같은 증명 조합 중 증명서가 아니라 창구가 직접 확인하는 항목 (예: 신용평점 하위 20%). */
+  counterChecked?: CounterCheck[];
   /** "제출하러 가기" 링크 대상. submitDocs 와 함께 쓴다. */
   presentHref?: string;
 }) {
@@ -72,6 +75,12 @@ export function RecommendationCard({
             {COPY.benefits.submitDocs}
             {submitDocs.length === 0 ? '없음' : submitDocs.map((d) => `${d.label} (${d.issuerName})`).join(', ')}
           </p>
+          {counterChecked && counterChecked.length > 0 && (
+            <p className="mt-1 text-[0.9rem] text-ink">
+              <span className="font-semibold">{COPY.benefits.counterChecked}</span>
+              {counterChecked.map((c) => (c.expected ? c.label : `${c.label} — 해당 없음`)).join(', ')}
+            </p>
+          )}
           {policy?.verifierHint && (
             <p className="mt-1 text-[0.9rem] text-ink">
               <span className="font-semibold">{COPY.benefits.verifierHint}</span>

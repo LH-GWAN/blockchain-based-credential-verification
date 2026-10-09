@@ -6,26 +6,34 @@
   "welfareMembership": false,
   "verifierHint": "한국전력 고객센터·앱에 '기초생활보장 급여 수급 = 참' 또는 '기준 중위소득 50% 이하 = 참' 증명서 제출",
   "agency": "한국전력공사",
-  "summary": "기초생활수급자·차상위계층·기초연금 수급 어르신 등의 가구에 매월 전기요금을 할인합니다.",
+  "summary": "기초생활수급자·차상위계층·장애인·국가유공자·대가족 등의 가구에 매월 전기요금을 할인합니다. 혜택패스는 이 가운데 수급자·차상위(기준 중위소득 50% 이하) 경로만 다룹니다.",
   "howToApply": "한국전력 고객센터(123), 한전ON 앱, 또는 행정복지센터 신청",
   "legalBasis": [
     {
       "clauseId": "elec-discount-c1",
       "title": "한국전력공사 전기공급약관 시행세칙 — 복지할인 대상",
-      "text": "생계·의료·주거·교육급여 수급자, 차상위계층, 장애인, 국가유공자, 독립유공자, 기초연금 수급자 등은 전기요금 복지할인 대상이다.",
+      "text": "생계·의료·주거·교육급여 수급자, 차상위계층, 장애인, 국가유공자·독립유공자·5·18민주유공자, 3자녀 이상·5인 이상·출산 가구, 생명유지장치 사용 가구, 사회복지시설은 전기요금 복지할인 대상이다.",
       "sourceUrl": "https://cyber.kepco.co.kr"
     }
   ],
   "basisVerified": true,
-  "requiredClaims": [
-    {
-      "claim": "incomeBelow50Median",
-      "expected": true
-    }
+  "requiredClaimSets": [
+    [
+      {
+        "claim": "incomeBelow50Median",
+        "expected": true
+      }
+    ],
+    [
+      {
+        "claim": "isBenefitRecipient",
+        "expected": true
+      }
+    ]
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",
     "version": "2026.2"
   },
-  "notes": "규칙: 수급자 OR 차상위(50% 이하) OR (65세 이상 AND 기초연금 선정기준 이하). 검증 예시는 차상위 항목만 사용."
+  "notes": "규칙: 수급자 OR 차상위(50% 이하). 장애인·유공자·대가족 등 다른 할인 대상은 혜택패스 claim 에 없어 다루지 않는다. 기초연금 수급만으로는 복지할인 대상이 아니다(2026-10-09 정정, D-22)."
 }

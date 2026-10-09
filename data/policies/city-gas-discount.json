@@ -4,7 +4,7 @@
   "category": "생활",
   "channel": "discount",
   "welfareMembership": false,
-  "verifierHint": "도시가스 회사 고객센터에 '기준 중위소득 50% 이하 = 참' 증명서 제출",
+  "verifierHint": "도시가스 회사 고객센터에 '기초생활보장 급여 수급 = 참' 또는 '기준 중위소득 50% 이하 = 참' 증명서 제출",
   "agency": "산업통상자원부 / 지역 도시가스사",
   "summary": "기초생활수급자·차상위계층 등에게 도시가스 요금(취사·난방)을 경감합니다.",
   "howToApply": "관할 도시가스 회사 고객센터 또는 행정복지센터 신청",
@@ -17,11 +17,19 @@
     }
   ],
   "basisVerified": true,
-  "requiredClaims": [
-    {
-      "claim": "incomeBelow50Median",
-      "expected": true
-    }
+  "requiredClaimSets": [
+    [
+      {
+        "claim": "incomeBelow50Median",
+        "expected": true
+      }
+    ],
+    [
+      {
+        "claim": "isBenefitRecipient",
+        "expected": true
+      }
+    ]
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",

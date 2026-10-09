@@ -23,15 +23,17 @@
     }
   ],
   "basisVerified": true,
-  "requiredClaims": [
-    {
-      "claim": "isBenefitRecipient",
-      "expected": true
-    },
-    {
-      "claim": "ageOver65",
-      "expected": true
-    }
+  "requiredClaimSets": [
+    [
+      {
+        "claim": "isBenefitRecipient",
+        "expected": true
+      },
+      {
+        "claim": "ageOver65",
+        "expected": true
+      }
+    ]
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",

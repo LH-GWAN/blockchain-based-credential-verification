@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { PRESETS_FALLBACK } from "../src/lib/copy";
 import {
+  factLabel,
   formatCountdown,
   formatMs,
   formatSeconds,
   groupShortCode,
   issuerNames,
+  policyCheckNotes,
+  presetCounterCheckedNote,
   receivedFactCount,
   remainingSeconds,
   shortHash,
@@ -90,5 +94,95 @@ describe("issuerNames / receivedFactCount", () => {
   it("받은 참/거짓 항목 수", () => {
     expect(receivedFactCount({ claims: { a: true, b: true }, credentials: [] })).toBe(2);
     expect(receivedFactCount({ claims: {}, credentials: [{ claim: "a" }, { claim: null }] })).toBe(1);
+  });
+});
+
+describe("factLabel", () => {
+  it("'여부'를 떼고, 기대값 거짓이면 '아님'", () => {
+    expect(factLabel("신용평점 하위 20% 여부", true)).toBe("신용평점 하위 20%");
+    expect(factLabel("기초생활보장 급여 수급 여부", false)).toBe("기초생활보장 급여 수급 아님");
+    expect(factLabel("creditBottom20", true)).toBe("creditBottom20");
+  });
+
+  it("서버가 보내는 번들 라벨의 '(창구 자체 조회)' 꼬리말도 뗀다", () => {
+    expect(factLabel("신용평점 하위 20% 여부 (창구 자체 조회)", true)).toBe("신용평점 하위 20%");
+  });
+});
+
+describe("policyCheckNotes", () => {
+  it("판정 불가: 결과를 바꾸는 미제출 항목을 서버 라벨로 나열한다", () => {
+    const n = policyCheckNotes({
+      policyId: "near-poor",
+      eligible: null,
+      pending: [{ claim: "isBenefitRecipient", label: "기초생활보장 급여 수급 여부" }],
+      counterChecked: [],
+    });
+    expect(n.pending).toBe("판정에 필요한 항목이 제출되지 않았습니다: 기초생활보장 급여 수급 여부");
+    expect(n.counterChecked).toBeNull();
+  });
+
+  it("여러 항목은 ' · ' 로 잇고, 라벨이 비면 내장 라벨로", () => {
+    const n = policyCheckNotes({
+      policyId: "sunshine-loan-general",
+      eligible: null,
+      pending: [
+        { claim: "annualIncomeUnder35M", label: "" },
+        { claim: "annualIncomeUnder45M", label: "연소득 4,500만 원 이하 여부" },
+      ],
+    });
+    expect(n.pending).toBe("판정에 필요한 항목이 제출되지 않았습니다: 연소득 3,500만 원 이하 여부 · 연소득 4,500만 원 이하 여부");
+  });
+
+  it("창구 조회 항목(counterCheck)은 '미제출'이 아니라 '창구 확인 필요'로 따로 적는다", () => {
+    const n = policyCheckNotes({
+      policyId: "sunshine-loan-general",
+      eligible: null,
+      pending: [
+        { claim: "annualIncomeUnder35M", label: "연소득 3,500만 원 이하 여부", counterCheck: false },
+        { claim: "creditBottom20", label: "신용평점 하위 20% 여부 (창구 자체 조회)", counterCheck: true },
+      ],
+    });
+    expect(n.pending).toBe(
+      "판정에 필요한 항목이 제출되지 않았습니다: 연소득 3,500만 원 이하 여부 / 창구 확인이 필요한 항목: 신용평점 하위 20%",
+    );
+  });
+
+  it("창구 자체 확인 항목이 있으면 판정과 무관하게 표시한다", () => {
+    const n = policyCheckNotes({
+      policyId: "sunshine-loan-general",
+      eligible: true,
+      pending: [],
+      counterChecked: [{ claim: "creditBottom20", expected: true, label: "신용평점 하위 20% 여부 (창구 자체 조회)" }],
+    });
+    expect(n.counterChecked).toBe("창구 자체 확인: 신용평점 하위 20%");
+    expect(n.pending).toBeNull();
+  });
+
+  it("적격·부적격이면 pending 이 와도 판정 불가 문구를 내지 않는다", () => {
+    for (const eligible of [true, false]) {
+      const n = policyCheckNotes({ policyId: "new-hope-loan", eligible, pending: [{ claim: "creditBottom20", label: "x" }] });
+      expect(n.pending).toBeNull();
+    }
+  });
+
+  it("이전 서버 응답(pending·counterChecked 없음)은 보조 문구 없음", () => {
+    expect(policyCheckNotes({ policyId: "unknown", eligible: null })).toEqual({ pending: null, counterChecked: null });
+  });
+});
+
+describe("presetCounterCheckedNote", () => {
+  const p = (id: string) => PRESETS_FALLBACK.find((x) => x.id === id);
+
+  it("신용 하위 20% 프리셋에만 '창구가 먼저 확인' 문구", () => {
+    expect(presetCounterCheckedNote(p("sunshine-general-low-credit"))).toBe("창구가 먼저 확인: 신용평점 하위 20%");
+    expect(presetCounterCheckedNote(p("new-hope-low-credit"))).toBe("창구가 먼저 확인: 신용평점 하위 20%");
+    for (const id of ["consult", "sunshine-general", "new-hope", "discount"]) expect(presetCounterCheckedNote(p(id))).toBeNull();
+    expect(presetCounterCheckedNote(undefined)).toBeNull();
+    expect(presetCounterCheckedNote(null)).toBeNull();
+  });
+
+  it("/claims 응답 라벨이 있으면 그것을 쓴다", () => {
+    const labels = [{ claim: "creditBottom20", label: "신용평점 하위 20% 해당 여부" }];
+    expect(presetCounterCheckedNote(p("new-hope-low-credit"), labels)).toBe("창구가 먼저 확인: 신용평점 하위 20% 해당");
   });
 });

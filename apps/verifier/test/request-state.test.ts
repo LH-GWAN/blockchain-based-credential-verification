@@ -62,6 +62,21 @@ describe("applyPreset", () => {
     expect(s.policyId).toBe("new-hope-loan");
   });
 
+  it("신용 하위 20% 프리셋: 상위 소득 구간 1개 항목 + 같은 정책 판정 (신용평점은 요청 항목에 넣지 않는다)", () => {
+    const base = initialRequestState(PRESETS_FALLBACK);
+    const sunshine = requestFormReducer(base, { type: "applyPreset", preset: preset("sunshine-general-low-credit") });
+    expect(sunshine.presetId).toBe("sunshine-general-low-credit");
+    expect(sunshine.purpose).toBe("햇살론 일반보증 대상 확인 (신용평점 하위 20%)");
+    expect(claimsOf(sunshine)).toEqual(["annualIncomeUnder45M"]);
+    expect(sunshine.policyId).toBe("sunshine-loan-general");
+    const newHope = requestFormReducer(base, { type: "applyPreset", preset: preset("new-hope-low-credit") });
+    expect(newHope.presetId).toBe("new-hope-low-credit");
+    expect(newHope.purpose).toBe("새희망홀씨 대상 확인 (신용평점 하위 20%)");
+    expect(claimsOf(newHope)).toEqual(["annualIncomeUnder50M"]);
+    expect(newHope.policyId).toBe("new-hope-loan");
+    for (const s of [sunshine, newHope]) expect(isClaimSelected(s, "creditBottom20")).toBe(false);
+  });
+
   it("정책 ID 가 없는 프리셋은 policyId 를 null 로 되돌린다", () => {
     let s = requestFormReducer(initialRequestState(PRESETS_FALLBACK), { type: "applyPreset", preset: preset("new-hope") });
     expect(s.policyId).toBe("new-hope-loan");
@@ -155,14 +170,28 @@ describe("presetsLoaded", () => {
 describe("presetsForKind · isPresetOffered", () => {
   const ids = (ps: readonly Preset[]) => ps.map((p) => p.id);
 
-  it("은행 창구에는 네 가지 프리셋이 모두 보인다", () => {
-    expect(ids(presetsForKind(PRESETS_FALLBACK, "bank"))).toEqual(["consult", "sunshine-general", "new-hope", "discount"]);
+  it("은행 창구에는 여섯 가지 프리셋이 모두 보인다", () => {
+    expect(ids(presetsForKind(PRESETS_FALLBACK, "bank"))).toEqual([
+      "consult",
+      "sunshine-general",
+      "sunshine-general-low-credit",
+      "new-hope",
+      "new-hope-low-credit",
+      "discount",
+    ]);
   });
 
-  it("저축은행 창구에는 새희망홀씨가 없고 햇살론 일반보증은 있다 (2026 개편)", () => {
-    expect(ids(presetsForKind(PRESETS_FALLBACK, "savings"))).toEqual(["consult", "sunshine-general", "discount"]);
+  it("저축은행 창구에는 새희망홀씨(신용 하위 20% 포함)가 없고 햇살론 일반보증은 둘 다 있다 (2026 개편)", () => {
+    expect(ids(presetsForKind(PRESETS_FALLBACK, "savings"))).toEqual([
+      "consult",
+      "sunshine-general",
+      "sunshine-general-low-credit",
+      "discount",
+    ]);
     expect(isPresetOffered(preset("new-hope"), "savings")).toBe(false);
+    expect(isPresetOffered(preset("new-hope-low-credit"), "savings")).toBe(false);
     expect(isPresetOffered(preset("sunshine-general"), "savings")).toBe(true);
+    expect(isPresetOffered(preset("sunshine-general-low-credit"), "savings")).toBe(true);
   });
 
   it("verifierKinds 가 없는 프리셋은 모든 창구에 보인다", () => {
@@ -206,6 +235,25 @@ describe("verifierChanged", () => {
     expect(s.policyId).toBeNull();
     expect(claimsOf(s)).toEqual(["daeguResident", "incomeBelow50Median"]);
     expect(s.purpose).toBe("서민금융 상담 대상 확인");
+  });
+
+  it("햇살론 일반보증 · 신용 하위 20% 도 저축은행 창구에서 그대로 유지된다", () => {
+    const bank = at("sunshine-general-low-credit");
+    const s = requestFormReducer(bank, { type: "verifierChanged", kind: "savings", presets: PRESETS_FALLBACK });
+    expect(s).toBe(bank);
+    expect(claimsOf(s)).toEqual(["annualIncomeUnder45M"]);
+    expect(s.policyId).toBe("sunshine-loan-general");
+  });
+
+  it("새희망홀씨 · 신용 하위 20% 도 저축은행 창구로 바꾸면 기본 프리셋(서민금융 상담)으로 바뀐다", () => {
+    const s = requestFormReducer(at("new-hope-low-credit"), { type: "verifierChanged", kind: "savings", presets: PRESETS_FALLBACK });
+    expect(s.presetId).toBe("consult");
+    expect(s.policyId).toBeNull();
+    expect(claimsOf(s)).toEqual(["daeguResident", "incomeBelow50Median"]);
+    expect(s.purpose).toBe("서민금융 상담 대상 확인");
+    // 은행 창구로 돌아오면 그대로
+    const s0 = at("new-hope-low-credit");
+    expect(requestFormReducer(s0, { type: "verifierChanged", kind: "bank", presets: PRESETS_FALLBACK })).toBe(s0);
   });
 
   it("직접 고친 용도 문구는 해제되어도 유지된다", () => {

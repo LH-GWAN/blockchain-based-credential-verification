@@ -43,11 +43,11 @@ def reference_policies(k: dict[str, bool]) -> dict[str, bool]:
         "near-poor": k["incomeBelow50Median"] and not k["isBenefitRecipient"],
         "basic-pension": k["ageOver65"] and k["incomeBelowBasicPensionLine"],
         "energy-voucher": k["isBenefitRecipient"] and k["ageOver65"],
-        "telecom-discount": k["isBenefitRecipient"] or k["incomeBelow50Median"],
+        "telecom-discount": k["isBenefitRecipient"] or k["incomeBelow50Median"] or (k["ageOver65"] and k["incomeBelowBasicPensionLine"]),
         "micro-livelihood-loan": k["annualIncomeUnder35M"] and (k["creditBottom20"] or k["isBenefitRecipient"] or k["incomeBelow50Median"]),
         "daegu-metro-free": k["daeguResident"] and k["daeguMetroFreeAge"],
         "sunshine-loan-general": k["annualIncomeUnder35M"] or (k["creditBottom20"] and k["annualIncomeUnder45M"]),
         "new-hope-loan": k["annualIncomeUnder40M"] or (k["creditBottom20"] and k["annualIncomeUnder50M"]),
-        "electricity-welfare-discount": k["isBenefitRecipient"] or k["incomeBelow50Median"] or (k["ageOver65"] and k["incomeBelowBasicPensionLine"]),
+        "electricity-welfare-discount": k["isBenefitRecipient"] or k["incomeBelow50Median"],
         "city-gas-discount": k["isBenefitRecipient"] or k["incomeBelow50Median"],
     }

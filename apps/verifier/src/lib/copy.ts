@@ -44,6 +44,8 @@ export const REQUEST = {
   presetsLead: "프리셋을 누르면 용도·요청 항목·정책 판정이 한 번에 채워집니다. 이후 직접 바꿔도 됩니다.",
   presetCustom: "직접 설정 중 — 정책 판정 없이 요청 항목의 참/거짓만 확인합니다.",
   presetPolicy: "정책 판정",
+  /** 프리셋 counterChecked — 증명서로 받지 않으므로 창구가 요청 전에 직접 조회해 두어야 하는 항목. */
+  presetCounterChecked: (items: string) => `창구가 먼저 확인: ${items}`,
   purpose: "용도",
   purposeDefault: "서민금융 상담 대상 확인",
   claims: "요청 항목",
@@ -68,8 +70,9 @@ export const REQUEST = {
 
 /**
  * GET /presets 가 실패했을 때 쓰는 내장 사본. services/verifier/src/dbp_verifier/config.py 의 PRESETS 와 동일하게 유지한다
- * (ID·문구·요청 항목·정책 ID·힌트·취급 창구 종류까지). 은행·저축은행 창구에서 실제로 쓰이는 네 가지 용도만 둔다.
+ * (ID·문구·요청 항목·정책 ID·힌트·취급 창구 종류·창구 자체 확인 항목까지). 은행·저축은행 창구에서 실제로 쓰이는 용도만 둔다.
  * verifierKinds: 그 상품을 실제로 취급하는 창구 종류. 새희망홀씨는 은행권 상품이라 저축은행에는 없다.
+ * counterChecked: 증명서로 받지 않고 창구가 먼저 자체 조회한 항목(신용평점). 정책 판정 재현에 창구 확인값으로 들어간다.
  */
 export const PRESETS_FALLBACK: readonly Preset[] = [
   {
@@ -94,6 +97,16 @@ export const PRESETS_FALLBACK: readonly Preset[] = [
     hint: "소득금액증명 원본 대신 '연소득 3,500만 원 이하 = 참' 1개 항목만 받습니다. 신용평점·재직(사업) 기간·보증 심사용 소득 증빙은 창구가 자체 확인합니다. 2026년 개편으로 은행·저축은행 모두 취급합니다.",
   },
   {
+    id: "sunshine-general-low-credit",
+    label: "햇살론 일반보증 · 신용 하위 20% 고객",
+    purpose: "햇살론 일반보증 대상 확인 (신용평점 하위 20%)",
+    requested: [{ claim: "annualIncomeUnder45M", expected: true }],
+    policyId: "sunshine-loan-general",
+    verifierKinds: ["bank", "savings"],
+    counterChecked: [{ claim: "creditBottom20", expected: true }],
+    hint: "창구 조회로 신용평점 하위 20%인 고객: 소득금액증명 원본 대신 '연소득 4,500만 원 이하 = 참' 1개 항목만 받습니다. 재직(사업) 기간·보증 심사용 소득 증빙은 창구가 자체 확인합니다.",
+  },
+  {
     id: "new-hope",
     label: "새희망홀씨 대상 확인",
     purpose: "새희망홀씨 대상 확인",
@@ -101,6 +114,16 @@ export const PRESETS_FALLBACK: readonly Preset[] = [
     policyId: "new-hope-loan",
     verifierKinds: ["bank"],
     hint: "소득금액증명 원본 대신 '연소득 4,000만 원 이하 = 참' 1개 항목만 받습니다. 신용평점·재직 등 대출 심사는 은행이 자체 확인합니다. 은행권 상품이라 저축은행 창구에는 없습니다.",
+  },
+  {
+    id: "new-hope-low-credit",
+    label: "새희망홀씨 · 신용 하위 20% 고객",
+    purpose: "새희망홀씨 대상 확인 (신용평점 하위 20%)",
+    requested: [{ claim: "annualIncomeUnder50M", expected: true }],
+    policyId: "new-hope-loan",
+    verifierKinds: ["bank"],
+    counterChecked: [{ claim: "creditBottom20", expected: true }],
+    hint: "은행 조회로 신용평점 하위 20%인 고객: 소득금액증명 원본 대신 '연소득 5,000만 원 이하 = 참' 1개 항목만 받습니다. 재직 등 대출 심사는 은행이 자체 확인합니다.",
   },
   {
     id: "discount",
@@ -185,10 +208,20 @@ export const RESULT = {
   credChecks: "확인",
   dataNote: (n: number) => `기관이 받은 것: 참/거짓 항목 ${n}개 + 발급기관 + 유효상태. 이름·소득 금액·주민번호는 받지 않았습니다.`,
   policyCheck: "정책 판정 재현",
-  policyRuleNote: `규칙 ${RULES_VERSION}, 제출된 항목만으로 계산 — 재직·신용평점 등 창구 심사 요건은 포함하지 않음`,
+  /** 창구 확인값(신용평점)이 판정에 들어갔으면 그렇다고 적는다 — '신용평점은 포함하지 않음'과 엇갈리지 않게. */
+  policyRuleNote: (withCounterChecked = false) =>
+    withCounterChecked
+      ? `규칙 ${RULES_VERSION}, 제출된 항목과 창구 확인값만으로 계산 — 재직 등 그 밖의 창구 심사 요건은 포함하지 않음`
+      : `규칙 ${RULES_VERSION}, 제출된 항목만으로 계산 — 재직·신용평점 등 창구 심사 요건은 포함하지 않음`,
   eligible: "적격",
   ineligible: "부적격",
   undetermined: "판정 불가",
+  /** 판정 불가 사유: 결과를 바꾸는(제출되지 않은) 항목. 제출되지 않은 항목을 거짓으로 채우지 않는다. */
+  policyPending: (labels: string) => `판정에 필요한 항목이 제출되지 않았습니다: ${labels}`,
+  /** 증명서가 아니라 창구가 자체 조회해 판정에 넣은 항목(신용평점). */
+  policyCounterChecked: (labels: string) => `창구 자체 확인: ${labels}`,
+  /** 판정 불가 사유 중 시민이 제출할 수 없고 창구가 조회해야 하는 항목(신용평점). */
+  policyNeedsCounter: (labels: string) => `창구 확인이 필요한 항목: ${labels}`,
   newRequest: "새 요청",
   toAttack: "공격 시연으로",
   copy: "복사",
@@ -301,6 +334,7 @@ export const REASON_KO: Record<string, string> = {
   CLAIM_FALSE: "요청한 항목이 충족되지 않았습니다",
   VP_MALFORMED: "제출 형식이 올바르지 않습니다",
   PRESET_NOT_OFFERED: "이 창구에서 취급하지 않는 상품입니다",
+  POLICY_UNKNOWN: "규칙 묶음에 없는 정책입니다",
 };
 
 export function reasonText(code: string, fromServer?: string): string {

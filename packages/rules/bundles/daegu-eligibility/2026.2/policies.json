@@ -58,6 +58,16 @@
         },
         {
           "var": "incomeBelow50Median"
+        },
+        {
+          "and": [
+            {
+              "var": "ageOver65"
+            },
+            {
+              "var": "incomeBelowBasicPensionLine"
+            }
+          ]
         }
       ]
     },
@@ -132,16 +142,6 @@
         },
         {
           "var": "incomeBelow50Median"
-        },
-        {
-          "and": [
-            {
-              "var": "ageOver65"
-            },
-            {
-              "var": "incomeBelowBasicPensionLine"
-            }
-          ]
         }
       ]
     },

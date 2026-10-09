@@ -23,15 +23,17 @@
     }
   ],
   "basisVerified": true,
-  "requiredClaims": [
-    {
-      "claim": "ageOver65",
-      "expected": true
-    },
-    {
-      "claim": "incomeBelowBasicPensionLine",
-      "expected": true
-    }
+  "requiredClaimSets": [
+    [
+      {
+        "claim": "ageOver65",
+        "expected": true
+      },
+      {
+        "claim": "incomeBelowBasicPensionLine",
+        "expected": true
+      }
+    ]
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",

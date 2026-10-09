@@ -160,11 +160,11 @@
         "sigungu": "동구"
       },
       "householdSize": 5,
-      "monthlyIncomeKRW": 3820345,
+      "monthlyIncomeKRW": 3627225,
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": true,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 45844140
+      "annualIncomeKRW": 43526700
     },
     {
       "citizenId": "C-012",
@@ -175,11 +175,11 @@
         "sigungu": "서구"
       },
       "householdSize": 6,
-      "monthlyIncomeKRW": 4587101,
+      "monthlyIncomeKRW": 4106856,
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": true,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 55045212
+      "annualIncomeKRW": 49282272
     },
     {
       "citizenId": "C-013",

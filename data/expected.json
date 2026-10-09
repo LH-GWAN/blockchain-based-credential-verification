@@ -2,7 +2,7 @@
   "evalDate": "2026-09-14",
   "bundle": "daegu-eligibility",
   "version": "2026.2",
-  "bundleHash": "0xb1eb8e28a1735506f65df6304be36c7a4d6133f4d99ff31f0391a3c4774ef102",
+  "bundleHash": "0xb24ad5f237f4d8ad8694dcfa2b28c88a15c6a9b88faa6764c6907e435509d94e",
   "citizenCount": 30,
   "policyCount": 13,
   "verdictCount": 390,
@@ -373,7 +373,7 @@
         "creditBottom20": false,
         "annualIncomeUnder35M": false,
         "annualIncomeUnder40M": false,
-        "annualIncomeUnder45M": false,
+        "annualIncomeUnder45M": true,
         "annualIncomeUnder50M": true
       },
       "policies": {
@@ -409,7 +409,7 @@
         "annualIncomeUnder35M": false,
         "annualIncomeUnder40M": false,
         "annualIncomeUnder45M": false,
-        "annualIncomeUnder50M": false
+        "annualIncomeUnder50M": true
       },
       "policies": {
         "nbl-livelihood": false,
@@ -453,12 +453,12 @@
         "near-poor": false,
         "basic-pension": true,
         "energy-voucher": false,
-        "telecom-discount": false,
+        "telecom-discount": true,
         "micro-livelihood-loan": false,
         "daegu-metro-free": false,
         "sunshine-loan-general": true,
         "new-hope-loan": true,
-        "electricity-welfare-discount": true,
+        "electricity-welfare-discount": false,
         "city-gas-discount": false
       }
     },
@@ -523,12 +523,12 @@
         "near-poor": false,
         "basic-pension": true,
         "energy-voucher": false,
-        "telecom-discount": false,
+        "telecom-discount": true,
         "micro-livelihood-loan": false,
         "daegu-metro-free": true,
         "sunshine-loan-general": true,
         "new-hope-loan": true,
-        "electricity-welfare-discount": true,
+        "electricity-welfare-discount": false,
         "city-gas-discount": false
       }
     },
@@ -593,12 +593,12 @@
         "near-poor": false,
         "basic-pension": true,
         "energy-voucher": false,
-        "telecom-discount": false,
+        "telecom-discount": true,
         "micro-livelihood-loan": false,
         "daegu-metro-free": true,
         "sunshine-loan-general": false,
         "new-hope-loan": false,
-        "electricity-welfare-discount": true,
+        "electricity-welfare-discount": false,
         "city-gas-discount": false
       }
     },
@@ -1031,7 +1031,7 @@
         "singlePersonHousehold": false,
         "hasStudentChild": true,
         "isBenefitRecipient": false,
-        "incomeBelow32Median": true,
+        "incomeBelow32Median": false,
         "incomeBelow48Median": true,
         "incomeBelow50Median": true,
         "incomeBelowBasicPensionLine": true,
@@ -1042,7 +1042,7 @@
         "annualIncomeUnder50M": true
       },
       "policies": {
-        "nbl-livelihood": true,
+        "nbl-livelihood": false,
         "nbl-housing": true,
         "nbl-education": true,
         "near-poor": true,

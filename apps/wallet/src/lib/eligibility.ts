@@ -2,7 +2,7 @@
  * 규칙 엔진·AI 페이로드·VC 선택 헬퍼. 모두 순수 함수 (네트워크·저장소 없음).
  * 판정(적격/부적격)은 전부 @dbp/rules 의 결정론적 엔진 출력이며 AI 출력이 아니다.
  */
-import { bundleHash, categoricalProfile, evaluateClaims, evaluatePolicies } from '@dbp/rules';
+import { bundleHash, categoricalProfile, claimSetsOf, evaluateClaims, evaluatePolicies } from '@dbp/rules';
 import type { Json, JsonObject } from '@dbp/rules';
 import citizensJson from '@/generated/citizens.json';
 import { EVAL_DATE, SELF_ISSUER, issuerByDid, issuerName } from './env';
@@ -16,6 +16,7 @@ import type {
   RecommendPayload,
   Recommendation,
   RequestedClaim,
+  RequiredClaim,
   RuleResult,
   StoredCredential,
 } from './types';
@@ -233,6 +234,22 @@ export function selectVcsForRequest(credentials: readonly StoredCredential[], re
 
 // ---------- 정책 카드 보조 ----------
 
+/** 조합 안에서 로컬 판정과 어긋나는 항목 (expected=false 는 '해당 없음' 이어야 맞다). */
+function unmetClaims(set: readonly RequiredClaim[], claims: ClaimMap): RequiredClaim[] {
+  return set.filter((rc) => (claims[rc.claim] === true) !== rc.expected);
+}
+
+/**
+ * 이 시민에게 맞는 증명 조합 하나 (정책 문서의 requiredClaimSets 는 선호 순).
+ * 로컬 판정으로 충족되는 첫 조합(= 적격이면 반드시 있다), 없거나 claims 를 모르면 첫 조합.
+ * 옛 형식(requiredClaims)은 claimSetsOf 가 조합 하나로 읽는다.
+ */
+export function chooseClaimSet(policy: PolicyMeta, claims?: ClaimMap): RequiredClaim[] {
+  const sets = claimSetsOf(policy);
+  const satisfied = claims ? sets.find((set) => unmetClaims(set, claims).length === 0) : undefined;
+  return satisfied ?? sets[0] ?? [];
+}
+
 export interface Holding {
   claim: string;
   expected: boolean;
@@ -242,7 +259,7 @@ export interface Holding {
 }
 
 /**
- * 정책 requiredClaims 대비 보유 증명서. expected=false 항목은 증명서가 존재할 수 없으므로
+ * 이 시민에게 맞는 증명 조합(chooseClaimSet) 대비 보유 증명서. expected=false 항목은 증명서가 존재할 수 없으므로
  * (발급기관은 참인 사실만 발급) 로컬 판정이 거짓이고 참 증명서가 없으면 "해당 없음 확인" 으로 표시한다.
  * issuerOf 가 'self' 인 항목은 증명서가 아니므로 목록에서 뺀다 (창구가 직접 확인).
  */
@@ -252,7 +269,7 @@ export function credentialHoldings(
   claims: ClaimMap,
   bundle: Bundle,
 ): Holding[] {
-  return policy.requiredClaims.filter((rc) => !isSelfChecked(bundle, rc.claim)).map((rc) => {
+  return chooseClaimSet(policy, claims).filter((rc) => !isSelfChecked(bundle, rc.claim)).map((rc) => {
     const label = claimLabel(bundle, rc.claim);
     if (rc.expected) {
       return { claim: rc.claim, expected: true, label, held: credentials.some((c) => c.claim === rc.claim && c.value) };
@@ -268,11 +285,21 @@ export function credentialHoldings(
   });
 }
 
-/** 부적격 정책에서 충족되지 않은 claim 라벨. requiredClaims 우선, 없으면 규칙 변수. */
+/**
+ * 부적격 정책에서 충족되지 않은 claim 라벨. 증명 조합 중 못 미친 항목이 가장 적은 것(같으면 앞선 것) 기준,
+ * 조합이 없으면 규칙 변수.
+ */
 export function failingClaimLabels(bundle: Bundle, policy: PolicyMeta | undefined, policyId: string, claims: ClaimMap): string[] {
-  if (policy && policy.requiredClaims.length > 0) {
-    const bad = policy.requiredClaims.filter((rc) => (claims[rc.claim] === true) !== rc.expected);
-    if (bad.length > 0) return bad.map((rc) => (rc.expected ? claimLabel(bundle, rc.claim) : `${claimLabel(bundle, rc.claim)} (해당되어야 함: 아니오)`));
+  const sets = policy ? claimSetsOf(policy) : [];
+  if (sets.length > 0) {
+    const unmet = sets.map((set) => unmetClaims(set, claims));
+    const fewest = Math.min(...unmet.map((u) => u.length));
+    const fmt = (rc: RequiredClaim) => (rc.expected ? claimLabel(bundle, rc.claim) : `${claimLabel(bundle, rc.claim)} (해당되어야 함: 아니오)`);
+    if (fewest > 0) {
+      // 못 미친 항목 수가 같은 경로가 여럿이면 하나만 사유처럼 보이지 않게 '또는'으로 함께 보여 준다
+      const tied = unmet.filter((u) => u.length === fewest);
+      return tied.length === 1 ? tied[0]!.map(fmt) : [tied.map((u) => u.map(fmt).join(' · ')).join(' 또는 ')];
+    }
   }
   const rule = bundle.policies.rules[policyId];
   if (rule === undefined) return [];
@@ -384,16 +411,34 @@ export interface SubmitDocument {
 }
 
 /**
- * 창구에 제출할 증명서 = 정책 requiredClaims 중 expected=true 이고 발급기관이 있는 것.
- * 'self' 항목(창구 자체 조회)과 expected=false 항목(증명서 불필요)은 제외한다.
+ * 창구에 제출할 증명서 = 이 시민에게 맞는 증명 조합(chooseClaimSet) 중 expected=true 이고 발급기관이 있는 것.
+ * 'self' 항목(창구 자체 조회 — counterChecks)과 expected=false 항목(증명서 불필요)은 제외한다.
+ * 예: 신용 하위 20%·연소득 4,500만 원인 시민의 햇살론 일반보증 → 연소득 4,500만 원 이하 (3,500만 아님).
  */
-export function submitDocuments(bundle: Bundle, policy: PolicyMeta): SubmitDocument[] {
-  return policy.requiredClaims
+export function submitDocuments(bundle: Bundle, policy: PolicyMeta, claims?: ClaimMap): SubmitDocument[] {
+  return chooseClaimSet(policy, claims)
     .filter((rc) => rc.expected && !isSelfChecked(bundle, rc.claim))
     .map((rc) => {
       const issuerDid = bundle.claims.issuerOf[rc.claim] ?? '';
       return { claim: rc.claim, label: claimLabel(bundle, rc.claim), issuerDid, issuerName: issuerName(issuerDid) };
     });
+}
+
+export interface CounterCheck {
+  claim: string;
+  expected: boolean;
+  /** 번들 라벨에서 '(창구 자체 조회)' 꼬리를 뗀 것 — 화면에서 "창구가 직접 확인" 머리말과 겹치지 않게. */
+  label: string;
+}
+
+/**
+ * 같은 증명 조합 중 증명서가 아니라 창구가 직접 확인하는 항목 (issuerOf === 'self', 예: 신용평점 하위 20%).
+ * 지갑은 제출하지 않는다 — 창구가 자체 조회한 값이 이 조건을 만족해야 이 조합으로 대상이 된다.
+ */
+export function counterChecks(bundle: Bundle, policy: PolicyMeta, claims?: ClaimMap): CounterCheck[] {
+  return chooseClaimSet(policy, claims)
+    .filter((rc) => isSelfChecked(bundle, rc.claim))
+    .map((rc) => ({ claim: rc.claim, expected: rc.expected, label: claimLabel(bundle, rc.claim).replace(/\s*\(창구 자체 조회\)$/, '') }));
 }
 
 // ---------- 한국어 조사 ----------

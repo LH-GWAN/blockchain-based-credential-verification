@@ -5,7 +5,9 @@ import { describe, expect, it } from 'vitest';
 import {
   buildRuleResults,
   checkBundleHash,
+  chooseClaimSet,
   computeClaims,
+  counterChecks,
   credentialHoldings,
   failingClaimLabels,
   filterRecommendations,
@@ -23,12 +25,18 @@ import {
   templateRecommendation,
 } from '@/lib/eligibility';
 import { ISSUERS, ISSUER_URL_BY_DID, SELF_ISSUER } from '@/lib/env';
-import type { PolicyMeta, Recommendation, StoredCredential } from '@/lib/types';
+import type { PolicyMeta, Recommendation, RequiredClaim, StoredCredential } from '@/lib/types';
 
 const bundle = loadBundle();
 const policies = loadPolicies();
 const index = policyIndex(policies);
 const c001 = getCitizen('C-001')!;
+
+/** 2026.2 이전 형식의 정책 문서 (requiredClaimSets 없이 requiredClaims 단일 목록) — 지갑 캐시에 남아 있을 수 있다. */
+function legacyPolicy(base: PolicyMeta, requiredClaims: RequiredClaim[]): PolicyMeta {
+  const { requiredClaimSets: _drop, ...rest } = base;
+  return { ...rest, requiredClaims } as unknown as PolicyMeta;
+}
 
 /** data/expected.json C-001 (김복례) 의 적격 정책. */
 const C001_ELIGIBLE = [
@@ -206,10 +214,135 @@ describe('창구 종류별 분류 (김복례)', () => {
     expect(submitDocuments(bundle, index['telecom-discount']!).map((d) => [d.claim, d.issuerName])).toEqual([['incomeBelow50Median', '사회보장정보원(복지기관)']]);
     // expected=false (수급자 아님) 항목은 증명서가 아니다
     expect(submitDocuments(bundle, index['near-poor']!).map((d) => d.claim)).toEqual(['incomeBelow50Median']);
-    // self 항목이 requiredClaims 에 끼어 있어도 제출 목록에는 오르지 않는다
-    const withSelf: PolicyMeta = { ...index['new-hope-loan']!, requiredClaims: [...index['new-hope-loan']!.requiredClaims, { claim: 'creditBottom20', expected: true }] };
+    // self 항목이 조합에 끼어 있어도 제출 목록에는 오르지 않는다 (옛 형식 requiredClaims 도 같다)
+    const withSelf = legacyPolicy(index['new-hope-loan']!, [{ claim: 'annualIncomeUnder40M', expected: true }, { claim: 'creditBottom20', expected: true }]);
     expect(submitDocuments(bundle, withSelf).map((d) => d.claim)).toEqual(['annualIncomeUnder40M']);
+    expect(counterChecks(bundle, withSelf)).toEqual([{ claim: 'creditBottom20', expected: true, label: '신용평점 하위 20% 여부' }]);
     for (const p of policies) expect(p.verifierHint).toBeTruthy();
+  });
+});
+
+describe('증명 조합 고르기 (requiredClaimSets — 시민에게 맞는 조합)', () => {
+  const eligibleOf = (claims: ReturnType<typeof computeClaims>) =>
+    Object.fromEntries(buildRuleResults(bundle, claims).map((r) => [r.policyId, r.eligible]));
+  const docs = (policyId: string, claims: ReturnType<typeof computeClaims>) =>
+    submitDocuments(bundle, index[policyId]!, claims).map((d) => [d.claim, d.issuerName]);
+
+  it('정책 문서의 조합 수: 서민금융·감면은 대체 경로, 나머지는 조합 하나', () => {
+    const count = Object.fromEntries(policies.map((p) => [p.policyId, p.requiredClaimSets.length]));
+    expect(count).toMatchObject({
+      'sunshine-loan-general': 2,
+      'new-hope-loan': 2,
+      'micro-livelihood-loan': 3,
+      'telecom-discount': 3,
+      'electricity-welfare-discount': 2,
+      'city-gas-discount': 2,
+      'near-poor': 1,
+      'basic-pension': 1,
+    });
+    for (const p of policies) expect(p).not.toHaveProperty('requiredClaims');
+  });
+
+  it('C-027 서혜진 (신용 하위 20%, 연소득 4,500만 원): 햇살론 일반보증은 연소득 4,500만 원 이하 증명서 + 창구가 신용평점 확인', () => {
+    const claims = computeClaims(bundle, getCitizen('C-027')!);
+    const ok = eligibleOf(claims);
+    expect(ok['sunshine-loan-general']).toBe(true);
+    expect(ok['new-hope-loan']).toBe(true);
+    expect(docs('sunshine-loan-general', claims)).toEqual([['annualIncomeUnder45M', '사회보장정보원(복지기관)']]);
+    expect(counterChecks(bundle, index['sunshine-loan-general']!, claims)).toEqual([{ claim: 'creditBottom20', expected: true, label: '신용평점 하위 20% 여부' }]);
+    // 3,500만 원 이하 증명서는 발급조차 안 된다 — 첫 조합을 그대로 보여주면 안 되는 이유
+    expect(claims['annualIncomeUnder35M']).toBe(false);
+    expect(docs('sunshine-loan-general', claims).map(([c]) => c)).not.toContain('annualIncomeUnder35M');
+    // 새희망홀씨도 신용 하위 20% 경로: 연소득 5,000만 원 이하
+    expect(docs('new-hope-loan', claims)).toEqual([['annualIncomeUnder50M', '사회보장정보원(복지기관)']]);
+    expect(counterChecks(bundle, index['new-hope-loan']!, claims).map((c) => c.claim)).toEqual(['creditBottom20']);
+    // 보유 표시도 같은 조합 기준 (신용평점은 증명서가 아니므로 목록에 없다)
+    expect(credentialHoldings(index['sunshine-loan-general']!, [], claims, bundle).map((h) => h.claim)).toEqual(['annualIncomeUnder45M']);
+    // claims 를 모르면 선호 순 첫 조합
+    expect(submitDocuments(bundle, index['sunshine-loan-general']!).map((d) => d.claim)).toEqual(['annualIncomeUnder35M']);
+  });
+
+  it('C-028 신종석 (신용 하위 20%, 연소득 45,000,001원): 새희망홀씨는 연소득 5,000만 원 이하, 햇살론 일반보증은 해당 없음', () => {
+    const claims = computeClaims(bundle, getCitizen('C-028')!);
+    const ok = eligibleOf(claims);
+    expect(ok['new-hope-loan']).toBe(true);
+    expect(ok['sunshine-loan-general']).toBe(false);
+    expect(docs('new-hope-loan', claims)).toEqual([['annualIncomeUnder50M', '사회보장정보원(복지기관)']]);
+    expect(counterChecks(bundle, index['new-hope-loan']!, claims)).toEqual([{ claim: 'creditBottom20', expected: true, label: '신용평점 하위 20% 여부' }]);
+    // 부적격 사유: 두 조합 모두 한 항목씩 모자라면 앞선(선호) 조합 기준
+    expect(failingClaimLabels(bundle, index['sunshine-loan-general'], 'sunshine-loan-general', claims)).toEqual(['연소득 3,500만 원 이하 여부 또는 연소득 4,500만 원 이하 여부']);
+  });
+
+  it('C-013 신정숙 (65세, 기초연금 선정기준액 이하, 수급자 아님): 통신요금 감면은 65세 이상 + 기초연금선 이하, 전기요금은 해당 없음', () => {
+    const claims = computeClaims(bundle, getCitizen('C-013')!);
+    expect(claims['isBenefitRecipient']).toBe(false);
+    expect(claims['incomeBelow50Median']).toBe(false);
+    const ok = eligibleOf(claims);
+    expect(ok['telecom-discount']).toBe(true);
+    expect(ok['electricity-welfare-discount']).toBe(false);
+    expect(ok['city-gas-discount']).toBe(false);
+    expect(docs('telecom-discount', claims)).toEqual([
+      ['ageOver65', '대구광역시'],
+      ['incomeBelowBasicPensionLine', '사회보장정보원(복지기관)'],
+    ]);
+    expect(counterChecks(bundle, index['telecom-discount']!, claims)).toEqual([]);
+    // 한전 복지할인 대상에 기초연금 수급자는 없다 — 부적격 사유는 첫 조합(중위소득 50% 이하)
+    expect(failingClaimLabels(bundle, index['electricity-welfare-discount'], 'electricity-welfare-discount', claims)).toEqual(['기준 중위소득 50% 이하 여부 또는 기초생활보장 급여 수급 여부']);
+    // 창구 혜택 카드에는 통신요금만 오른다
+    const eligible = new Set(Object.entries(ok).filter(([, v]) => v).map(([k]) => k));
+    const counter = groupEligibleByChannel(index, eligible).counter.map((p) => p.policyId);
+    expect(counter).toContain('telecom-discount');
+    expect(counter).not.toContain('electricity-welfare-discount');
+  });
+
+  it('C-001 김복례: 햇살론 일반보증은 그대로 연소득 3,500만 원 이하 (신용평점 확인 불필요)', () => {
+    const claims = computeClaims(bundle, c001);
+    expect(docs('sunshine-loan-general', claims)).toEqual([['annualIncomeUnder35M', '사회보장정보원(복지기관)']]);
+    expect(counterChecks(bundle, index['sunshine-loan-general']!, claims)).toEqual([]);
+    expect(docs('new-hope-loan', claims)).toEqual([['annualIncomeUnder40M', '사회보장정보원(복지기관)']]);
+    // 미소금융: 첫 조합(3,500만 이하 + 신용 하위 20%) — 증명서 1개, 신용평점은 창구 확인
+    expect(docs('micro-livelihood-loan', claims)).toEqual([['annualIncomeUnder35M', '사회보장정보원(복지기관)']]);
+    expect(counterChecks(bundle, index['micro-livelihood-loan']!, claims).map((c) => c.claim)).toEqual(['creditBottom20']);
+    // 단일 조합 정책은 이전과 같다
+    expect(docs('near-poor', claims).map(([c]) => c)).toEqual(['incomeBelow50Median']);
+    expect(docs('basic-pension', claims).map(([c]) => c)).toEqual(['ageOver65', 'incomeBelowBasicPensionLine']);
+  });
+
+  it('C-002 박순자 (신용 하위 20% 아님, 중위소득 50% 이하): 미소금융은 셋째 조합 — 3,500만 이하 + 중위소득 50% 이하', () => {
+    const claims = computeClaims(bundle, getCitizen('C-002')!);
+    expect(claims['creditBottom20']).toBe(false);
+    expect(eligibleOf(claims)['micro-livelihood-loan']).toBe(true);
+    expect(docs('micro-livelihood-loan', claims).map(([c]) => c)).toEqual(['annualIncomeUnder35M', 'incomeBelow50Median']);
+    expect(counterChecks(bundle, index['micro-livelihood-loan']!, claims)).toEqual([]);
+  });
+
+  it('C-022 (수급자): 차상위는 expected=false 항목 때문에 부적격 — "해당되어야 함: 아니오" 표시', () => {
+    const claims = computeClaims(bundle, getCitizen('C-022')!);
+    expect(claims['isBenefitRecipient']).toBe(true);
+    expect(eligibleOf(claims)['near-poor']).toBe(false);
+    expect(failingClaimLabels(bundle, index['near-poor'], 'near-poor', claims)).toEqual(['기초생활보장 급여 수급 여부 (해당되어야 함: 아니오)']);
+  });
+
+  it('옛 형식(requiredClaims 만 있는 캐시 문서)도 그대로 동작한다', () => {
+    const claims = computeClaims(bundle, c001);
+    const legacy = legacyPolicy(index['near-poor']!, [
+      { claim: 'incomeBelow50Median', expected: true },
+      { claim: 'isBenefitRecipient', expected: false },
+    ]);
+    expect(chooseClaimSet(legacy, claims)).toEqual(legacy.requiredClaims);
+    expect(submitDocuments(bundle, legacy, claims).map((d) => d.claim)).toEqual(['incomeBelow50Median']);
+    expect(credentialHoldings(legacy, [], claims, bundle).map((h) => [h.claim, h.held])).toEqual([
+      ['incomeBelow50Median', false],
+      ['isBenefitRecipient', true],
+    ]);
+    expect(counterChecks(bundle, legacy, claims)).toEqual([]);
+    const c022 = computeClaims(bundle, getCitizen('C-022')!);
+    expect(failingClaimLabels(bundle, legacy, 'near-poor', c022)).toEqual(['기초생활보장 급여 수급 여부 (해당되어야 함: 아니오)']);
+    // 조합이 아예 없는 문서: 제출 증명서 없음, 부적격 사유는 규칙 변수
+    const empty = legacyPolicy(index['nbl-livelihood']!, []);
+    expect(chooseClaimSet(empty, claims)).toEqual([]);
+    expect(submitDocuments(bundle, empty, claims)).toEqual([]);
+    expect(failingClaimLabels(bundle, empty, 'nbl-livelihood', claims)).toEqual(['기준 중위소득 32% 이하 여부']);
   });
 });
 
@@ -275,8 +408,10 @@ describe('증명서 보유 표시', () => {
     expect(h.every((x) => !x.held)).toBe(true);
   });
   it("issuerOf 가 'self' 인 항목은 보유 목록에 오르지 않는다", () => {
-    const withSelf: PolicyMeta = { ...index['new-hope-loan']!, requiredClaims: [...index['new-hope-loan']!.requiredClaims, { claim: 'creditBottom20', expected: true }] };
+    const withSelf = legacyPolicy(index['new-hope-loan']!, [{ claim: 'annualIncomeUnder40M', expected: true }, { claim: 'creditBottom20', expected: true }]);
     expect(credentialHoldings(withSelf, creds, claims, bundle).map((x) => x.claim)).toEqual(['annualIncomeUnder40M']);
+    // 2026.2 문서: 김복례(신용 하위 20%, 연소득 1,200만 원)는 첫 조합(연소득 3,500만 원 이하)으로 충족 — 신용평점은 목록에 없다
+    expect(credentialHoldings(index['micro-livelihood-loan']!, creds, claims, bundle).map((x) => x.claim)).toEqual(['annualIncomeUnder35M']);
   });
 });
 

@@ -7,12 +7,20 @@
 """
 from .bundle import bundle_hash, load_bundle
 from .canonical import canonicalize, sha256_hex
-from .engine import categorical_profile, evaluate_claims, evaluate_policies, preprocess
+from .engine import (
+    categorical_profile,
+    evaluate_claims,
+    evaluate_policies,
+    evaluate_policy_partial,
+    preprocess,
+    rule_vars,
+)
 from .jsonlogic import evaluate
 from .paths import repo_root
-from .policies import load_policies
+from .policies import claim_sets, load_policies
 
 __all__ = [
     "bundle_hash", "load_bundle", "canonicalize", "sha256_hex", "categorical_profile",
-    "evaluate_claims", "evaluate_policies", "preprocess", "evaluate", "repo_root", "load_policies",
+    "evaluate_claims", "evaluate_policies", "evaluate_policy_partial", "preprocess", "rule_vars", "evaluate",
+    "repo_root", "load_policies", "claim_sets",
 ]

@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   bundleHash,
   canonicalize,
+  claimSetsOf,
   categoricalProfile,
   evaluateClaims,
   evaluatePolicies,
@@ -147,8 +148,20 @@ describe('bundle / policy metadata consistency', () => {
     const idx = policyIndex(metas);
     expect(Object.keys(idx).sort()).toEqual(Object.keys(BUNDLE.policies.rules).sort());
     for (const p of metas) {
+      // 2026.2 부터는 조합 목록(requiredClaimSets)만 둔다 — 옛 단일 목록과 섞이면 어느 쪽을 믿을지 모호해진다
+      expect(p, p.policyId).not.toHaveProperty('requiredClaims');
+      expect(p.requiredClaimSets.length, p.policyId).toBeGreaterThan(0);
+      expect(p.ruleRef, p.policyId).toEqual({ bundle: BUNDLE.bundle, version: BUNDLE.version });
       const used = vars(BUNDLE.policies.rules[p.policyId]!);
-      for (const rc of p.requiredClaims) expect(used.has(rc.claim), `${p.policyId}:${rc.claim}`).toBe(true);
+      for (const set of claimSetsOf(p)) {
+        expect(set.length, `${p.policyId}: 빈 조합`).toBeGreaterThan(0);
+        expect(new Set(set.map((rc) => rc.claim)).size, `${p.policyId}: 중복 claim`).toBe(set.length);
+        for (const rc of set) {
+          expect(Object.keys(rc).sort(), `${p.policyId}:${rc.claim}`).toEqual(['claim', 'expected']);
+          expect(typeof rc.expected, `${p.policyId}:${rc.claim}`).toBe('boolean');
+          expect(used.has(rc.claim), `${p.policyId}:${rc.claim}`).toBe(true);
+        }
+      }
       expect(p.legalBasis.length).toBeGreaterThan(0);
       for (const lb of p.legalBasis) expect(lb.sourceUrl.startsWith('http')).toBe(true);
     }

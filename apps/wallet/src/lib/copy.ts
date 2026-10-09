@@ -76,6 +76,7 @@ export const COPY = {
     welfareNote: '공공 복지 신청·안내는 복지멤버십(복지로)이 맡습니다. 여기서는 규칙 엔진 판정 결과만 보여드립니다.',
     notEligible: '지금은 해당되지 않는 혜택',
     submitDocs: '창구에 제출할 증명서: ',
+    counterChecked: '창구가 직접 확인 (증명서 아님): ',
     verifierHint: '창구 안내: ',
     goPresent: '제출하러 가기',
     explanation: '설명 · 근거 조항',

@@ -4,7 +4,7 @@
   "category": "금융",
   "channel": "finance",
   "welfareMembership": false,
-  "verifierHint": "은행·저축은행 창구의 대상 확인 단계에 '연소득 3,500만 원 이하 = 참' 증명서 제출(소득금액증명 원본 대신). 재직·사업 기간, 보증 심사용 소득 증빙, 신용평점은 창구가 자체 확인",
+  "verifierHint": "은행·저축은행 창구의 대상 확인 단계에 '연소득 3,500만 원 이하 = 참' 증명서 제출(소득금액증명 원본 대신). 창구 조회로 신용평점 하위 20%이면 '연소득 4,500만 원 이하 = 참'. 재직·사업 기간, 보증 심사용 소득 증빙, 신용평점은 창구가 자체 확인",
   "agency": "서민금융진흥원 보증 / 은행·저축은행 등 취급 금융회사 창구",
   "summary": "2026년 1월 2일 근로자햇살론과 햇살론뱅크를 하나로 합친 보증부 대출입니다. 연소득 3,500만 원 이하이거나, 신용평점 하위 20%이면서 연소득 4,500만 원 이하이면 소득 요건을 충족합니다. 3개월 이상 재직·사업 여부와 소득 증빙은 창구의 보증 심사에서 따로 확인합니다. 은행과 저축은행 모두에서 신청할 수 있습니다.",
   "howToApply": "은행·저축은행 등 취급 금융회사 창구 또는 앱에서 신청 (서민금융진흥원 보증 심사 포함)",
@@ -29,11 +29,23 @@
     }
   ],
   "basisVerified": true,
-  "requiredClaims": [
-    {
-      "claim": "annualIncomeUnder35M",
-      "expected": true
-    }
+  "requiredClaimSets": [
+    [
+      {
+        "claim": "annualIncomeUnder35M",
+        "expected": true
+      }
+    ],
+    [
+      {
+        "claim": "creditBottom20",
+        "expected": true
+      },
+      {
+        "claim": "annualIncomeUnder45M",
+        "expected": true
+      }
+    ]
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",

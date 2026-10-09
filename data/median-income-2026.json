@@ -5,15 +5,16 @@
   "sourceUrl": "https://www.mohw.go.kr/board.es?mid=a10409020000&bid=0026&list_no=1487112&act=view",
   "pressReleaseUrl": "https://www.mohw.go.kr/board.es?mid=a10503000000&bid=0027&act=view&list_no=1487098",
   "verified": true,
-  "verifiedOn": "2026-09-14",
+  "verifiedOn": "2026-10-09",
   "byHouseholdSize": {
     "1": 2564238,
     "2": 4199292,
     "3": 5359036,
     "4": 6494738,
-    "5": 7959053,
-    "6": 9556461
+    "5": 7556719,
+    "6": 8555952
   },
+  "householdSizeNote": "7인 이상 가구는 6인 값으로 판정한다 (MVP 단순화 — 규칙 전처리 householdSizeClamped, D-22). 고시의 7인 이상 산정은 구현하지 않았고, 합성 시민 중 7인 이상 가구는 없다.",
   "benefitLinePercent": {
     "livelihood": 32,
     "medical": 40,

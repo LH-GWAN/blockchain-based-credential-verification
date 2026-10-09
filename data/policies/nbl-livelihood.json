@@ -23,11 +23,13 @@
     }
   ],
   "basisVerified": true,
-  "requiredClaims": [
-    {
-      "claim": "incomeBelow32Median",
-      "expected": true
-    }
+  "requiredClaimSets": [
+    [
+      {
+        "claim": "incomeBelow32Median",
+        "expected": true
+      }
+    ]
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",

@@ -17,15 +17,17 @@
     }
   ],
   "basisVerified": true,
-  "requiredClaims": [
-    {
-      "claim": "daeguResident",
-      "expected": true
-    },
-    {
-      "claim": "daeguMetroFreeAge",
-      "expected": true
-    }
+  "requiredClaimSets": [
+    [
+      {
+        "claim": "daeguResident",
+        "expected": true
+      },
+      {
+        "claim": "daeguMetroFreeAge",
+        "expected": true
+      }
+    ]
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",

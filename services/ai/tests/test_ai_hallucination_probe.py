@@ -68,3 +68,19 @@ def test_template_chat_answers_registered_policy_with_rule_result_only(client, c
     assert "생계급여" in text
     assert "규칙 엔진 판정 결과, 현재 기준에는 해당하지 않습니다" in text
     assert "nbl-livelihood-c1" in text
+
+
+def test_utility_discount_questions_route_to_their_own_policy(client, chat_body, persona):
+    """전기·도시가스·통신 요금 감면은 대상이 서로 다르다 (2026.2: 기초연금 수급자는 통신요금만).
+    "전기요금 감면" 을 물었는데 통신요금 판정을 전하면 안 된다 — 일반어 '요금감면' 은 어느 제도의 별칭도 아니다."""
+    store = get_store()
+    assert store.match_policies("전기요금 감면 받을 수 있나요?") == ["electricity-welfare-discount"]
+    assert store.match_policies("도시가스 요금감면 되나요?") == ["city-gas-discount"]
+    assert store.match_policies("휴대폰 요금 감면 되나요?") == ["telecom-discount"]
+    assert store.match_policies("요금감면 알려 주세요") == []
+    text = client.post("/chat/complete", json=chat_body("전기요금 감면 받을 수 있나요?")).json()["text"]
+    assert "전기요금 복지할인" in text and "통신요금" not in text
+    clause = store.by_id["electricity-welfare-discount"]["legalBasis"][0]["clauseId"]
+    assert clause in text
+    eligible = persona["policies"]["electricity-welfare-discount"]
+    assert ("신청 기준을 충족합니다" if eligible else "현재 기준에는 해당하지 않습니다") in text

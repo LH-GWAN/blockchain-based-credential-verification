@@ -1,5 +1,6 @@
 /** 순수 포맷 함수. 화면 로직과 분리해 vitest 로 검증한다. */
-import type { VerificationResult } from "./types";
+import { claimLabel, REQUEST, RESULT } from "./copy";
+import type { PolicyCheck, Preset, VerificationResult } from "./types";
 
 /** 830 → "0.83초", 1234.5 → "1.23초" */
 export function formatSeconds(ms: number, digits = 2): string {
@@ -76,4 +77,43 @@ export function receivedFactCount(r: Pick<VerificationResult, "claims" | "creden
   const fromClaims = Object.keys(r.claims ?? {}).length;
   const fromCreds = (r.credentials ?? []).filter((c) => c.claim != null).length;
   return Math.max(fromClaims, fromCreds);
+}
+
+/** 항목 라벨 → 사실 문구: "신용평점 하위 20% 여부" + 참 → "신용평점 하위 20%", 거짓 → "신용평점 하위 20% 아님" */
+export function factLabel(label: string, expected: boolean): string {
+  const base = label.replace(/\s*\(창구 자체 조회\)$/, "").replace(/\s*여부$/, "");
+  return expected ? base : `${base} 아님`;
+}
+
+/**
+ * 정책 판정 카드의 보조 문구. 없으면 null.
+ * - pending: 판정 불가(eligible=null)일 때 결과를 바꾸는 미제출 항목
+ * - counterChecked: 증명서가 아니라 창구가 자체 조회해 판정에 넣은 항목
+ * 라벨은 서버 응답의 label 이 우선, 없으면 내장 라벨.
+ */
+export function policyCheckNotes(pc: PolicyCheck): { pending: string | null; counterChecked: string | null } {
+  const undecided = pc.eligible === null ? (pc.pending ?? []) : [];
+  // 신용평점처럼 시민이 제출할 수 없는 항목(창구 조회)은 '미제출'이 아니라 '창구 확인 필요'로 따로 적는다
+  const missing = undecided.filter((p) => !p.counterCheck).map((p) => claimLabel(p.claim, p.label || undefined));
+  const needsCounter = undecided.filter((p) => p.counterCheck).map((p) => factLabel(claimLabel(p.claim, p.label || undefined), true));
+  const pending = [
+    missing.length ? RESULT.policyPending(missing.join(" · ")) : null,
+    needsCounter.length ? RESULT.policyNeedsCounter(needsCounter.join(" · ")) : null,
+  ].filter((s): s is string => s !== null);
+  const counter = (pc.counterChecked ?? []).map((c) => factLabel(claimLabel(c.claim, c.label || undefined), c.expected));
+  return {
+    pending: pending.length ? pending.join(" / ") : null,
+    counterChecked: counter.length ? RESULT.policyCounterChecked(counter.join(" · ")) : null,
+  };
+}
+
+/** 요청 화면: 활성 프리셋이 창구 자체 조회를 전제하면 "창구가 먼저 확인: …" (없으면 null). 라벨은 /claims 응답이 우선. */
+export function presetCounterCheckedNote(
+  preset: Pick<Preset, "counterChecked"> | null | undefined,
+  labels: readonly { claim: string; label: string }[] = [],
+): string | null {
+  const items = (preset?.counterChecked ?? []).map((c) =>
+    factLabel(claimLabel(c.claim, labels.find((l) => l.claim === c.claim)?.label || undefined), c.expected),
+  );
+  return items.length ? REQUEST.presetCounterChecked(items.join(" · ")) : null;
 }

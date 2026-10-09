@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 from datetime import date
+from itertools import product
 from typing import Any
 
 from .jsonlogic import evaluate
@@ -81,6 +82,43 @@ def evaluate_policies(bundle: dict, claims: dict[str, bool]) -> dict[str, bool]:
             raise TypeError(f"policy {pid} must evaluate to boolean")
         out[pid] = v
     return out
+
+
+def rule_vars(rule: Any, acc: set[str] | None = None) -> set[str]:
+    """규칙이 참조하는 변수 이름."""
+    acc = set() if acc is None else acc
+    if isinstance(rule, dict):
+        for op, args in rule.items():
+            if op == "var":
+                acc.add(args if isinstance(args, str) else args[0])
+            else:
+                rule_vars(args, acc)
+    elif isinstance(rule, list):
+        for a in rule:
+            rule_vars(a, acc)
+    return acc
+
+
+def evaluate_policy_partial(bundle: dict, policy_id: str, known: dict[str, bool]) -> dict:
+    """제출된(알려진) claim 만으로 정책을 판정한다. 모르는 claim 을 거짓으로 채우지 않는다.
+    모르는 claim 의 모든 조합에서 결과가 같으면 그 값을, 갈리면 eligible=None 과
+    결과를 바꾸는 claim(pending)을 돌려준다 — 검증기관이 제출되지 않은 항목으로 '적격'을 단정하지 않게."""
+    rule = bundle["policies"]["rules"].get(policy_id)
+    if rule is None:  # 규칙 묶음에 없는 정책: 판정하지 않는다
+        return {"eligible": None, "pending": []}
+    unknown = sorted(v for v in rule_vars(rule) if v not in known)
+    outcomes: dict[tuple[bool, ...], bool] = {}
+    for bits in product([False, True], repeat=len(unknown)):
+        v = evaluate(rule, {**known, **dict(zip(unknown, bits, strict=True))})
+        if not isinstance(v, bool):
+            raise TypeError(f"policy {policy_id} must evaluate to boolean")
+        outcomes[bits] = v
+    values = set(outcomes.values())
+    if len(values) == 1:
+        return {"eligible": values.pop(), "pending": []}
+    pending = [name for i, name in enumerate(unknown)
+               if any(outcomes[b] != outcomes[b[:i] + (not b[i],) + b[i + 1:]] for b in outcomes)]
+    return {"eligible": None, "pending": pending}
 
 
 def categorical_profile(claims: dict[str, bool], household_size: int) -> dict:

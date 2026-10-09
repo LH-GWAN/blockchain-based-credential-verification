@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { api, isApiError, isUnreachable } from "@/lib/api";
 import { policyLabel, PRESETS_FALLBACK, REQUEST, requestErrorText, RULES_VERSION, verifierKindLabel } from "@/lib/copy";
+import { presetCounterCheckedNote } from "@/lib/format";
 import { initialRequestState, isClaimSelected, presetsForKind, requestFormReducer } from "@/lib/request-state";
 import type { ClaimDef, PresentationRequest, Preset, VerifierProfile } from "@/lib/types";
 import { RequestQr } from "./RequestQr";
@@ -102,6 +103,8 @@ export function RequestForm() {
   // 이 창구가 취급하는 상품의 프리셋만 보인다 (예: 새희망홀씨는 은행 창구에만).
   const visiblePresets = presetsForKind(meta.presets, verifierKind);
   const selectedClaims = meta.claims.filter((c) => isClaimSelected(form, c.claim));
+  // 신용 하위 20% 프리셋: 신용평점은 증명서로 받지 않는다 — 창구가 요청 전에 직접 조회해 두었어야 한다.
+  const counterNote = presetCounterCheckedNote(activePreset, meta.claims);
 
   return (
     <form
@@ -179,6 +182,7 @@ export function RequestForm() {
                 {REQUEST.presetPolicy}: {policyLabel(activePreset.policyId)}
               </span>
             )}
+            {counterNote && <span className="badge border-warn/40 bg-warn-soft/50 text-warn">{counterNote}</span>}
           </p>
         </fieldset>
 
@@ -254,7 +258,7 @@ export function RequestForm() {
           <p className="text-base">
             <span className="text-muted">{REQUEST.presetPolicy}: </span>
             <span className="font-semibold">{policyLabel(form.policyId)}</span>
-            <span className="text-sm text-muted"> · 규칙 {RULES_VERSION} · 제출된 항목만으로 계산</span>
+            <span className="text-sm text-muted"> · 규칙 {RULES_VERSION} · 제출된 항목{counterNote ? "과 창구 확인값" : ""}만으로 계산</span>
           </p>
         )}
         <p className="rounded-xl border border-line bg-surface px-4 py-3 text-muted">{REQUEST.notRequested}</p>

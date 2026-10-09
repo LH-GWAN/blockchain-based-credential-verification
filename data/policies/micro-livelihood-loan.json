@@ -4,7 +4,7 @@
   "category": "금융",
   "channel": "finance",
   "welfareMembership": false,
-  "verifierHint": "서민금융통합지원센터에 '연소득 3,500만 원 이하 = 참' 증명서 제출. 신용평점은 센터가 자체 조회",
+  "verifierHint": "서민금융통합지원센터에 '연소득 3,500만 원 이하 = 참' 증명서 제출. 신용평점은 센터가 자체 조회하고, 신용 하위 20%가 아니면 '기초생활보장 급여 수급 = 참' 또는 '기준 중위소득 50% 이하 = 참'을 함께 제출",
   "agency": "서민금융진흥원 / 서민금융통합지원센터 (대구센터)",
   "summary": "신용평점 하위 20%이고 연소득 3,500만 원 이하인 분에게 최대 100만 원을 당일 지원하는 정책 서민금융 상품입니다. 기초수급자·차상위계층은 신용평점 기준 없이 신청할 수 있습니다.",
   "howToApply": "서민금융진흥원 앱·홈페이지에서 방문 예약 후 서민금융통합지원센터 대면 상담",
@@ -23,11 +23,37 @@
     }
   ],
   "basisVerified": true,
-  "requiredClaims": [
-    {
-      "claim": "annualIncomeUnder35M",
-      "expected": true
-    }
+  "requiredClaimSets": [
+    [
+      {
+        "claim": "annualIncomeUnder35M",
+        "expected": true
+      },
+      {
+        "claim": "creditBottom20",
+        "expected": true
+      }
+    ],
+    [
+      {
+        "claim": "annualIncomeUnder35M",
+        "expected": true
+      },
+      {
+        "claim": "isBenefitRecipient",
+        "expected": true
+      }
+    ],
+    [
+      {
+        "claim": "annualIncomeUnder35M",
+        "expected": true
+      },
+      {
+        "claim": "incomeBelow50Median",
+        "expected": true
+      }
+    ]
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",

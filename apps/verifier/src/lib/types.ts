@@ -17,6 +17,8 @@ export type Preset = {
   hint: string;
   /** 이 상품을 취급하는 창구 종류(VerifierProfile.kind). 없으면 모든 창구에 보인다. */
   verifierKinds?: string[];
+  /** 증명서로 받지 않고 창구가 먼저 자체 조회한 항목(신용평점). 서버가 정책 판정 재현에 창구 확인값으로 넣는다. */
+  counterChecked?: { claim: string; expected: boolean }[];
 };
 
 export type PresentationRequest = {
@@ -72,8 +74,18 @@ export type Receipt = {
   error?: string;
 };
 
-/** policyId 를 보낸 요청에만 포함. eligible=null 은 규칙 묶음에 없는 정책. */
-export type PolicyCheck = { policyId: string; eligible: boolean | null };
+/**
+ * policyId 를 보낸 요청에만 포함. 제출된 항목 + 창구 자체 확인 항목(counterChecked)만으로 계산한다.
+ * eligible=null 은 판정 불가 — 결과가 제출되지 않은 항목(pending)에 달려 있다. 서버는 미제출 항목을 거짓으로 채우지 않는다.
+ * pending·counterChecked 는 이전 버전 서버 응답에는 없을 수 있다.
+ */
+export type PolicyCheck = {
+  policyId: string;
+  eligible: boolean | null;
+  /** counterCheck: 시민이 제출할 수 없고 창구가 조회하는 항목(issuerOf self) */
+  pending?: { claim: string; label: string; counterCheck?: boolean }[];
+  counterChecked?: { claim: string; expected: boolean; label: string }[];
+};
 
 export type VerificationResult = {
   requestId: string;

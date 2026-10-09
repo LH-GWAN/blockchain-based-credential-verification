@@ -11,6 +11,7 @@ import { COPY } from '@/lib/copy';
 import {
   buildRecommendPayload,
   computeClaims,
+  counterChecks,
   credentialHoldings,
   failingClaimLabels,
   filterRecommendations,
@@ -206,7 +207,8 @@ export default function BenefitsPage() {
                 policy={policy}
                 holdings={credentialHoldings(policy, credentials, derived.claims, data.bundle)}
                 isAi={rec.source ? rec.source === 'llm' : isAiProvider}
-                submitDocs={submitDocuments(data.bundle, policy)}
+                submitDocs={submitDocuments(data.bundle, policy, derived.claims)}
+                counterChecked={counterChecks(data.bundle, policy, derived.claims)}
                 presentHref="/present"
               />
             );

@@ -9,7 +9,14 @@ import pytest
 from dbp_ai import chat, llm
 from dbp_ai.app import app
 from dbp_ai.retriever import get_store
-from dbp_rules import categorical_profile, evaluate_claims, evaluate_policies, load_bundle, repo_root
+from dbp_rules import (
+    categorical_profile,
+    claim_sets,
+    evaluate_claims,
+    evaluate_policies,
+    load_bundle,
+    repo_root,
+)
 from fastapi.testclient import TestClient
 
 
@@ -49,8 +56,9 @@ def persona():
     store = get_store()
     rule_results = []
     for pid, eligible in policies.items():
-        req = store.by_id[pid]["requiredClaims"]
-        matched = [rc["claim"] for rc in req if claims.get(rc["claim"]) == rc["expected"]]
+        # 증명 조합(anyOf) 어디에든 나오는 claim 가운데 기대값과 일치하는 것 (중복 없이, 조합 순서대로)
+        req = [rc for s in claim_sets(store.by_id[pid]) for rc in s]
+        matched = list(dict.fromkeys(rc["claim"] for rc in req if claims.get(rc["claim"]) == rc["expected"]))
         rule_results.append({"policyId": pid, "eligible": eligible, "matchedClaims": matched})
     return {
         "citizen": c,

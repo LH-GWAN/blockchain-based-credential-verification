@@ -1,5 +1,5 @@
 import { COMPARISON, CHECK_LABELS, claimLabel, CRED_CHECK_LABELS, policyLabel, reasonText, RESULT, TIMING_LABELS } from "@/lib/copy";
-import { formatDateTime, formatMs, formatSeconds, issuerNames, receivedFactCount, statusLabel } from "@/lib/format";
+import { formatDateTime, formatMs, formatSeconds, issuerNames, policyCheckNotes, receivedFactCount, statusLabel } from "@/lib/format";
 import { CHECK_KEYS, TIMING_PARTS, type VerificationResult } from "@/lib/types";
 import { Checkmark } from "./Checkmark";
 import { CopyButton } from "./CopyButton";
@@ -286,10 +286,14 @@ export function DataNote({ result }: { result: VerificationResult }) {
   );
 }
 
-/** policyId 를 보낸 요청에만 나오는 작은 카드: 제출된 참/거짓 항목만으로 정책 규칙을 다시 돌린 결과. */
+/**
+ * policyId 를 보낸 요청에만 나오는 작은 카드: 제출된 참/거짓 항목(+창구 자체 확인 항목)만으로 정책 규칙을 다시 돌린 결과.
+ * 판정 불가면 결과를 바꾸는 미제출 항목을, 창구 확인값이 들어갔으면 그 항목을 함께 보여 준다.
+ */
 export function PolicyCheckCard({ result }: { result: VerificationResult }) {
   const pc = result.policyCheck;
   if (!pc) return null;
+  const notes = policyCheckNotes(pc);
   const verdict = pc.eligible === null ? RESULT.undetermined : pc.eligible ? RESULT.eligible : RESULT.ineligible;
   const tone =
     pc.eligible === null
@@ -304,8 +308,10 @@ export function PolicyCheckCard({ result }: { result: VerificationResult }) {
         <span className="font-bold">{policyLabel(pc.policyId)}</span>
         <span> — </span>
         <span className="font-extrabold">{verdict}</span>
-        <span className="text-sm"> ({RESULT.policyRuleNote})</span>
+        {notes.counterChecked && <span className="font-semibold"> ({notes.counterChecked})</span>}
+        <span className="text-sm"> ({RESULT.policyRuleNote(Boolean(notes.counterChecked))})</span>
       </p>
+      {notes.pending && <p className="mt-1 text-base font-medium">{notes.pending}</p>}
       <p className="mono mt-1 text-xs opacity-80">{pc.policyId}</p>
     </section>
   );

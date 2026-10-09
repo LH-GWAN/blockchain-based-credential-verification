@@ -34,12 +34,15 @@ async function newContexts(browser: Browser) {
  * 검증기관 → 프리셋 순서로 고른다. 검증기관 앱은 고른 창구 종류(verifierKinds)가 취급하지 않는 프리셋을 숨기고,
  * 창구를 바꾸면 취급하지 않는 프리셋 선택을 지우므로 창구를 먼저 골라야 한다.
  * hiddenPresets: 이 창구에서 보이지 않아야 하는 프리셋 이름 (예: 저축은행의 새희망홀씨).
+ * 프리셋 칩은 이름 전체가 같은 것만 고른다 — getByRole 의 name 은 기본이 부분 일치라
+ * '햇살론 일반보증 · 신용 하위 20% 고객' 같은 비슷한 칩이 늘어도 엉뚱한 칩을 누르지 않게.
+ * 숨김 확인은 반대로 부분 일치로 둔다 (이름이 조금 바뀌어도 칩이 남아 있으면 잡히게).
  */
 async function createVerifierRequest(verifier: Page, preset?: string, verifierName?: string, hiddenPresets: readonly string[] = []): Promise<string> {
   await verifier.goto(`${VERIFIER_APP}/`);
   if (verifierName) await verifier.getByRole('radio', { name: new RegExp(verifierName) }).check();
   if (preset) {
-    const chip = verifier.getByRole('button', { name: preset }).first();
+    const chip = verifier.getByRole('button', { name: preset, exact: true }).first();
     await expect(chip).toBeVisible(); // 프리셋 목록이 그려진 뒤에 숨김 여부를 본다
     for (const hidden of hiddenPresets) await expect(verifier.getByRole('button', { name: hidden })).toHaveCount(0);
     await chip.click();
@@ -185,7 +188,7 @@ test('①~⑦ 전체 시연 흐름', async ({ browser }) => {
   const countIssued = async (claim: string) =>
     ((await (await fetch(`${ISSUER_WELFARE}/admin/credentials`)).json()).credentials as { claim: string }[]).filter((c) => c.claim === claim).length;
   const issuedBefore = await countIssued('annualIncomeUnder35M');
-  const code4 = await createVerifierRequest(verifier, '햇살론 일반보증 대상 확인', 'iM저축은행', ['새희망홀씨 대상 확인']);
+  const code4 = await createVerifierRequest(verifier, '햇살론 일반보증 대상 확인', 'iM저축은행', ['새희망홀씨 대상 확인', '새희망홀씨 · 신용 하위 20% 고객']);
   await presentWithCode(wallet, code4);
   await expect(wallet.getByText('iM저축은행', { exact: false }).first()).toBeVisible();
   await expect(wallet.getByText('연소득 3,500만 원 이하 여부', { exact: false }).first()).toBeVisible();

@@ -54,9 +54,11 @@ print(" 두 발급기관 혼합 제출(햇살론 일반보증 용도):", res["ve
 assert res["verdict"] == "PASS"
 # ③ iM뱅크 → ③′ iM저축은행: 같은 '연소득 3,500만 원 이하' VC 를 재발급 없이 다시 제출 (2026 개편으로 저축은행도 햇살론 일반보증 취급)
 for vid in ["imbank-branch-01", "im-savings-01"]:
-    res = present(["annualIncomeUnder35M"], ["annualIncomeUnder35M"], verifierId=vid, presetId="sunshine-general", purpose="햇살론 일반보증 대상 확인")
-    print(f" 햇살론 일반보증 확인 @ {res['verifier']['name']}:", res["verdict"], res["reasonCodes"], f"{res['timingsMs']['total']}ms")
+    res = present(["annualIncomeUnder35M"], ["annualIncomeUnder35M"], verifierId=vid, presetId="sunshine-general", policyId="sunshine-loan-general", purpose="햇살론 일반보증 대상 확인")
+    print(f" 햇살론 일반보증 확인 @ {res['verifier']['name']}:", res["verdict"], res["reasonCodes"], "정책 판정:", res["policyCheck"]["eligible"], f"{res['timingsMs']['total']}ms")
     assert res["verdict"] == "PASS"
+    # 제출된 VC 하나(연소득 3,500만 원 이하)만으로 정책 규칙이 참으로 확정된다 — 보류 항목·창구 확인 항목 없음
+    assert res["policyCheck"] == {"policyId": "sunshine-loan-general", "eligible": True, "pending": [], "counterChecked": []}
 # 새희망홀씨는 은행권 상품 → 저축은행 창구에서는 요청 단계에서 거부
 r = httpx.post(f"{V}/requests", json={"verifierId":"im-savings-01","presetId":"new-hope","requested":[{"claim":"annualIncomeUnder40M","expected":True}]})
 print(" 새희망홀씨 요청 @ 저축은행:", r.status_code, r.json().get("detail"))

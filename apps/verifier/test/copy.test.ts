@@ -1,8 +1,9 @@
 /**
  * 문구·프리셋 불변 조건.
  * - 검증기관은 은행·저축은행 창구뿐: 행정복지센터/복지기관 문구가 화면 소스 어디에도 없다.
- * - 내장 프리셋 4개는 서버 /presets(services/verifier config.py PRESETS) 와 같은 ID·항목·정책·취급 창구를 가진다.
+ * - 내장 프리셋 6개는 서버 /presets(services/verifier config.py PRESETS) 와 같은 ID·항목·정책·취급 창구·창구 자체 확인 항목을 가진다.
  * - 2026 개편: 햇살론뱅크 → 햇살론 일반보증(은행·저축은행), 새희망홀씨는 연소득 4,000만 원 기준·은행 전용.
+ * - 신용 하위 20% 고객 프리셋: 연소득 4,500만(햇살론)·5,000만(새희망홀씨) 원 기준, 신용평점은 증명서가 아니라 창구가 조회.
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -14,7 +15,10 @@ import {
   policyLabel,
   POLICY_LABELS,
   PRESETS_FALLBACK,
+  REQUEST,
   requestErrorText,
+  RESULT,
+  RULES_VERSION,
   verifierKindLabel,
 } from "../src/lib/copy";
 
@@ -52,38 +56,73 @@ describe("policyLabel", () => {
 });
 
 describe("PRESETS_FALLBACK", () => {
-  it("네 가지 창구 용도, consult 가 첫 번째", () => {
-    expect(PRESETS_FALLBACK.map((p) => p.id)).toEqual(["consult", "sunshine-general", "new-hope", "discount"]);
+  it("여섯 가지 창구 용도, consult 가 첫 번째 · 신용 하위 20% 프리셋은 각 상품 바로 뒤", () => {
+    expect(PRESETS_FALLBACK.map((p) => p.id)).toEqual([
+      "consult",
+      "sunshine-general",
+      "sunshine-general-low-credit",
+      "new-hope",
+      "new-hope-low-credit",
+      "discount",
+    ]);
   });
 
-  it("햇살론 일반보증·새희망홀씨만 정책 판정을 가진다", () => {
+  it("햇살론 일반보증·새희망홀씨(신용 하위 20% 포함)만 정책 판정을 가진다", () => {
     const withPolicy = Object.fromEntries(PRESETS_FALLBACK.map((p) => [p.id, p.policyId ?? null]));
     expect(withPolicy).toEqual({
       consult: null,
       "sunshine-general": "sunshine-loan-general",
+      "sunshine-general-low-credit": "sunshine-loan-general",
       "new-hope": "new-hope-loan",
+      "new-hope-low-credit": "new-hope-loan",
       discount: null,
     });
   });
 
-  it("요청 항목: 햇살론 일반보증은 연소득 3,500만 원, 새희망홀씨는 연소득 4,000만 원 이하 1개", () => {
+  it("요청 항목: 햇살론 일반보증 3,500만(신용 하위 20%면 4,500만), 새희망홀씨 4,000만(5,000만) 원 이하 1개", () => {
     const requested = Object.fromEntries(PRESETS_FALLBACK.map((p) => [p.id, p.requested.map((r) => r.claim)]));
     expect(requested).toEqual({
       consult: ["daeguResident", "incomeBelow50Median"],
       "sunshine-general": ["annualIncomeUnder35M"],
+      "sunshine-general-low-credit": ["annualIncomeUnder45M"],
       "new-hope": ["annualIncomeUnder40M"],
+      "new-hope-low-credit": ["annualIncomeUnder50M"],
       discount: ["incomeBelow50Median"],
     });
   });
 
-  it("취급 창구: 새희망홀씨만 은행 전용, 나머지는 은행·저축은행", () => {
+  it("취급 창구: 새희망홀씨(신용 하위 20% 포함)만 은행 전용, 나머지는 은행·저축은행", () => {
     const kinds = Object.fromEntries(PRESETS_FALLBACK.map((p) => [p.id, p.verifierKinds]));
     expect(kinds).toEqual({
       consult: ["bank", "savings"],
       "sunshine-general": ["bank", "savings"],
+      "sunshine-general-low-credit": ["bank", "savings"],
       "new-hope": ["bank"],
+      "new-hope-low-credit": ["bank"],
       discount: ["bank", "savings"],
     });
+  });
+
+  it("창구 자체 확인(counterChecked): 신용 하위 20% 프리셋 둘만, 신용평점 하위 20% = 참", () => {
+    const counter = Object.fromEntries(PRESETS_FALLBACK.map((p) => [p.id, p.counterChecked ?? null]));
+    expect(counter).toEqual({
+      consult: null,
+      "sunshine-general": null,
+      "sunshine-general-low-credit": [{ claim: "creditBottom20", expected: true }],
+      "new-hope": null,
+      "new-hope-low-credit": [{ claim: "creditBottom20", expected: true }],
+      discount: null,
+    });
+  });
+
+  it("창구 자체 확인 항목은 증명서로 요청하지 않는다 (요청 항목과 겹치지 않음)", () => {
+    for (const p of PRESETS_FALLBACK) {
+      const requested = new Set(p.requested.map((r) => r.claim));
+      for (const c of p.counterChecked ?? []) {
+        expect(CLAIM_LABELS).toHaveProperty(c.claim);
+        expect(requested.has(c.claim), `${p.id}.${c.claim}`).toBe(false);
+      }
+    }
   });
 
   it("services/verifier config.py 의 PRESETS 와 문구·항목·취급 창구가 글자 그대로 같다", () => {
@@ -100,8 +139,17 @@ describe("PRESETS_FALLBACK", () => {
       }
       expect(chunk, `${p.id}.policyId`).toContain(`"policyId": ${p.policyId ? JSON.stringify(p.policyId) : "None"}`);
       expect(chunk, `${p.id}.verifierKinds`).toContain(`"verifierKinds": ${pyList(p.verifierKinds ?? [])}`);
-      const req = p.requested.map((r) => `{"claim": ${JSON.stringify(r.claim)}, "expected": ${r.expected ? "True" : "False"}}`);
-      expect(chunk, `${p.id}.requested`).toContain(`"requested": [${req.join(", ")}]`);
+      const pyItems = (xs: readonly { claim: string; expected: boolean }[]) =>
+        `[${xs.map((r) => `{"claim": ${JSON.stringify(r.claim)}, "expected": ${r.expected ? "True" : "False"}}`).join(", ")}]`;
+      expect(chunk, `${p.id}.requested`).toContain(`"requested": ${pyItems(p.requested)}`);
+      // counterChecked: 있으면 글자 그대로 같고, 없으면 서버 쪽에도 키가 없다
+      if (p.counterChecked) expect(chunk, `${p.id}.counterChecked`).toContain(`"counterChecked": ${pyItems(p.counterChecked)}`);
+      else expect(chunk, `${p.id}.counterChecked`).not.toContain(`"counterChecked"`);
+      // 서버 프리셋의 최상위 키 = 내장 사본의 키 (새 필드가 생기면 여기서 걸린다). claim·expected 는 항목 안쪽 키.
+      const pyKeys = new Set([...chunk.matchAll(/"(\w+)": /g)].map((m) => m[1]));
+      pyKeys.delete("claim");
+      pyKeys.delete("expected");
+      expect([...pyKeys].sort(), `${p.id} keys`).toEqual(Object.keys(p).sort());
     });
   });
 
@@ -131,6 +179,27 @@ describe("CLAIM_LABELS", () => {
     expect(CLAIM_LABELS.annualIncomeUnder35M).toBe("연소득 3,500만 원 이하 여부");
     expect(CLAIM_LABELS.annualIncomeUnder40M).toBe("연소득 4,000만 원 이하 여부");
     expect(CLAIM_LABELS.annualIncomeUnder50M).toBe("연소득 5,000만 원 이하 여부");
+  });
+});
+
+describe("정책 판정 보조 문구", () => {
+  it("판정 불가 사유와 창구 자체 확인 문구", () => {
+    expect(RESULT.policyPending("기초생활보장 급여 수급 여부")).toBe(
+      "판정에 필요한 항목이 제출되지 않았습니다: 기초생활보장 급여 수급 여부",
+    );
+    expect(RESULT.policyCounterChecked("신용평점 하위 20%")).toBe("창구 자체 확인: 신용평점 하위 20%");
+    expect(REQUEST.presetCounterChecked("신용평점 하위 20%")).toBe("창구가 먼저 확인: 신용평점 하위 20%");
+  });
+
+  it("규칙 안내: 창구 확인값이 들어갔으면 '신용평점은 포함하지 않음'이라고 적지 않는다", () => {
+    expect(RESULT.policyRuleNote()).toBe(
+      `규칙 ${RULES_VERSION}, 제출된 항목만으로 계산 — 재직·신용평점 등 창구 심사 요건은 포함하지 않음`,
+    );
+    const withCounter = RESULT.policyRuleNote(true);
+    expect(withCounter).toBe(
+      `규칙 ${RULES_VERSION}, 제출된 항목과 창구 확인값만으로 계산 — 재직 등 그 밖의 창구 심사 요건은 포함하지 않음`,
+    );
+    expect(withCounter).not.toContain("신용평점");
   });
 });
 

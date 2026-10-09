@@ -1,8 +1,8 @@
 # 테스트 리포트
 
-- 생성 시각: 2026-10-09T16:34:58+09:00
-- 커밋: `6b749cb`
-- 규칙 번들: `daegu-eligibility@2026.2` 해시 `0xb1eb8e28a1735506f65df6304be36c7a4d6133f4d99ff31f0391a3c4774ef102`
+- 생성 시각: 2026-10-09T17:53:48+09:00
+- 커밋: `f354111`
+- 규칙 번들: `daegu-eligibility@2026.2` 해시 `0xb24ad5f237f4d8ad8694dcfa2b28c88a15c6a9b88faa6764c6907e435509d94e`
 
 ## 제안요약서 검증 계획 대응
 
@@ -10,7 +10,7 @@
 |---|---|---|---|
 | 판정 정확성 | 합성 시민 30명 × 정책 13개 = 390건 100% 일치 | Python/TS 엔진 모두 기댓값과 일치 (pytest·vitest 포함) | ✅ |
 | 엔진 동등성 | TS/Py 번들 해시 동일 | vitest 해시 검증 | ✅ |
-| 개인정보 최소화 | 기관 전달 항목 ≥70% 감소 | 서민금융 상담 대상 확인: 13개 → 2개 (85% 감소) · 햇살론 일반보증 대상 확인: 10개 → 1개 (90% 감소) · 새희망홀씨 대상 확인: 10개 → 1개 (90% 감소) · 공공요금 감면 대상 확인: 13개 → 1개 (92% 감소) | ✅ |
+| 개인정보 최소화 | 기관 전달 항목 ≥70% 감소 | 서민금융 상담 대상 확인: 13개 → 2개 (85% 감소) · 햇살론 일반보증 대상 확인: 10개 → 1개 (90% 감소) · 햇살론 일반보증 · 신용 하위 20% 고객: 10개 → 1개 (90% 감소) · 새희망홀씨 대상 확인: 10개 → 1개 (90% 감소) · 새희망홀씨 · 신용 하위 20% 고객: 10개 → 1개 (90% 감소) · 공공요금 감면 대상 확인: 13개 → 1개 (92% 감소) | ✅ |
 | 보안 | 위조·만료·폐기·재사용·타인 증명서·비활성 발급기관 차단 | services/verifier 테스트 | ✅ |
 | AI 신뢰성·PII 차단 | 인용 검증, 환각 프로브, 페이로드 allowlist | services/ai 테스트 | ✅ |
 | 검증 성능 | p95 < 2,000ms | p95 13.2ms, 평균 12.4ms (50회) | ✅ |
@@ -20,8 +20,8 @@
 
 ## 스위트별 결과
 
-- Python (pytest): {'ok': True, 'tests': 165, 'failures': 0, 'errors': 0}
-- @dbp/rules (vitest): {'ok': True, 'tests': 46, 'failures': 0}
+- Python (pytest): {'ok': True, 'tests': 254, 'failures': 0, 'errors': 0}
+- @dbp/rules (vitest): {'ok': True, 'tests': 93, 'failures': 0}
 - @dbp/vc (vitest): {'ok': True, 'tests': 58, 'failures': 0}
 - @dbp/chain (hardhat): {'ok': True, 'passing': 30, 'failing': 0}
 
@@ -41,7 +41,17 @@
       "reductionPercent": 90,
       "pullCount": 10
     },
+    "햇살론 일반보증 · 신용 하위 20% 고객": {
+      "benefitPassCount": 1,
+      "reductionPercent": 90,
+      "pullCount": 10
+    },
     "새희망홀씨 대상 확인": {
+      "benefitPassCount": 1,
+      "reductionPercent": 90,
+      "pullCount": 10
+    },
+    "새희망홀씨 · 신용 하위 20% 고객": {
       "benefitPassCount": 1,
       "reductionPercent": 90,
       "pullCount": 10

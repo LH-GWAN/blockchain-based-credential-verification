@@ -1,7 +1,7 @@
 {
   "rpc": "http://127.0.0.1:8545",
   "chainId": 31337,
-  "bundleHash": "0xb1eb8e28a1735506f65df6304be36c7a4d6133f4d99ff31f0391a3c4774ef102",
+  "bundleHash": "0xb24ad5f237f4d8ad8694dcfa2b28c88a15c6a9b88faa6764c6907e435509d94e",
   "issuers": {
     "did:dbp:daegu": {
       "name": "대구광역시",
@@ -25,7 +25,7 @@
     },
     {
       "registerBundle": "daegu-eligibility@2026.2",
-      "tx": "0x6a272264df83fff78c483c718e4c47921565177f4d58b3b16eb9bc6129ba3943"
+      "tx": "0xd23bb9fd55fe01fa27e5b7721ba06ed4d914e5b0a140dcbfd05fa159cabc629d"
     },
     {
       "publishStatusList": "dbp:status:daegu:list-1",

@@ -23,15 +23,17 @@
     }
   ],
   "basisVerified": true,
-  "requiredClaims": [
-    {
-      "claim": "incomeBelow50Median",
-      "expected": true
-    },
-    {
-      "claim": "hasStudentChild",
-      "expected": true
-    }
+  "requiredClaimSets": [
+    [
+      {
+        "claim": "incomeBelow50Median",
+        "expected": true
+      },
+      {
+        "claim": "hasStudentChild",
+        "expected": true
+      }
+    ]
   ],
   "ruleRef": {
     "bundle": "daegu-eligibility",
