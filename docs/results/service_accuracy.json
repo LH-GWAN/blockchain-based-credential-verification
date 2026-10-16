@@ -1,0 +1,59 @@
+{
+  "households": 6207,
+  "claims_measured": [
+    "ageOver65",
+    "daeguMetroFreeAge",
+    "singlePersonHousehold",
+    "incomeBelow32Median",
+    "incomeBelow48Median",
+    "incomeBelow50Median",
+    "incomeBelowBasicPensionLine",
+    "annualIncomeUnder35M",
+    "annualIncomeUnder40M",
+    "annualIncomeUnder45M",
+    "annualIncomeUnder50M"
+  ],
+  "consistency": {
+    "total": 68277,
+    "agree": 68277
+  },
+  "honest": {
+    "total": 24382,
+    "pass": 24382,
+    "false_reject": 0
+  },
+  "forged": {
+    "total": 43895,
+    "blocked": 43895,
+    "false_accept": 0
+  },
+  "borrowed": {
+    "total": 43895,
+    "blocked": 43895,
+    "false_accept": 0
+  },
+  "revoked": {
+    "total": 1219,
+    "blocked": 1219
+  },
+  "replay": {
+    "total": 1188,
+    "blocked": 1188
+  },
+  "reasons": {},
+  "latency_ms": {
+    "n": 24382,
+    "mean": 0.7,
+    "p50": 0.52,
+    "p95": 1.54,
+    "max": 13.25,
+    "scope": "검증 함수 처리만(프로세스 내, 원장은 메모리 스텁) — 네트워크·체인 지연 제외"
+  },
+  "vcs_issued": 24382,
+  "elapsed_s": 102.6,
+  "notes": [
+    "정답 = 독립 참조 구현(reference.py)이 합성 가구의 실제 값으로 계산한 자격",
+    "거주는 전원 대구로 가정, 수급·학생 자녀·신용 항목은 공공용 자료에 없어 제외",
+    "소득은 가구 경상소득 기준"
+  ]
+}

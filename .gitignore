@@ -31,3 +31,7 @@ apps/e2e/playwright-report/
 .smoke/
 .demo/
 .besu-test/
+
+# MDIS 원자료·합성 레코드는 이용 규정상 저장소에 넣지 않는다 (집계 결과만 docs/results)
+.synthetic/
+data/mdis/
