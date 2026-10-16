@@ -14,7 +14,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "bottom20",
-      "annualIncomeKRW": 12000000
+      "annualIncomeKRW": 12000000,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": false
     },
     {
       "citizenId": "C-002",
@@ -29,7 +32,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 9846672
+      "annualIncomeKRW": 9846672,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": true
     },
     {
       "citizenId": "C-003",
@@ -44,7 +50,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 9846684
+      "annualIncomeKRW": 9846684,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": true
     },
     {
       "citizenId": "C-004",
@@ -59,7 +68,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 14770008
+      "annualIncomeKRW": 14770008,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": false
     },
     {
       "citizenId": "C-005",
@@ -74,7 +86,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 14770020
+      "annualIncomeKRW": 14770020,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": false
     },
     {
       "citizenId": "C-006",
@@ -89,7 +104,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 15385428
+      "annualIncomeKRW": 15385428,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": true
     },
     {
       "citizenId": "C-007",
@@ -104,7 +122,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 15385440
+      "annualIncomeKRW": 15385440,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": true
     },
     {
       "citizenId": "C-008",
@@ -119,7 +140,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 24187920
+      "annualIncomeKRW": 24187920,
+      "isHouseholdHead": true,
+      "isMarried": true,
+      "isEmployed": true
     },
     {
       "citizenId": "C-009",
@@ -134,7 +158,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": true,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 30868044
+      "annualIncomeKRW": 30868044,
+      "isHouseholdHead": true,
+      "isMarried": true,
+      "isEmployed": true
     },
     {
       "citizenId": "C-010",
@@ -149,7 +176,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": true,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 37409688
+      "annualIncomeKRW": 37409688,
+      "isHouseholdHead": true,
+      "isMarried": true,
+      "isEmployed": true
     },
     {
       "citizenId": "C-011",
@@ -164,7 +194,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": true,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 43526700
+      "annualIncomeKRW": 43526700,
+      "isHouseholdHead": true,
+      "isMarried": true,
+      "isEmployed": true
     },
     {
       "citizenId": "C-012",
@@ -179,7 +212,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": true,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 49282272
+      "annualIncomeKRW": 49282272,
+      "isHouseholdHead": true,
+      "isMarried": true,
+      "isEmployed": true
     },
     {
       "citizenId": "C-013",
@@ -194,7 +230,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 18000000
+      "annualIncomeKRW": 18000000,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": false
     },
     {
       "citizenId": "C-014",
@@ -209,7 +248,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 18000000
+      "annualIncomeKRW": 18000000,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": false
     },
     {
       "citizenId": "C-015",
@@ -224,7 +266,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 29640000
+      "annualIncomeKRW": 29640000,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": false
     },
     {
       "citizenId": "C-016",
@@ -239,7 +284,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 29640012
+      "annualIncomeKRW": 29640012,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": false
     },
     {
       "citizenId": "C-017",
@@ -254,7 +302,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 47424000
+      "annualIncomeKRW": 47424000,
+      "isHouseholdHead": true,
+      "isMarried": true,
+      "isEmployed": false
     },
     {
       "citizenId": "C-018",
@@ -269,7 +320,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 47424012
+      "annualIncomeKRW": 47424012,
+      "isHouseholdHead": true,
+      "isMarried": true,
+      "isEmployed": false
     },
     {
       "citizenId": "C-019",
@@ -284,7 +338,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "bottom20",
-      "annualIncomeKRW": 10800000
+      "annualIncomeKRW": 10800000,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": false
     },
     {
       "citizenId": "C-020",
@@ -299,7 +356,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "bottom20",
-      "annualIncomeKRW": 10800000
+      "annualIncomeKRW": 10800000,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": false
     },
     {
       "citizenId": "C-021",
@@ -314,7 +374,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "bottom20",
-      "annualIncomeKRW": 10800000
+      "annualIncomeKRW": 10800000,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": false
     },
     {
       "citizenId": "C-022",
@@ -329,7 +392,10 @@
       "isBasicLivelihoodRecipient": true,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 8400000
+      "annualIncomeKRW": 8400000,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": false
     },
     {
       "citizenId": "C-023",
@@ -344,7 +410,10 @@
       "isBasicLivelihoodRecipient": true,
       "hasStudentChild": true,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 14400000
+      "annualIncomeKRW": 14400000,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": false
     },
     {
       "citizenId": "C-024",
@@ -359,7 +428,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "bottom20",
-      "annualIncomeKRW": 35000000
+      "annualIncomeKRW": 35000000,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": true
     },
     {
       "citizenId": "C-025",
@@ -374,7 +446,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "bottom20",
-      "annualIncomeKRW": 35000001
+      "annualIncomeKRW": 35000001,
+      "isHouseholdHead": true,
+      "isMarried": false,
+      "isEmployed": true
     },
     {
       "citizenId": "C-026",
@@ -389,7 +464,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 24000000
+      "annualIncomeKRW": 24000000,
+      "isHouseholdHead": false,
+      "isMarried": true,
+      "isEmployed": true
     },
     {
       "citizenId": "C-027",
@@ -404,7 +482,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "bottom20",
-      "annualIncomeKRW": 45000000
+      "annualIncomeKRW": 45000000,
+      "isHouseholdHead": true,
+      "isMarried": true,
+      "isEmployed": true
     },
     {
       "citizenId": "C-028",
@@ -419,7 +500,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "bottom20",
-      "annualIncomeKRW": 45000001
+      "annualIncomeKRW": 45000001,
+      "isHouseholdHead": true,
+      "isMarried": true,
+      "isEmployed": true
     },
     {
       "citizenId": "C-029",
@@ -434,7 +518,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": false,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 68585796
+      "annualIncomeKRW": 68585796,
+      "isHouseholdHead": true,
+      "isMarried": true,
+      "isEmployed": true
     },
     {
       "citizenId": "C-030",
@@ -449,7 +536,10 @@
       "isBasicLivelihoodRecipient": false,
       "hasStudentChild": true,
       "creditScoreTier": "other",
-      "annualIncomeKRW": 34975812
+      "annualIncomeKRW": 34975812,
+      "isHouseholdHead": true,
+      "isMarried": true,
+      "isEmployed": true
     }
   ]
 }

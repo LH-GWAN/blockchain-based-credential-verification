@@ -79,29 +79,36 @@ describe('로컬 사전 판정 (김복례)', () => {
     expect(plans.map((p) => p.did)).toEqual(['did:dbp:daegu', 'did:dbp:welfare']);
   });
 
-  it('대구광역시: 거주·65세 이상·무임 연령·1인 가구 발급 가능, 학생 자녀는 발급 불가', () => {
+  it('대구광역시: 거주·65세 이상·무임 연령·1인 가구·세대주 발급 가능, 학생 자녀·기혼은 발급 불가', () => {
     const daegu = plans[0]!;
-    expect(daegu.issuable.map((d) => d.claim).sort()).toEqual(['ageOver65', 'daeguMetroFreeAge', 'daeguResident', 'singlePersonHousehold']);
-    expect(daegu.denied.map((d) => d.claim)).toEqual(['hasStudentChild']);
+    expect(daegu.issuable.map((d) => d.claim).sort()).toEqual([
+      'ageOver65',
+      'daeguMetroFreeAge',
+      'daeguResident',
+      'householdHead',
+      'singlePersonHousehold',
+    ]);
+    expect(daegu.denied.map((d) => d.claim).sort()).toEqual(['hasStudentChild', 'married']);
   });
 
-  it('사회보장정보원: 소득구간·연소득(3,500·4,000·4,500·5,000만 원) 발급 가능, 32% 이하·수급 여부는 발급 불가', () => {
+  it('사회보장정보원: 소득구간·연소득(3,500·4,000·4,500·5,000·6,000만 원) 발급 가능, 32% 이하·수급 여부·재직은 발급 불가', () => {
     const welfare = plans[1]!;
     expect(welfare.issuable.map((d) => d.claim).sort()).toEqual([
       'annualIncomeUnder35M',
       'annualIncomeUnder40M',
       'annualIncomeUnder45M',
       'annualIncomeUnder50M',
+      'annualIncomeUnder60M',
       'incomeBelow48Median',
       'incomeBelow50Median',
       'incomeBelowBasicPensionLine',
     ]);
-    expect(welfare.denied.map((d) => d.claim).sort()).toEqual(['incomeBelow32Median', 'isBenefitRecipient']);
+    expect(welfare.denied.map((d) => d.claim).sort()).toEqual(['employed', 'incomeBelow32Median', 'isBenefitRecipient']);
     expect(welfare.denied.find((d) => d.claim === 'incomeBelow32Median')?.label).toBe('기준 중위소득 32% 이하 여부');
   });
 
-  it('발급 가능한 사실은 두 기관 합쳐 11개 (대구광역시 4 + 사회보장정보원 7)', () => {
-    expect(plans.flatMap((p) => p.issuable)).toHaveLength(11);
+  it('발급 가능한 사실은 두 기관 합쳐 13개 (대구광역시 5 + 사회보장정보원 8)', () => {
+    expect(plans.flatMap((p) => p.issuable)).toHaveLength(13);
   });
 
   it("issuerOf 가 'self' 인 creditBottom20 은 어느 발급기관에도 요청하지 않고, 연소득 3,500만 원 이하는 사회보장정보원에 요청한다", () => {

@@ -6,6 +6,8 @@
     "daeguMetroFreeAge": "did:dbp:daegu",
     "singlePersonHousehold": "did:dbp:daegu",
     "hasStudentChild": "did:dbp:daegu",
+    "householdHead": "did:dbp:daegu",
+    "married": "did:dbp:daegu",
     "isBenefitRecipient": "did:dbp:welfare",
     "incomeBelow32Median": "did:dbp:welfare",
     "incomeBelow48Median": "did:dbp:welfare",
@@ -15,6 +17,8 @@
     "annualIncomeUnder40M": "did:dbp:welfare",
     "annualIncomeUnder45M": "did:dbp:welfare",
     "annualIncomeUnder50M": "did:dbp:welfare",
+    "annualIncomeUnder60M": "did:dbp:welfare",
+    "employed": "did:dbp:welfare",
     "creditBottom20": "self"
   },
   "labels": {
@@ -23,6 +27,8 @@
     "daeguMetroFreeAge": "도시철도 무임 연령(1958년생 이전) 여부",
     "singlePersonHousehold": "1인 가구 여부",
     "hasStudentChild": "초·중·고 학생 자녀 유무",
+    "householdHead": "세대주 여부",
+    "married": "혼인 여부 (기혼)",
     "isBenefitRecipient": "기초생활보장 급여 수급 여부",
     "incomeBelow32Median": "기준 중위소득 32% 이하 여부",
     "incomeBelow48Median": "기준 중위소득 48% 이하 여부",
@@ -32,7 +38,9 @@
     "annualIncomeUnder35M": "연소득 3,500만 원 이하 여부",
     "annualIncomeUnder40M": "연소득 4,000만 원 이하 여부",
     "annualIncomeUnder45M": "연소득 4,500만 원 이하 여부",
-    "annualIncomeUnder50M": "연소득 5,000만 원 이하 여부"
+    "annualIncomeUnder50M": "연소득 5,000만 원 이하 여부",
+    "annualIncomeUnder60M": "연소득 6,000만 원 이하 여부",
+    "employed": "재직 중 여부 (직장 건강보험 가입)"
   },
   "rules": {
     "daeguResident": {
@@ -71,6 +79,22 @@
       "==": [
         {
           "var": "hasStudentChild"
+        },
+        true
+      ]
+    },
+    "householdHead": {
+      "==": [
+        {
+          "var": "isHouseholdHead"
+        },
+        true
+      ]
+    },
+    "married": {
+      "==": [
+        {
+          "var": "isMarried"
         },
         true
       ]
@@ -191,6 +215,22 @@
           "var": "annualIncomeKRW"
         },
         50000000
+      ]
+    },
+    "annualIncomeUnder60M": {
+      "<=": [
+        {
+          "var": "annualIncomeKRW"
+        },
+        60000000
+      ]
+    },
+    "employed": {
+      "==": [
+        {
+          "var": "isEmployed"
+        },
+        true
       ]
     }
   }

@@ -69,6 +69,12 @@ export type CitizenProfile = {
   hasStudentChild: boolean;
   creditScoreTier: 'bottom20' | 'other';
   annualIncomeKRW: number;
+  /** 세대주 여부 (주민등록, 대구시가 앎) */
+  isHouseholdHead: boolean;
+  /** 혼인 여부 (가족관계등록, 대구시가 앎) */
+  isMarried: boolean;
+  /** 재직 중 여부 = 직장 건강보험 가입 (복지기관이 건보 자격 연계로 앎) */
+  isEmployed: boolean;
 };
 
 /** claim 이름 → 불리언 (원자적 사실). */

@@ -56,7 +56,7 @@
 
 ## 데이터 모델 요약
 
-- 규칙 번들 = `{bundle, version, preprocess, claims, policies, tables}`; 해시 = SHA-256(JCS(번들)). 정수 연산만 사용. 현재 `daegu-eligibility@2026.2`, 해시 `0xb24ad5f2…d94e` (원장의 (번들, 버전) 항목은 불변이라 규칙을 바꾸면 버전을 올려 새로 등록한다, D-03·D-21. 2026.2 는 지속 원장에 등록된 적이 없어 D-22 정정을 같은 버전에 합쳤다).
+- 규칙 번들 = `{bundle, version, preprocess, claims, policies, tables}`; 해시 = SHA-256(JCS(번들)). 정수 연산만 사용. 현재 `daegu-eligibility@2026.2`, 해시 `0xa054a6a2…df60` (원장의 (번들, 버전) 항목은 불변이라 규칙을 바꾸면 버전을 올려 새로 등록한다, D-03·D-21. 2026.2 는 지속 원장에 등록된 적이 없어 D-22 정정을 같은 버전에 합쳤다).
 - 기준 중위소득표는 1~6인 고시값(제2025-135호)만 담는다. 7인 이상 가구는 전처리가 6인으로 잘라 판정한다(MVP 한계, D-22).
 - 정책 문서(`data/policies/*.json`) = 설명·근거 조항(`legalBasis`)·`channel`·`verifierHint` + `requiredClaimSets`: 규칙식의 OR 분기마다 증명 조합을 하나씩 둔 anyOf 목록(`RequiredClaim[][]`, 각 조합은 AND). 앞 조합이 우선 안내 경로이고, 조합에는 창구가 직접 확인하는 `issuerOf: "self"` 항목(신용평점)과 `expected: false` 항목(차상위의 '수급자 아님')도 들어 있다. 읽기는 Python `claim_sets` / TS `claimSetsOf`(옛 `requiredClaims` 단일 목록도 조합 하나로 읽는다).
 - 검증 결과의 정책 판정 재현 `policyCheck = {policyId, eligible: true|false|null, pending: [{claim, label}], counterChecked: [{claim, expected, label}]}`. (창구 확인값 ∪ 검증된 VC claim)만으로 `evaluate_policy_partial` 이 판정하며, 제출되지 않은 항목을 거짓으로 채우지 않는다. 결과가 미제출 항목에 달려 있으면 `eligible: null` 과 그 항목(`pending`)을 돌려준다.

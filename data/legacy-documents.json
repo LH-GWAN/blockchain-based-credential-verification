@@ -47,6 +47,33 @@
         "사용 목적"
       ],
       "source": "국민기초생활 보장법 시행규칙 별지 서식(수급자증명서)"
+    },
+    "marriage-certificate": {
+      "name": "혼인관계증명서",
+      "issuer": "법원 / 시·구·읍·면",
+      "fields": [
+        "성명",
+        "주민등록번호",
+        "등록기준지",
+        "출생연월일·성별·본",
+        "배우자 성명·주민등록번호",
+        "혼인 신고일",
+        "발급번호·발급일"
+      ],
+      "source": "가족관계의 등록 등에 관한 규칙 별지 서식(혼인관계증명서 일반)"
+    },
+    "health-insurance-eligibility": {
+      "name": "건강보험 자격득실확인서",
+      "issuer": "국민건강보험공단",
+      "fields": [
+        "성명",
+        "주민등록번호",
+        "가입자 구분(직장·지역)",
+        "사업장 명칭",
+        "자격 취득일·상실일",
+        "발급번호·발급일"
+      ],
+      "source": "국민건강보험공단 자격득실확인서 서식"
     }
   },
   "claimDocuments": {
@@ -64,6 +91,12 @@
     ],
     "hasStudentChild": [
       "resident-register"
+    ],
+    "householdHead": [
+      "resident-register"
+    ],
+    "married": [
+      "marriage-certificate"
     ],
     "isBenefitRecipient": [
       "recipient-certificate"
@@ -95,6 +128,12 @@
     ],
     "annualIncomeUnder50M": [
       "income-certificate"
+    ],
+    "annualIncomeUnder60M": [
+      "income-certificate"
+    ],
+    "employed": [
+      "health-insurance-eligibility"
     ]
   },
   "records": {

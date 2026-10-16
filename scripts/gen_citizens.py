@@ -1,7 +1,7 @@
 """합성 시민 30명 생성기. 전부 가명·가상 데이터. 결정론적(seed 고정).
 
 경계값을 고르게 포함한다: 기준선 정확히 일치, ±1원, 가구원수 1~6, 대구 외 거주, 65세 미만,
-학생 자녀 가구, 수급자, 신용 구간. C-001은 시연 페르소나(68세 1인 가구 대구 북구, 월 100만 원).
+학생 자녀 가구, 수급자, 신용 구간, 세대원(세대주 아님)·한부모(미혼 2인 가구)·비재직. C-001은 시연 페르소나(68세 1인 가구 대구 북구, 월 100만 원).
 """
 from __future__ import annotations
 
@@ -25,7 +25,9 @@ def line(hs: int, pct: int) -> int:
 
 
 def citizen(i: int, *, birth: str, sido: str, sigungu: str, hs: int, income: int, recipient=False,
-            student=False, credit="other", annual=None) -> dict:
+            student=False, credit="other", annual=None, head=None, married=None, employed=None) -> dict:
+    # 세대주·혼인·재직은 난수를 쓰지 않고 정한다 (기존 시민 값이 바뀌지 않게). 1인 가구는 본인이 세대주.
+    year = int(birth[:4])
     return {
         "citizenId": f"C-{i:03d}",
         "name": SURNAMES[i % len(SURNAMES)] + GIVEN[(i - 1) % len(GIVEN)],
@@ -37,6 +39,9 @@ def citizen(i: int, *, birth: str, sido: str, sigungu: str, hs: int, income: int
         "hasStudentChild": student,
         "creditScoreTier": credit,
         "annualIncomeKRW": annual if annual is not None else income * 12,
+        "isHouseholdHead": head if head is not None else True,
+        "isMarried": married if married is not None else (hs >= 2),
+        "isEmployed": employed if employed is not None else (year >= 1962 and not recipient),
     }
 
 
@@ -70,11 +75,12 @@ def main() -> None:
         rows.append(citizen(idx, birth="1957-02-02", sido=sido, sigungu=sg, hs=1, income=900_000, credit="bottom20"))
     # 7) 수급자 (에너지바우처·통신감면), 65세 이상/미만
     rows.append(citizen(22, birth="1950-10-10", sido="대구광역시", sigungu="달성군", hs=1, income=700_000, recipient=True))
-    rows.append(citizen(23, birth="1985-10-10", sido="대구광역시", sigungu="군위군", hs=2, income=1_200_000, recipient=True, student=True))
+    rows.append(citizen(23, birth="1985-10-10", sido="대구광역시", sigungu="군위군", hs=2, income=1_200_000, recipient=True, student=True,
+                        married=False))
     # 8) 소액생계비대출 경계: 연소득 3,500만 정확히 / +1, 신용 구간
     rows.append(citizen(24, birth="1992-03-03", sido="대구광역시", sigungu="북구", hs=1, income=2_916_666, credit="bottom20", annual=35_000_000))
     rows.append(citizen(25, birth="1992-03-03", sido="대구광역시", sigungu="북구", hs=1, income=2_916_667, credit="bottom20", annual=35_000_001))
-    rows.append(citizen(26, birth="1988-08-08", sido="대구광역시", sigungu="남구", hs=3, income=2_000_000, credit="other"))
+    rows.append(citizen(26, birth="1988-08-08", sido="대구광역시", sigungu="남구", hs=3, income=2_000_000, credit="other", head=False))
     # 9) 연소득 4,500만 경계 (신용 하위 20% + 3,500만 초과): 정확히 / +1원
     rows.append(citizen(27, birth="1975-04-04", sido="대구광역시", sigungu="서구", hs=2, income=3_750_000, credit="bottom20", annual=45_000_000))
     rows.append(citizen(28, birth="1975-04-04", sido="대구광역시", sigungu="서구", hs=2, income=3_750_001, credit="bottom20", annual=45_000_001))

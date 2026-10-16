@@ -261,7 +261,8 @@ def test_presets_list_in_counter_order(env):
     client, _, _, _ = env
     presets = client.get("/presets").json()
     assert [p["id"] for p in presets] == ["consult", "sunshine-general", "sunshine-general-low-credit",
-                                          "new-hope", "new-hope-low-credit", "discount"]
+                                          "new-hope", "new-hope-low-credit", "beotimmok", "didimdol",
+                                          "daegu-youth-deposit", "discount"]
     by_id = {p["id"]: p for p in presets}
     assert by_id["sunshine-general-low-credit"]["label"] == "햇살론 일반보증 · 신용 하위 20% 고객"
     assert by_id["new-hope-low-credit"]["label"] == "새희망홀씨 · 신용 하위 20% 고객"
@@ -360,7 +361,7 @@ def test_comparison_lists_low_credit_presets(env):
     client, _, _, _ = env
     presets = client.get("/comparison").json()["presets"]
     assert list(presets) == ["consult", "sunshine-general", "sunshine-general-low-credit", "new-hope",
-                             "new-hope-low-credit", "discount"]
+                             "new-hope-low-credit", "beotimmok", "didimdol", "daegu-youth-deposit", "discount"]
     for pid, hold in [("sunshine-general-low-credit", "연소득 4,500만 원 이하 여부 = 참"),
                       ("new-hope-low-credit", "연소득 5,000만 원 이하 여부 = 참")]:
         c = presets[pid]
@@ -701,3 +702,30 @@ def test_empty_allowed_origins_falls_back_to_defaults(monkeypatch):
     assert Settings().allowed_origins == DEFAULT_ALLOWED_ORIGINS.split(",")
     monkeypatch.setenv("ALLOWED_ORIGINS", "http://phone.test:3000")
     assert Settings().allowed_origins == ["http://phone.test:3000"]
+
+
+def test_housing_loan_preset_takes_three_claims_from_two_issuers(env):
+    """버팀목: 소득금액증명·등본·건보 자격득실 원본 대신 소득(복지기관)·세대주(대구시)·재직(복지기관) 참 3개."""
+    client, _, _, _ = env
+    holder = generate_holder_key()
+    vcs = [_vc(holder.did, "annualIncomeUnder50M", 41), _vc(holder.did, "householdHead", 42), _vc(holder.did, "employed", 43)]
+    res = _present_preset(client, holder, vcs, "beotimmok")
+    assert res["verdict"] == "PASS", res
+    assert res["claims"] == {"annualIncomeUnder50M": True, "householdHead": True, "employed": True}
+    c = res["comparison"]
+    assert [d["name"] for d in c["pullDocuments"]] == ["소득금액증명", "주민등록표 등본", "건강보험 자격득실확인서"]
+    assert c["holdCount"] == 3 and c["reductionPercent"] >= 70
+    # 재직 증명서가 빠지면 통과하지 않는다
+    res = _present_preset(client, holder, vcs[:2], "beotimmok")
+    assert res["verdict"] == "FAIL" and "CLAIM_MISSING" in res["reasonCodes"], res
+
+
+def test_household_head_issued_by_welfare_is_rejected(env):
+    """세대주는 대구시(주민등록) 소관 — 복지기관 키로 서명된 세대주 증명서는 받지 않는다."""
+    client, _, _, _ = env
+    holder = generate_holder_key()
+    vcs = [_vc(holder.did, "annualIncomeUnder50M", 51),
+           _vc(holder.did, "householdHead", 52, issuer_did="did:dbp:welfare"),
+           _vc(holder.did, "employed", 53)]
+    res = _present_preset(client, holder, vcs, "beotimmok")
+    assert res["verdict"] == "FAIL" and "ISSUER_NOT_AUTHORITATIVE" in res["reasonCodes"], res

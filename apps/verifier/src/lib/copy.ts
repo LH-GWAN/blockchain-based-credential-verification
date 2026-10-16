@@ -129,6 +129,44 @@ export const PRESETS_FALLBACK: readonly Preset[] = [
     hint: "은행 조회로 신용평점 하위 20%인 고객: 소득금액증명 원본 대신 '연소득 5,000만 원 이하 = 참' 1개 항목만 받습니다. 재직 등 대출 심사는 은행이 자체 확인합니다.",
   },
   {
+    id: "beotimmok",
+    label: "버팀목 전세자금대출 소득·세대주·재직 확인",
+    purpose: "버팀목 전세자금대출 대상 확인",
+    requested: [
+      { claim: "annualIncomeUnder50M", expected: true },
+      { claim: "householdHead", expected: true },
+      { claim: "employed", expected: true },
+    ],
+    policyId: null,
+    verifierKinds: ["bank"],
+    hint: "소득금액증명·주민등록표 등본·건강보험 자격득실확인서 원본 대신 '연소득 5,000만 원 이하'·'세대주'·'재직 중' 3개 항목의 참/거짓만 받습니다. 무주택·순자산은 HUG 가 중앙에서 심사해 결과를 따로 줍니다.",
+  },
+  {
+    id: "didimdol",
+    label: "디딤돌 대출 소득·세대주·재직 확인",
+    purpose: "내집마련 디딤돌대출 대상 확인",
+    requested: [
+      { claim: "annualIncomeUnder60M", expected: true },
+      { claim: "householdHead", expected: true },
+      { claim: "employed", expected: true },
+    ],
+    policyId: null,
+    verifierKinds: ["bank"],
+    hint: "소득금액증명·주민등록표 등본·건강보험 자격득실확인서 원본 대신 '연소득 6,000만 원 이하'·'세대주'·'재직 중' 3개 항목의 참/거짓만 받습니다. 무주택·순자산은 HUG 가 중앙에서 심사해 결과를 따로 줍니다.",
+  },
+  {
+    id: "daegu-youth-deposit",
+    label: "대구 청년 임차보증금 이자지원 대상 확인",
+    purpose: "대구 청년 임차보증금 이자지원 대상 확인",
+    requested: [
+      { claim: "daeguResident", expected: true },
+      { claim: "annualIncomeUnder60M", expected: true },
+    ],
+    policyId: null,
+    verifierKinds: ["bank"],
+    hint: "대구시 청년 임차보증금 대출이자 지원: 주민등록표 등본·소득금액증명 원본 대신 '대구 거주'·'연소득 6,000만 원 이하' 2개 항목의 참/거짓만 받습니다. 나이·무주택 등 나머지 요건은 대구시 심사 절차를 따릅니다.",
+  },
+  {
     id: "discount",
     label: "공공요금 감면 대상 확인",
     purpose: "공공요금 감면 대상 확인",
@@ -382,6 +420,8 @@ export const CLAIM_LABELS: Record<string, string> = {
   daeguMetroFreeAge: "도시철도 무임 연령(1958년생 이전) 여부",
   singlePersonHousehold: "1인 가구 여부",
   hasStudentChild: "초·중·고 학생 자녀 유무",
+  householdHead: "세대주 여부",
+  married: "혼인 여부 (기혼)",
   isBenefitRecipient: "기초생활보장 급여 수급 여부",
   incomeBelow32Median: "기준 중위소득 32% 이하 여부",
   incomeBelow48Median: "기준 중위소득 48% 이하 여부",
@@ -392,6 +432,8 @@ export const CLAIM_LABELS: Record<string, string> = {
   annualIncomeUnder40M: "연소득 4,000만 원 이하 여부",
   annualIncomeUnder45M: "연소득 4,500만 원 이하 여부",
   annualIncomeUnder50M: "연소득 5,000만 원 이하 여부",
+  annualIncomeUnder60M: "연소득 6,000만 원 이하 여부",
+  employed: "재직 중 여부 (직장 건강보험 가입)",
 };
 
 export function claimLabel(claim: string, fromServer?: string): string {

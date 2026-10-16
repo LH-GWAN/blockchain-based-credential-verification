@@ -64,13 +64,16 @@ describe("policyLabel", () => {
 });
 
 describe("PRESETS_FALLBACK", () => {
-  it("여섯 가지 창구 용도, consult 가 첫 번째 · 신용 하위 20% 프리셋은 각 상품 바로 뒤", () => {
+  it("아홉 가지 창구 용도, consult 가 첫 번째 · 신용 하위 20% 프리셋은 각 상품 바로 뒤", () => {
     expect(PRESETS_FALLBACK.map((p) => p.id)).toEqual([
       "consult",
       "sunshine-general",
       "sunshine-general-low-credit",
       "new-hope",
       "new-hope-low-credit",
+      "beotimmok",
+      "didimdol",
+      "daegu-youth-deposit",
       "discount",
     ]);
   });
@@ -83,6 +86,9 @@ describe("PRESETS_FALLBACK", () => {
       "sunshine-general-low-credit": "sunshine-loan-general",
       "new-hope": "new-hope-loan",
       "new-hope-low-credit": "new-hope-loan",
+      beotimmok: null,
+      didimdol: null,
+      "daegu-youth-deposit": null,
       discount: null,
     });
   });
@@ -95,11 +101,14 @@ describe("PRESETS_FALLBACK", () => {
       "sunshine-general-low-credit": ["annualIncomeUnder45M"],
       "new-hope": ["annualIncomeUnder40M"],
       "new-hope-low-credit": ["annualIncomeUnder50M"],
+      beotimmok: ["annualIncomeUnder50M", "householdHead", "employed"],
+      didimdol: ["annualIncomeUnder60M", "householdHead", "employed"],
+      "daegu-youth-deposit": ["daeguResident", "annualIncomeUnder60M"],
       discount: ["incomeBelow50Median"],
     });
   });
 
-  it("취급 창구: 새희망홀씨(신용 하위 20% 포함)만 은행 전용, 나머지는 은행·저축은행", () => {
+  it("취급 창구: 새희망홀씨(신용 하위 20% 포함)·주거 대출·대구 청년 이자지원은 은행 전용, 나머지는 은행·저축은행", () => {
     const kinds = Object.fromEntries(PRESETS_FALLBACK.map((p) => [p.id, p.verifierKinds]));
     expect(kinds).toEqual({
       consult: ["bank", "savings"],
@@ -107,6 +116,9 @@ describe("PRESETS_FALLBACK", () => {
       "sunshine-general-low-credit": ["bank", "savings"],
       "new-hope": ["bank"],
       "new-hope-low-credit": ["bank"],
+      beotimmok: ["bank"],
+      didimdol: ["bank"],
+      "daegu-youth-deposit": ["bank"],
       discount: ["bank", "savings"],
     });
   });
@@ -119,6 +131,9 @@ describe("PRESETS_FALLBACK", () => {
       "sunshine-general-low-credit": [{ claim: "creditBottom20", expected: true }],
       "new-hope": null,
       "new-hope-low-credit": [{ claim: "creditBottom20", expected: true }],
+      beotimmok: null,
+      didimdol: null,
+      "daegu-youth-deposit": null,
       discount: null,
     });
   });
@@ -195,6 +210,13 @@ describe("CLAIM_LABELS", () => {
     expect(CLAIM_LABELS.annualIncomeUnder35M).toBe("연소득 3,500만 원 이하 여부");
     expect(CLAIM_LABELS.annualIncomeUnder40M).toBe("연소득 4,000만 원 이하 여부");
     expect(CLAIM_LABELS.annualIncomeUnder50M).toBe("연소득 5,000만 원 이하 여부");
+  });
+
+  it("주거 대출 항목(세대주·혼인·재직·6,000만 원)의 라벨이 규칙 묶음과 같다", () => {
+    expect(CLAIM_LABELS.householdHead).toBe("세대주 여부");
+    expect(CLAIM_LABELS.married).toBe("혼인 여부 (기혼)");
+    expect(CLAIM_LABELS.employed).toBe("재직 중 여부 (직장 건강보험 가입)");
+    expect(CLAIM_LABELS.annualIncomeUnder60M).toBe("연소득 6,000만 원 이하 여부");
   });
 });
 

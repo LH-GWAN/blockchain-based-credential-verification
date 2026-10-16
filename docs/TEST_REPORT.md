@@ -2,7 +2,7 @@
 
 - 생성 시각: 2026-10-09T19:16:48+09:00
 - 커밋: `4fda1ef`
-- 규칙 번들: `daegu-eligibility@2026.2` 해시 `0xb24ad5f237f4d8ad8694dcfa2b28c88a15c6a9b88faa6764c6907e435509d94e`
+- 규칙 번들: `daegu-eligibility@2026.2` 해시 `0xa054a6a26d1158525de00335cb1858acf354b7a99511f21da5da852fc92edf60`
 
 ## 제안요약서 검증 계획 대응
 

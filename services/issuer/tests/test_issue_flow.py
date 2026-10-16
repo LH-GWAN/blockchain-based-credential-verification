@@ -63,7 +63,7 @@ def test_issue_then_revoke(env):
 
 
 def test_welfare_issuer_only_knows_its_fields(tmp_path, monkeypatch):
-    """복지기관은 소득·수급 사실만, 대구시는 주민등록 사실만 발급한다. 신용평점(self)은 누구도 발급하지 않는다."""
+    """복지기관은 소득·수급·재직(건보 자격) 사실만, 대구시는 주민등록·가족관계 사실만 발급한다. 신용평점(self)은 누구도 발급하지 않는다."""
     monkeypatch.setenv("RULE_EVAL_DATE", "2026-09-14")
     settings = Settings(issuer_id="welfare", db_path=str(tmp_path / "welfare.db"))
     client = TestClient(create_app(settings, ledger=FakeLedger(bundle_hash(load_bundle())), store=Store(settings.db_path)))
@@ -72,7 +72,7 @@ def test_welfare_issuer_only_knows_its_fields(tmp_path, monkeypatch):
     assert {c["claim"] for c in wk["claims"]} == {"isBenefitRecipient", "incomeBelow32Median", "incomeBelow48Median",
                                                  "incomeBelow50Median", "incomeBelowBasicPensionLine",
                                                  "annualIncomeUnder35M", "annualIncomeUnder40M", "annualIncomeUnder45M",
-                                                 "annualIncomeUnder50M"}
+                                                 "annualIncomeUnder50M", "annualIncomeUnder60M", "employed"}
     r = client.post("/credentials/issue", json={
         "citizenId": "C-001", "holderDid": holder.did, "holderProof": _holder_proof(client, holder),
         "requestedClaims": ["daeguResident"], "consent": {"scope": ["daeguResident"], "ts": "2026-09-14T09:00:00Z"},
@@ -116,3 +116,20 @@ def test_holder_proof_required(env):
         "requestedClaims": ["daeguResident"], "consent": {"scope": ["daeguResident"], "ts": "2026-09-14T09:00:00Z"},
     })
     assert r.status_code == 401
+
+
+def test_daegu_issues_household_head_and_marriage(tmp_path, monkeypatch):
+    """대구시는 주민등록(세대주)·가족관계(혼인) 사실을 발급한다. 참인 사실만 증명서가 된다."""
+    monkeypatch.setenv("RULE_EVAL_DATE", "2026-09-14")
+    settings = Settings(issuer_id="daegu", db_path=str(tmp_path / "daegu.db"))
+    client = TestClient(create_app(settings, ledger=FakeLedger(bundle_hash(load_bundle())), store=Store(settings.db_path)))
+    wk = {c["claim"] for c in client.get("/.well-known/issuer").json()["claims"]}
+    assert {"householdHead", "married"} <= wk and "employed" not in wk
+    holder = generate_holder_key()
+    # C-008: 2인 가구 세대주, 기혼
+    r = client.post("/credentials/issue", json={
+        "citizenId": "C-008", "holderDid": holder.did, "holderProof": _holder_proof(client, holder),
+        "requestedClaims": ["householdHead", "married"], "consent": {"scope": ["householdHead", "married"], "ts": "2026-09-14T09:00:00Z"},
+    })
+    assert r.status_code == 200, r.text
+    assert {c["claim"] for c in r.json()["credentials"]} == {"householdHead", "married"}

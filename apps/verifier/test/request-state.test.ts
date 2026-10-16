@@ -170,13 +170,16 @@ describe("presetsLoaded", () => {
 describe("presetsForKind · isPresetOffered", () => {
   const ids = (ps: readonly Preset[]) => ps.map((p) => p.id);
 
-  it("은행 창구에는 여섯 가지 프리셋이 모두 보인다", () => {
+  it("은행 창구에는 아홉 가지 프리셋이 모두 보인다", () => {
     expect(ids(presetsForKind(PRESETS_FALLBACK, "bank"))).toEqual([
       "consult",
       "sunshine-general",
       "sunshine-general-low-credit",
       "new-hope",
       "new-hope-low-credit",
+      "beotimmok",
+      "didimdol",
+      "daegu-youth-deposit",
       "discount",
     ]);
   });

@@ -22,6 +22,8 @@ def reference_claims(c: dict, median: dict, pension: dict, as_of: date) -> dict[
         "daeguMetroFreeAge": int(c["birthDate"][:4]) <= 1958,
         "singlePersonHousehold": c["householdSize"] == 1,
         "hasStudentChild": c["hasStudentChild"] is True,
+        "householdHead": c["isHouseholdHead"] is True,
+        "married": c["isMarried"] is True,
         "isBenefitRecipient": c["isBasicLivelihoodRecipient"] is True,
         "incomeBelow32Median": inc * 100 <= m * 32,
         "incomeBelow48Median": inc * 100 <= m * 48,
@@ -32,6 +34,8 @@ def reference_claims(c: dict, median: dict, pension: dict, as_of: date) -> dict[
         "annualIncomeUnder40M": c["annualIncomeKRW"] <= 40_000_000,
         "annualIncomeUnder45M": c["annualIncomeKRW"] <= 45_000_000,
         "annualIncomeUnder50M": c["annualIncomeKRW"] <= 50_000_000,
+        "annualIncomeUnder60M": c["annualIncomeKRW"] <= 60_000_000,
+        "employed": c["isEmployed"] is True,
     }
 
 
