@@ -1,4 +1,4 @@
-# 대구 혜택패스 (Daegu Benefit Pass)
+# 혜택패스 (Daegu Benefit Pass)
 
 > **"공공이 판정한 자격을 시민이 보유하고, 은행 창구에 충족 여부만 제출한다."**
 > 2026 AI Blockchain Challenge in Daegu — 공모주제 ❺ 블록체인 기반 신뢰 인프라 · 팀 원비트
