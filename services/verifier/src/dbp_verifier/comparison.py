@@ -10,7 +10,7 @@ from functools import lru_cache
 
 from dbp_rules import repo_root
 
-HONESTY = "※ 조회형 열은 공공 마이데이터 서비스 문서에 기재된 전달 항목으로 구성한 비교이며, 실제 API 호출 결과가 아니다."
+HONESTY = "※ 왼쪽 열은 각 서류의 공식 서식에 기재된 항목이다. 공공 마이데이터는 필요한 항목만 골라 보내므로 이보다 적을 수 있으나, 판단에 필요한 값(소득 금액 등)은 그대로 전달된다."
 
 
 @lru_cache(maxsize=1)

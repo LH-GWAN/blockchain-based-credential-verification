@@ -199,7 +199,7 @@ def test_comparison_block_from_single_source(env):
     assert c["presetId"] == "sunshine-general" and [d["name"] for d in c["pullDocuments"]] == ["소득금액증명"]
     assert c["pullCount"] == 10 and c["holdCount"] == 1 and c["reductionPercent"] == 90
     assert c["holdItems"] == ["연소득 3,500만 원 이하 여부 = 참"] and "3년" in c["pullRecords"]
-    assert "실제 API 호출 결과가 아니다" in c["honestyNote"]
+    assert "공식 서식" in c["honestyNote"] and "공공 마이데이터" in c["honestyNote"]
     presets = client.get("/comparison").json()["presets"]
     assert "sunshine-bank" not in presets
     pre = presets["sunshine-general"]

@@ -188,13 +188,13 @@ test('①~⑥ 시연 흐름 + ⑤ 폐기·공격 4종', async () => {
   // ── ⑥ 조회형 대비 비교 패널 (§12.5): 숫자는 서비스(data/comparison.json)에서 온다 ──
   const panel = verifier.getByTestId('comparison-panel');
   await expect(panel).toBeVisible();
-  await expect(panel.getByText('같은 상담, 두 경로 비교')).toBeVisible();
-  await expect(panel.getByText('공공 마이데이터 방식 (조회형)')).toBeVisible();
+  await expect(panel.getByText('같은 자격 확인, 두 경로 비교')).toBeVisible();
+  await expect(panel.getByText('서류 제출 방식 (원문)')).toBeVisible();
   await expect(panel.getByText('대구 혜택패스 (보유형)')).toBeVisible();
   await expect(panel.getByText('소득금액증명', { exact: false }).first()).toBeVisible();
   await expect(verifier.getByTestId('comparison-summary')).toHaveText(/이번 검증에서 줄어든 항목: 10 → 1 \(90%\)/);
   await expect(panel.getByText(/3년 보관/)).toBeVisible();
-  await expect(panel.getByText(/실제 API 호출 결과가 아니다/)).toBeVisible();
+  await expect(panel.getByText(/공식 서식에 기재된 항목/)).toBeVisible();
   // 보유형 쪽 '남는 기록'은 원장의 제출 영수증 솔트 해시 1건 (F13) — '없음'이라고 쓰지 않는다
   const hold = verifier.getByTestId('comparison-hold');
   await expect(hold).toContainText('원장에 제출 영수증의 솔트 해시 1건');

@@ -241,11 +241,11 @@ export const RESULT = {
 } as const;
 
 export const COMPARISON = {
-  title: "같은 상담, 두 경로 비교",
-  lead: "이번 용도로 창구가 자격을 확인하는 두 가지 방법. 왼쪽은 원문을 끌어오는 조회형, 오른쪽은 시민이 보유한 참·거짓을 제출하는 보유형.",
-  pullTitle: "공공 마이데이터 방식 (조회형)",
+  title: "같은 자격 확인, 두 경로 비교",
+  lead: "이번 용도로 창구가 자격을 확인하는 두 가지 방법. 왼쪽은 서류 원문을 받는 방식, 오른쪽은 시민이 보유한 참·거짓을 제출하는 보유형.",
+  pullTitle: "서류 제출 방식 (원문)",
   holdTitle: "대구 혜택패스 (보유형)",
-  pullDocs: "넘어오는 서류",
+  pullDocs: "내는 서류",
   pullItems: "창구가 받게 되는 항목",
   holdItems: "이번에 실제로 받은 것",
   itemsBadge: (n: number) => `${n}개 항목`,
