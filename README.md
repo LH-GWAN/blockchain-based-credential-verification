@@ -101,4 +101,4 @@ editable `.pth` 를 건너뜁니다(`ModuleNotFoundError: dbp_*`). `make setup`�
 
 ## 라이선스
 
-MIT (제출용 프로토타입).
+All rights reserved. 저작권자의 사전 서면 허락 없는 복제·수정·배포를 금지합니다. 자세한 내용은 [LICENSE](LICENSE) 를 참고하세요.
